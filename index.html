@@ -1,28 +1,102 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="An experimental workspace for lifeafterlogic.">
-  <title>lab</title>
-  <style>
-    * { box-sizing: border-box; }
-    html { background: #fff; color: #111; }
-    body { margin: 0; min-height: 100vh; font-family: Arial, Helvetica, sans-serif; }
-    header { padding: 24px 28px; }
-    h1 { margin: 0; font-size: 24px; line-height: 1; font-weight: 500; letter-spacing: -0.055em; }
-    h1 a { color: inherit; text-decoration: none; }
-    h1 a:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
-    main { padding: 0 28px 28px; }
-    @media (max-width: 600px) {
-      header { padding: 20px; }
-      main { padding: 0 20px 20px; }
-    }
-  </style>
-</head>
-<body>
-  <header><h1><a href="./">lab</a></h1></header>
-  <main id="experiments" aria-label="Experiments"></main>
-</body>
-</html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fff">
+<title>lab — field studies</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:white;color:#111;font:14px Arial,Helvetica,sans-serif}header{padding:24px 28px}h1{font-size:24px;font-weight:500;letter-spacing:-.055em;margin:0}h1 a{color:inherit;text-decoration:none}main{margin:0 28px 28px;max-width:1800px}.stage{background:#121811;position:relative;aspect-ratio:16/9;overflow:hidden}.stage canvas{display:block;width:100%;height:100%;object-fit:contain}.stage:fullscreen{width:100vw;height:100vh;aspect-ratio:auto}.bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 0}.title{font-size:14px;letter-spacing:-.025em}.sub{font-size:11px;color:#777;margin-top:5px}.controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap}button,label.upload{font:inherit;font-size:12px;border:0;background:none;padding:5px 0;cursor:pointer;color:#333;text-decoration:underline;text-underline-offset:3px}button:focus-visible,label:focus-within{outline:2px solid #555}input[type=file]{position:absolute;width:1px;height:1px;opacity:0}input[type=range]{width:85px;accent-color:#222}details{color:#777;font-size:11px;line-height:1.6}details a{color:inherit}#video{display:none}@media(max-width:600px){header{padding:20px}main{margin:0 20px 20px}.controls{gap:10px}.bar{align-items:flex-start}} 
+</style>
+</head><body>
+<header><h1><a href="./">lab</a></h1></header><main>
+<div class="stage" id="stage"><canvas id="art" aria-label="Continuously evolving computational painting"></canvas></div>
+<div class="bar"><div><div class="title">001 — field studies</div><div class="sub" id="status" role="status">Preparing source…</div></div><div class="controls"><button id="view">Source</button><label>Abstraction <input id="abstraction" type="range" min="0" max="100" value="65"></label><label class="upload">Load footage<input id="file" type="file" accept="video/*"></label><button id="pause">Pause</button><button id="full">Fullscreen</button></div></div>
+<details><summary>Source &amp; process</summary>Live computational painting. Local gradient structure and estimated optical flow guide multiscale pigment strokes. Default footage: <a href="https://commons.wikimedia.org/wiki/File:Purple_flowers.webm">Purple flowers</a> by <a href="https://www.youtube.com/user/Editor">Editor</a>, <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>, transformed in real time. If remote footage is unavailable, a generated botanical motion field is used as a clearly labelled fallback. Uploaded footage stays on your device. Inspired by the approach of Quayola's <i>Jardins d’Été</i>; independently implemented.</details>
+<video id="video" muted loop playsinline crossorigin="anonymous" preload="auto"></video>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id), art=$('art'), stage=$('stage'), video=$('video'), status=$('status');
+const W=matchMedia('(max-width: 700px)').matches?960:1600,H=W*9/16|0, SW=320,SH=180;
+art.width=W;art.height=H;
+const ctx=art.getContext('2d',{alpha:false}), paint=document.createElement('canvas'), src=document.createElement('canvas');
+paint.width=W;paint.height=H;src.width=SW;src.height=SH;
+const p=paint.getContext('2d',{alpha:false}), s=src.getContext('2d',{willReadFrequently:true,alpha:false});
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), rand=(a,b)=>a+Math.random()*(b-a);
+let prev=new Float32Array(SW*SH), gray=new Float32Array(SW*SH), pixels, havePrev=false;
+const GS=8,GW=Math.ceil(SW/GS),GH=Math.ceil(SH/GS), vx=new Float32Array(GW*GH),vy=new Float32Array(GW*GH), ang=new Float32Array(GW*GH),edge=new Float32Array(GW*GH);
+let source='fallback', playing=true, showingSource=false, visible=true, initialized=false, t=0,last=0,lastVideoTime=-1,objectURL=null,request=0,sourceTimer,remoteAttempt=0;
+let seed=41729;function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}
+const leaves=Array.from({length:240},()=>({x:random()*SW,y:SH*(.2+random()*.86),l:5+random()*18,a:random()*6.28,w:2+random()*4,c:random(),phase:random()*6.28}));
+const flowers=Array.from({length:39},()=>({x:random()*SW,y:20+random()*137,r:3+random()*9,phase:random()*6.28,palette:Math.floor(random()*4),petals:5+Math.floor(random()*5)}));
+const petalPal=[['#563c64','#ac769b','#e7b4bc'],['#655a83','#b6a9ca','#e5d9e1'],['#6c3c42','#bb6766','#efad91'],['#77713c','#c3b16f','#f0dbaf']];
+function botanical(time){
+ const bg=s.createLinearGradient(0,0,SW,SH);bg.addColorStop(0,'#111b19');bg.addColorStop(.55,'#24352c');bg.addColorStop(1,'#0a1516');s.fillStyle=bg;s.fillRect(0,0,SW,SH);
+ for(const l of leaves){let x=l.x+Math.sin(time*.8+l.phase)*3,y=l.y+Math.cos(time*.6+l.phase)*2;s.save();s.translate(x,y);s.rotate(l.a+Math.sin(time+l.phase)*.18);s.fillStyle=['#314936','#536347','#72805a','#203b31'][Math.floor(l.c*4)];s.beginPath();s.ellipse(0,0,l.l,l.w,0,0,Math.PI*2);s.fill();s.restore()}
+ for(const f of flowers){const wind=Math.sin(time*1.05+f.phase)*6+Math.sin(time*.41+f.x*.04)*5,x=f.x+wind,y=f.y+Math.sin(time*.83+f.phase)*2;s.strokeStyle='#566747';s.lineWidth=1.1;s.beginPath();s.moveTo(f.x+9,SH+5);s.quadraticCurveTo(f.x+wind*.3,(y+SH)/2,x,y);s.stroke();let colors=petalPal[f.palette];for(let k=0;k<f.petals;k++){let a=k*6.283/f.petals+f.phase+Math.sin(time*.8+f.phase)*.17;s.save();s.translate(x+Math.cos(a)*f.r*.67,y+Math.sin(a)*f.r*.58);s.rotate(a);s.fillStyle=colors[(k+f.palette)%3];s.beginPath();s.ellipse(0,0,f.r*.78,f.r*.35,0,0,6.283);s.fill();s.restore()}s.fillStyle='#bba171';s.beginPath();s.arc(x,y,f.r*.23,0,6.283);s.fill()}
+}
+function resetMotion(){havePrev=false;vx.fill(0);vy.fill(0);lastVideoTime=-1;initialized=false}
+function sourceFrame(){
+ if(source!=='fallback'&&video.readyState>=2){
+  if(lastVideoTime>=0&&video.currentTime+0.1<lastVideoTime)havePrev=false;
+  lastVideoTime=video.currentTime;
+  const scale=Math.max(SW/video.videoWidth,SH/video.videoHeight),w=video.videoWidth*scale,h=video.videoHeight*scale;
+  try{s.drawImage(video,(SW-w)/2,(SH-h)/2,w,h);pixels=s.getImageData(0,0,SW,SH).data;return}
+  catch(e){switchFallback('Video cannot be sampled — generated source');}
+ }
+ botanical(t);pixels=s.getImageData(0,0,SW,SH).data;
+}
+function analyze(){
+ for(let i=0;i<gray.length;i++){let j=i*4;gray[i]=(.2126*pixels[j]+.7152*pixels[j+1]+.0722*pixels[j+2])/255}
+ for(let gy=0;gy<GH;gy++)for(let gx=0;gx<GW;gx++){
+  let xx=clamp(gx*GS+4,3,SW-4),yy=clamp(gy*GS+4,3,SH-4),a=0,b=0,c=0,d=0,e=0;
+  for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){
+   let k=(yy+j)*SW+xx+i,dx=(gray[k+1]-gray[k-1])*.5,dy=(gray[k+SW]-gray[k-SW])*.5,dt=havePrev?gray[k]-prev[k]:0;a+=dx*dx;b+=dx*dy;c+=dy*dy;d+=dx*dt;e+=dy*dt
+  }
+  let k=gy*GW+gx,det=(a+.006)*(c+.006)-b*b,ux=(-(c+.006)*d+b*e)/det,uy=(b*d-(a+.006)*e)/det;
+  vx[k]=vx[k]*.62+clamp(ux,-3.5,3.5)*.38;vy[k]=vy[k]*.62+clamp(uy,-3.5,3.5)*.38;
+  ang[k]=.5*Math.atan2(2*b,a-c)+Math.PI/2;edge[k]=clamp((a+c)*2,0,1);
+ }
+ prev.set(gray);havePrev=true;
+}
+function pigment(x,y,scale,ab,opacity){
+ const ix=clamp(x|0,0,SW-1),iy=clamp(y|0,0,SH-1),q=(iy*SW+ix)*4,k=Math.min(GH-1,iy/GS|0)*GW+Math.min(GW-1,ix/GS|0);
+ const flow=Math.hypot(vx[k],vy[k]),phase=Math.sin(x*.032+y*.041+t*.27)+Math.cos(x*.075-y*.028-t*.19);
+ let theta=ang[k]+phase*.23*ab+rand(-.37,.37)*ab;
+ if(flow>.12){const fa=Math.atan2(vy[k],vx[k]),mix=clamp(flow*.22,0,.58)*ab;theta+=Math.atan2(Math.sin(2*(fa-theta)),Math.cos(2*(fa-theta)))*.5*mix}
+ const sx=W/SW,sy=H/SH, len=scale*sx*rand(.65,1.55)*(1+Math.min(flow,2)*.34*ab),wid=len*rand(.19,.58);
+ let px=x*sx+vx[k]*sx*ab*rand(.6,2.3),py=y*sy+vy[k]*sy*ab*rand(.6,2.3);
+ const r=pixels[q],g=pixels[q+1],b=pixels[q+2],lum=.25*r+.55*g+.2*b;
+ const sat=1.08+ab*.22,variation=rand(-13,13),color=(v,z=0)=>clamp(Math.round(lum+(v-lum)*sat+variation+z),0,255);
+ const rr=color(r),gg=color(g),bb=color(b);
+ p.save();p.translate(px,py);p.rotate(theta);p.globalAlpha=opacity;
+ p.fillStyle='rgb('+rr+','+gg+','+bb+')';
+ p.beginPath();p.moveTo(-len*.5,-wid*.25);p.quadraticCurveTo(-len*.22,-wid*.65,len*.44,-wid*.32);p.lineTo(len*.53,wid*.14);p.quadraticCurveTo(len*.03,wid*.65,-len*.48,wid*.30);p.closePath();p.fill();
+ if(scale>2.5){p.globalAlpha=opacity*.28;p.strokeStyle='rgb('+color(r,25)+','+color(g,25)+','+color(b,25)+')';p.lineWidth=Math.max(.55,wid*.085);p.beginPath();p.moveTo(-len*.40,-wid*.18);p.quadraticCurveTo(0,-wid*.37,len*.39,-wid*.14);p.stroke();p.globalAlpha=opacity*.24;p.strokeStyle='rgb('+color(r,-27)+','+color(g,-27)+','+color(b,-27)+')';p.beginPath();p.moveTo(-len*.39,wid*.20);p.lineTo(len*.33,wid*.29);p.stroke()}
+ p.restore();
+}
+function layer(step,scale,ab,alpha,prob=1){for(let y=0;y<SH;y+=step)for(let x=0;x<SW;x+=step)if(Math.random()<prob)pigment(clamp(x+rand(0,step),0,SW-1),clamp(y+rand(0,step),0,SH-1),scale,ab,alpha)}
+function paintFrame(){
+ const setting=+$('abstraction').value/100,ab=clamp(setting+Math.sin(t*.055)*.18,0,1);
+ if(!initialized){p.imageSmoothingEnabled=true;p.drawImage(src,0,0,W,H);layer(9,18,ab,.85);layer(5,8,ab,.91);layer(3,3.4,ab,.88);initialized=true}
+ // Persistent pigment: broad marks are replaced slowly, detail accumulates between them.
+ let count=W>1000?1100:650;
+ for(let i=0;i<count;i++){let x=Math.random()*SW,y=Math.random()*SH,k=Math.min(GH-1,y/GS|0)*GW+Math.min(GW-1,x/GS|0),e=edge[k],f=Math.hypot(vx[k],vy[k]);let u=Math.random(),scale=u<.14?rand(11,23):u<.54?rand(4,10):rand(1.3,4);scale*=.55+ab*.9;if(e>.25&&Math.random()<.55)scale*=.53;if(f>.18)scale*=1+Math.min(f,2)*.16;pigment(x,y,scale,ab,rand(.48,.91))}
+ // Preserve source structure without directly displaying the raw video in painting mode.
+ ctx.drawImage(paint,0,0); 
+}
+function frame(now){
+ request=requestAnimationFrame(frame);if(!playing||!visible||document.hidden)return;if(now-last<42)return;let dt=last?Math.min(.075,(now-last)/1000):.042;last=now;t+=dt;
+ sourceFrame();analyze();paintFrame();if(showingSource)ctx.drawImage(src,0,0,W,H);
+}
+function switchFallback(message){source='fallback';video.pause();resetMotion();status.textContent=message||'Live · generated botanical test source';}
+function startVideo(url,label){clearTimeout(sourceTimer);source='fallback';status.textContent='Loading footage · generated preview';video.pause();video.src=url;video.load();sourceTimer=setTimeout(()=>{if(source==='fallback')status.textContent='Live · generated source (footage unavailable)'},12000);video.onloadeddata=()=>{if(video.src!==url&&video.currentSrc!==url)return;try{if(!video.videoWidth)return;s.drawImage(video,0,0,SW,SH);s.getImageData(0,0,1,1);source=label;clearTimeout(sourceTimer);resetMotion();status.textContent='Live · '+label;if(playing&&visible&&!document.hidden)video.play().catch(()=>{status.textContent='Footage ready · press Play to start';playing=false;$('pause').textContent='Play'})}catch(e){switchFallback('Live · generated source (cross-origin video blocked)')}};video.onerror=()=>{if(label==='flower footage'&&remoteAttempt++===0){startVideo('https://upload.wikimedia.org/wikipedia/commons/f/f0/Purple_flowers.webm','flower footage')}else switchFallback('Live · generated source (footage unavailable)')};}
+$('view').onclick=()=>{showingSource=!showingSource;$('view').textContent=showingSource?'Painting':'Source';if(pixels)ctx.drawImage(showingSource?src:paint,0,0,W,H)};
+$('pause').onclick=()=>{playing=!playing;$('pause').textContent=playing?'Pause':'Play';if(playing){last=0;if(source!=='fallback')video.play().catch(()=>{});}else video.pause()};
+$('full').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else if(stage.requestFullscreen)await stage.requestFullscreen();else{stage.classList.toggle('expanded');stage.style.position=stage.classList.contains('expanded')?'fixed':'relative';stage.style.inset=stage.classList.contains('expanded')?'0':'auto';stage.style.zIndex=stage.classList.contains('expanded')?'10':'auto';stage.style.height=stage.classList.contains('expanded')?'100dvh':'auto'}}catch(e){status.textContent='Fullscreen unavailable in this browser'}};
+$('file').onchange=e=>{let f=e.target.files[0];if(!f)return;if(objectURL)URL.revokeObjectURL(objectURL);objectURL=URL.createObjectURL(f);startVideo(objectURL,'local footage')};
+new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(!visible)video.pause();else if(playing&&source!=='fallback'&&!document.hidden)video.play().catch(()=>{})},{threshold:.01}).observe(stage);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)video.pause();else if(playing&&visible&&source!=='fallback')video.play().catch(()=>{})});
+p.fillStyle='#142019';p.fillRect(0,0,W,H);
+startVideo('https://upload.wikimedia.org/wikipedia/commons/transcoded/f/f0/Purple_flowers.webm/Purple_flowers.webm.480p.vp9.webm','flower footage');
+request=requestAnimationFrame(frame);
+</script></body></html>
