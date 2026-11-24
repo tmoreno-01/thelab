@@ -40,7 +40,7 @@ function initGL(){
  float d=max(abs(y-warp)/width+end*.48,abs(x)*.98);
  float grain=hash(floor(vec2(x*95.,y*24.)+seed.y*71.));float bristle=sin(y*42.+sin(x*6.+seed.y*11.)*1.8)*.5+.5;
  float mask=1.-smoothstep(.77,.98,d+(grain-.5)*.13);
- float relief=.91+.12*bristle+.07*grain+.13*exp(-pow((y-warp+.53)*5.,2.))-.17*exp(-pow((y-warp-.58)*5.,2.));
+ float hi=(y-warp+.53)*5.;float lo=(y-warp-.58)*5.;float relief=.91+.12*bristle+.07*grain+.13*exp(-hi*hi)-.17*exp(-lo*lo);
  vec3 c=clamp(col.rgb*relief+vec3(.012*(grain-.5)),0.,1.);outColor=vec4(c,col.a*mask);}
  `;
  program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vert));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,frag));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
@@ -128,7 +128,7 @@ async function load(url,token){
 }
 async function scan(first,token){
  analyzing=true;bank=[];prev=first;bank.push(analyze(first,null));seedPainting(bank[0]);clock=0;
- const duration=Math.min(video.duration-.04,40), step=Math.max(.16,duration/150), frames=Math.max(2,Math.floor(duration/step));
+ const duration=Math.min(Math.max(.001,video.duration-.04),40), frames=Math.max(2,Math.min(150,Math.ceil(duration/.16))), step=duration/frames;
  for(let i=1;i<=frames;i++){
   if(token!==epoch)return;
   const seek=waitEvent('seeked',token,10000);video.currentTime=Math.min(duration,i*step);await seek;if(token!==epoch)return;
