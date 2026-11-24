@@ -1,157 +1,188 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lab — urban studies</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lab — pigment studies</title>
 <style>
-*{box-sizing:border-box}body{margin:0;color:#111;background:#fff;font:14px Arial,sans-serif}header{padding:24px 28px}h1{font-size:24px;font-weight:500;letter-spacing:-.055em;margin:0}h1 a{color:inherit;text-decoration:none}main{margin:0 28px 28px;max-width:1920px}.stage{aspect-ratio:16/9;background:#121212;position:relative;overflow:hidden}canvas,video{width:100%;height:100%;display:block;object-fit:contain}video{position:absolute;inset:0;display:none;background:#111}video.show{display:block}.stage:fullscreen,.stage.expanded{width:100vw;height:100dvh;aspect-ratio:auto}.stage.expanded{position:fixed;inset:0;z-index:20}.bar,.controls{display:flex;align-items:center;gap:15px;flex-wrap:wrap}.bar{justify-content:space-between;padding:12px 0}.sub,details{font-size:11px;color:#666;line-height:1.6}button,select,label{font:inherit;font-size:12px}button{border:0;background:none;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:5px}input[type=range]{width:85px;accent-color:#222}input[type=file]{max-width:175px}a{color:inherit}#message{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#ddd;text-align:center;font-size:12px;max-width:80%;pointer-events:none}#message:empty{display:none}@media(max-width:600px){header{padding:20px}main{margin:0 20px 20px}.controls{gap:8px}}
+*{box-sizing:border-box}body{margin:0;color:#111;background:#fff;font:14px Arial,sans-serif}header{padding:24px 28px}h1{font-size:24px;font-weight:500;letter-spacing:-.055em;margin:0}a{color:inherit}h1 a{text-decoration:none}main{margin:0 28px 28px;max-width:1920px}.stage{aspect-ratio:16/9;background:#171815;position:relative;overflow:hidden}canvas,video{width:100%;height:100%;display:block;object-fit:contain}video{position:absolute;inset:0;display:none;background:#111}video.show{display:block}.stage:fullscreen,.stage.expanded{width:100vw;height:100dvh;aspect-ratio:auto}.stage.expanded{position:fixed;inset:0;z-index:20}.bar,.controls{display:flex;align-items:center;gap:15px;flex-wrap:wrap}.bar{justify-content:space-between;padding:12px 0}.sub,details{font-size:11px;color:#666;line-height:1.6}button,select,label{font:inherit;font-size:12px}button{border:0;background:none;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:5px}input[type=range]{width:85px;accent-color:#222}input[type=file]{max-width:175px}#message{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#ddd;text-align:center;font-size:12px;max-width:80%;pointer-events:none}#message:empty{display:none}@media(max-width:600px){header{padding:20px}main{margin:0 20px 20px}.controls{gap:8px}}
 </style></head><body><header><h1><a href="./">lab</a></h1></header><main>
-<div class="stage" id="stage"><canvas id="art" aria-label="Motion-driven computational painting"></canvas><video id="source" muted playsinline preload="auto" crossorigin="anonymous"></video><div id="message">Loading filmed movement…</div></div>
-<div class="bar"><div>001 — urban studies<div class="sub" id="status" role="status">Preparing motion analysis</div></div><div class="controls"><select id="clip" aria-label="Source footage"><option value="night">Manhattan · night traffic</option><option value="avenue">10th Avenue · elevated</option></select><label>Local footage <input type="file" id="file" accept="video/*"></label><label>Abstraction <input type="range" id="amount" min="0" max="100" value="58"></label><button id="compare">Source</button><button id="pause">Pause</button><button id="full">Fullscreen</button></div></div>
-<details><summary>Process / footage credits</summary><p>Real filmed motion → sampled colour and structure → multiscale patch-based optical flow → a bank of recorded vector fields → autonomous persistent brush simulation. No original video pixels are composited into the painting. The source view is a separate diagnostic. Inspired by the documented methodology of <a href="https://quayola.com/jardins-dete/">Quayola’s Jardins d’Été</a>; this is an independent implementation, not his software.</p><p>Night traffic: <a href="https://commons.wikimedia.org/wiki/File:NYC_congestion_pricing_-_cars_cross_after_midnight_2.webm">NYC congestion pricing – cars cross after midnight 2</a>, Legoktm, <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Painted adaptation under CC BY-SA 4.0. Elevated traffic: <a href="https://commons.wikimedia.org/wiki/File:Time-lapse_above_10th_Avenue,_New_York.ogv">Time-lapse above 10th Avenue, New York</a>, Vincent Lim Show Chen, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC BY-SA 2.0</a>. Painted adaptation under CC BY-SA 2.0. Local footage is never uploaded. Use footage you have rights to.</p></details>
+<div class="stage" id="stage"><canvas id="art" aria-label="Flow-driven pigment painting"></canvas><video id="source" muted playsinline loop crossorigin="anonymous" preload="auto"></video><div id="message">Loading filmed movement…</div></div>
+<div class="bar"><div>001 — pigment studies<div class="sub" id="status" role="status">Preparing real footage</div></div><div class="controls"><select id="clip" aria-label="Source footage"><option value="flowers">Flowers · wind</option><option value="crowd">Shibuya · pedestrians</option><option value="night">New York · night traffic</option></select><label>Local MP4 <input id="file" type="file" accept="video/*"></label><label>Abstraction <input id="amount" type="range" min="0" max="100" value="65"></label><button id="compare">Source</button><button id="reset">Repaint</button><button id="pause">Pause</button><button id="full">Fullscreen</button></div></div>
+<details><summary>Source / process</summary><p>Actual video frames are decoded in normal chronological order. Multiscale patch matching estimates local movement, then a smoothed vector field transports a persistent pigment surface. Curved, overlapping bristle strokes are deposited at several scales, with slowly changing colour and spatially varying abstraction. The renderer never displays source pixels in painting mode. This independently implements ideas from <a href="https://mrl.cs.nyu.edu/publications/painterly-video/">Painterly Rendering for Video and Interaction</a> and is inspired by <a href="https://quayola.com/jardins-dete/">Jardins d’Été</a>; not Quayola’s code.</p><p>Flowers: <a href="https://commons.wikimedia.org/wiki/File:Purple_flowers.webm">Purple flowers</a>, Editor, <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>. Crowd: <a href="https://commons.wikimedia.org/wiki/File:Shibuya_Crossing,_Tokyo,_Japan_(video).webm">Shibuya Crossing</a>, Basile Morin, <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Night: <a href="https://commons.wikimedia.org/wiki/File:NYC_congestion_pricing_-_cars_cross_after_midnight_2.webm">NYC congestion pricing</a>, Legoktm, CC BY-SA 4.0. Sources transformed; adaptations of share-alike clips remain CC BY-SA 4.0. Uploaded videos stay on your device.</p></details>
 </main><script>
 'use strict';
 const $=id=>document.getElementById(id), art=$('art'), video=$('source'), stage=$('stage'), status=$('status'), message=$('message');
-const clips={
-night:['https://upload.wikimedia.org/wikipedia/commons/transcoded/a/a0/NYC_congestion_pricing_-_cars_cross_after_midnight_2.webm/NYC_congestion_pricing_-_cars_cross_after_midnight_2.webm.720p.vp9.webm','https://upload.wikimedia.org/wikipedia/commons/a/a0/NYC_congestion_pricing_-_cars_cross_after_midnight_2.webm'],
-avenue:['https://upload.wikimedia.org/wikipedia/commons/transcoded/b/b9/Time-lapse_above_10th_Avenue%2C_New_York.ogv/Time-lapse_above_10th_Avenue%2C_New_York.ogv.720p.vp9.webm','https://upload.wikimedia.org/wikipedia/commons/b/b9/Time-lapse_above_10th_Avenue%2C_New_York.ogv']};
-const W=320,H=180,G=8,CW=W/G,CH=Math.ceil(H/G),N=CW*CH;
-const sample=document.createElement('canvas');sample.width=W;sample.height=H;
-let sc=sample.getContext('2d',{willReadFrequently:true}), bank=[], prev=null, lastField=null, epoch=0, running=true, visible=true, sourceMode=false, analyzing=false, objectURL=null, ready=false, clock=0, last=0;
-const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)), mix=(a,b,t)=>a+(b-a)*t, rand=()=>Math.random();
-const phone=matchMedia('(max-width:700px)').matches, count=phone?13000:30000;
-const gl=art.getContext('webgl2',{alpha:false,antialias:false,preserveDrawingBuffer:false});
-let program,vao,buffer,instances=new Float32Array(count*10), agents=[], bg=[.055,.05,.048];
-function shader(type,code){const s=gl.createShader(type);gl.shaderSource(s,code);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
-function initGL(){
+const clipPath={flowers:'f/f0/Purple_flowers.webm',crowd:'5/53/Shibuya_Crossing%2C_Tokyo%2C_Japan_%28video%29.webm',night:'a/a0/NYC_congestion_pricing_-_cars_cross_after_midnight_2.webm'};
+function clipURLs(key){const path=clipPath[key],base='https://upload.wikimedia.org/wikipedia/commons/',name=path.split('/').pop();return [base+'transcoded/'+path+'/'+name+'.720p.vp9.webm',base+path]}
+const phone=matchMedia('(max-width:700px)').matches, W=phone?960:1600,H=W*9/16|0, SW=320,SH=180,G=8,GW=SW/G,GH=Math.ceil(SH/G);
+art.width=W;art.height=H;
+const sample=document.createElement('canvas');sample.width=SW;sample.height=SH;let sc=sample.getContext('2d',{willReadFrequently:true});
+const brush=document.createElement('canvas');brush.width=W;brush.height=H;const bc=brush.getContext('2d');
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),mix=(a,b,t)=>a+(b-a)*t,rand=(a=0,b=1)=>a+Math.random()*(b-a);
+let prev=null,field=null,flowBytes=new Uint8Array(GW*GH*4),rgba=null,clock=0,sourceTime=-1,loaded=false,paused=false,sourceMode=false,visible=true,epoch=0,objectURL=null,last=0,lastAnalysis=0,initial=true,frameCount=0;
+const gl=art.getContext('webgl2',{alpha:false,antialias:false,premultipliedAlpha:false});
+let pg,display,vao,flowTex,strokeTex,targets=[],front=0;
+function makeProgram(v,f){
+ const compile=(type,code)=>{let sh=gl.createShader(type);gl.shaderSource(sh,code);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh));return sh};
+ let p=gl.createProgram();gl.attachShader(p,compile(gl.VERTEX_SHADER,v));gl.attachShader(p,compile(gl.FRAGMENT_SHADER,f));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p
+}
+const vertex=`#version 300 es
+out vec2 uv;void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));uv=p;gl_Position=vec4(p*2.-1.,0.,1.);}`;
+const feedback=`#version 300 es
+precision highp float;
+in vec2 uv;out vec4 outColor;
+uniform sampler2D previous,flow,marks;
+uniform vec2 px;uniform float dt,ab,time,first;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}
+void main(){
+ vec4 m=texture(flow,uv);vec2 velocity=(m.rg*255.-128.)/12.;
+ float strength=length(velocity);float spatial=sin(uv.x*9.+uv.y*5.+time*.18)*cos(uv.y*7.-time*.13);
+ // Inverse transport of the existing pigment, rather than repositioning sprites.
+ vec2 drift=velocity/vec2(320.,180.)*dt*(1.25+ab*3.4);
+ vec2 curl=vec2(sin(uv.y*28.+time*.24),cos(uv.x*25.-time*.21))*px*dt*ab*(4.+min(strength,4.)*3.);
+ vec2 q=clamp(uv-drift-curl,px*.5,1.-px*.5);
+ vec3 p=texture(previous,q).rgb;
+ vec3 neighbours=(texture(previous,q+vec2(px.x,0.)).rgb+texture(previous,q-vec2(px.x,0.)).rgb+texture(previous,q+vec2(0.,px.y)).rgb+texture(previous,q-vec2(0.,px.y)).rgb)*.25;
+ p=mix(p,neighbours,clamp(dt*(.14+ab*.65),0.,.10));
+ vec4 s=texture(marks,uv);
+ // Pigment mixing in a subtractive approximation: optical density, not additive light.
+ vec3 oldDensity=-log(max(p,vec3(.025))), newDensity=-log(max(s.rgb,vec3(.025)));
+ float wet=s.a;
+ vec3 mixed=exp(-mix(oldDensity,newDensity,wet));
+ mixed=mix(mixed,s.rgb,wet*wet*.6);
+ if(first>.5)mixed=mix(vec3(.065,.071,.057),s.rgb,s.a);
+ outColor=vec4(clamp(mixed,0.,1.),1.);
+}`;
+const present=`#version 300 es
+precision highp float;
+in vec2 uv;out vec4 outColor;uniform sampler2D image;uniform vec2 px;
+float l(vec3 c){return dot(c,vec3(.2126,.7152,.0722));}
+void main(){vec3 c=texture(image,uv).rgb;
+float dx=l(texture(image,uv+vec2(px.x*1.4,0.)).rgb)-l(texture(image,uv-vec2(px.x*1.4,0.)).rgb);
+float dy=l(texture(image,uv+vec2(0.,px.y*1.4)).rgb)-l(texture(image,uv-vec2(0.,px.y*1.4)).rgb);
+float bump=clamp((dy-dx)*.34,-.075,.075);
+outColor=vec4(clamp(c*(1.+bump)+bump*.12,0.,1.),1.);}
+`;
+function texture(w,h,data=null){let t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,data);return t}
+function bind(p,name,t,i){gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,t);gl.uniform1i(gl.getUniformLocation(p,name),i)}
+function init(){
  if(!gl)throw Error('WebGL 2 unavailable');
- const vert=`#version 300 es
- precision highp float;
- layout(location=0) in vec2 corner;
- layout(location=1) in vec4 shape;
- layout(location=2) in vec4 pigment;
- layout(location=3) in vec2 extra;
- uniform vec2 res;
- out vec2 uv;out vec4 col;out vec2 seed;
- void main(){vec2 q=corner*shape.zw;float a=extra.x;vec2 p=vec2(q.x*cos(a)-q.y*sin(a),q.x*sin(a)+q.y*cos(a))+shape.xy;gl_Position=vec4(p.x/res.x*2.-1.,1.-p.y/res.y*2.,0.,1.);uv=corner;col=pigment;seed=extra;}`;
- const frag=`#version 300 es
- precision highp float;
- in vec2 uv;in vec4 col;in vec2 seed;out vec4 outColor;
- float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
- void main(){float x=uv.x,y=uv.y;float warp=.10*sin(x*9.+seed.y*19.)+.06*sin(x*21.+seed.y*31.);
- float width=.83+.12*sin(x*5.+seed.y*8.);float end=pow(abs(x),5.);
- float d=max(abs(y-warp)/width+end*.48,abs(x)*.98);
- float grain=hash(floor(vec2(x*95.,y*24.)+seed.y*71.));float bristle=sin(y*42.+sin(x*6.+seed.y*11.)*1.8)*.5+.5;
- float mask=1.-smoothstep(.77,.98,d+(grain-.5)*.13);
- float hi=(y-warp+.53)*5.;float lo=(y-warp-.58)*5.;float relief=.91+.12*bristle+.07*grain+.13*exp(-hi*hi)-.17*exp(-lo*lo);
- vec3 c=clamp(col.rgb*relief+vec3(.012*(grain-.5)),0.,1.);outColor=vec4(c,col.a*mask);}
- `;
- program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vert));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,frag));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
- vao=gl.createVertexArray();gl.bindVertexArray(vao);const quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,8,0);
- buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,instances.byteLength,gl.DYNAMIC_DRAW);
- for(const [i,n,off] of [[1,4,0],[2,4,16],[3,2,32]]){gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,n,gl.FLOAT,false,40,off);gl.vertexAttribDivisor(i,1)}
- gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.useProgram(program);gl.uniform2f(gl.getUniformLocation(program,'res'),W,H);
+ pg=makeProgram(vertex,feedback);display=makeProgram(vertex,present);vao=gl.createVertexArray();gl.bindVertexArray(vao);
+ flowTex=texture(GW,GH,flowBytes);strokeTex=texture(W,H);
+ for(let i=0;i<2;i++){let t=texture(W,H),fb=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Pigment framebuffer unavailable');gl.clearColor(.065,.071,.057,1);gl.clear(gl.COLOR_BUFFER_BIT);targets.push({t,fb})}
+ gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,W,H);gl.disable(gl.BLEND);
 }
-function resize(){const width=Math.min(phone?1100:2200,Math.max(480,stage.clientWidth*Math.min(devicePixelRatio||1,1.6)));art.width=width|0;art.height=Math.round(width*H/W);if(gl)gl.viewport(0,0,art.width,art.height)}
-new ResizeObserver(resize).observe(stage);
 function readFrame(){
- const scale=Math.max(W/video.videoWidth,H/video.videoHeight),ww=video.videoWidth*scale,hh=video.videoHeight*scale;
- sc.drawImage(video,(W-ww)/2,(H-hh)/2,ww,hh);
- const rgba=sc.getImageData(0,0,W,H).data, gray=new Float32Array(W*H);
- for(let i=0;i<gray.length;i++){let q=i*4;gray[i]=(.2126*rgba[q]+.7152*rgba[q+1]+.0722*rgba[q+2])/255}
- return {rgba,gray};
+ const scale=Math.max(SW/video.videoWidth,SH/video.videoHeight),w=video.videoWidth*scale,h=video.videoHeight*scale;
+ sc.drawImage(video,(SW-w)/2,(SH-h)/2,w,h);const data=sc.getImageData(0,0,SW,SH).data,gray=new Float32Array(SW*SH);
+ for(let i=0;i<gray.length;i++){let q=i*4;gray[i]=(.2126*data[q]+.7152*data[q+1]+.0722*data[q+2])/255}return {data,gray}
 }
-// Backward patch matching: locate a current patch in the preceding filmed frame,
-// then convert the displacement into forward motion. Coarse and fine search.
-function analyze(frame,previous){
- const out=new Float32Array(N*7), a=frame.gray,b=previous?.gray;
- for(let j=0;j<CH;j++)for(let i=0;i<CW;i++){
-  const x=clamp(i*G+G/2,15,W-16),y=clamp(j*G+G/2,15,H-16),k=(j*CW+i)*7;
-  let r=0,g=0,bl=0,xx=0,xy=0,yy=0;
-  for(let v=-3;v<=3;v++)for(let u=-3;u<=3;u++){const z=(y+v)*W+x+u,q=z*4; r+=frame.rgba[q];g+=frame.rgba[q+1];bl+=frame.rgba[q+2];const dx=a[z+1]-a[z-1],dy=a[z+W]-a[z-W];xx+=dx*dx;xy+=dx*dy;yy+=dy*dy}
-  out[k]=r/(49*255);out[k+1]=g/(49*255);out[k+2]=bl/(49*255);out[k+3]=.5*Math.atan2(2*xy,xx-yy)+Math.PI/2;
-  let best=Infinity,dx=0,dy=0,zero=0;
-  if(b&&xx+yy>.012){
-   const cost=(u,v)=>{let s=0;for(let py=-4;py<=4;py+=2)for(let px=-4;px<=4;px+=2){const z=(y+py)*W+x+px;let d=a[z]-b[z+v*W+u];s+=d*d}return s+.0007*(u*u+v*v)};
-   zero=cost(0,0);best=zero;
-   for(let v=-9;v<=9;v+=3)for(let u=-9;u<=9;u+=3){let c=cost(u,v);if(c<best){best=c;dx=u;dy=v}}
-   const ox=dx,oy=dy;for(let v=oy-2;v<=oy+2;v++)for(let u=ox-2;u<=ox+2;u++){let c=cost(u,v);if(c<best){best=c;dx=u;dy=v}}
+// Estimate current-to-previous displacement on textured patches. Adjacent
+// decoded samples are used, rather than skipping several seconds or reversing time.
+function analyze(frame,previous,old){
+ const a=frame.gray,b=previous?.gray,out=new Float32Array(GW*GH*6);
+ for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){
+  const x=clamp(i*G+4,14,SW-15),y=clamp(j*G+4,14,SH-15),k=(j*GW+i)*6;
+  let xx=0,xy=0,yy=0,change=0;
+  for(let v=-3;v<=3;v++)for(let u=-3;u<=3;u++){const z=(y+v)*SW+x+u,dx=a[z+1]-a[z-1],dy=a[z+SW]-a[z-SW];xx+=dx*dx;xy+=dx*dy;yy+=dy*dy;if(b)change+=Math.abs(a[z]-b[z])}
+  const theta=.5*Math.atan2(2*xy,xx-yy)+Math.PI/2;
+  out[k+2]=Math.cos(2*theta);out[k+3]=Math.sin(2*theta);out[k+4]=clamp((xx+yy)*1.25,0,1);out[k+5]=change/49;
+  let dx=0,dy=0,conf=0;
+  if(b&&xx+yy>.01&&change>.2){
+   const cost=(u,v)=>{let s=0;for(let py=-4;py<=4;py+=2)for(let px=-4;px<=4;px+=2){const z=(y+py)*SW+x+px,d=a[z]-b[z+v*SW+u];s+=d*d}return s+.00022*(u*u+v*v)};
+   const zero=cost(0,0);let best=zero;
+   for(let v=-8;v<=8;v+=2)for(let u=-8;u<=8;u+=2){let c=cost(u,v);if(c<best){best=c;dx=u;dy=v}}
+   const ox=dx,oy=dy;for(let v=oy-1;v<=oy+1;v++)for(let u=ox-1;u<=ox+1;u++){let c=cost(u,v);if(c<best){best=c;dx=u;dy=v}}
+   conf=zero>.008?clamp((zero-best)/zero,0,1):0;
   }
-  const conf=zero>.018?clamp((zero-best)/zero,0,1):0;
-  out[k+4]=-dx*conf;out[k+5]=-dy*conf;out[k+6]=clamp((xx+yy)*1.6,0,1);
+  out[k]=mix(old?old[k]:0,-dx*conf,.65);out[k+1]=mix(old?old[k+1]:0,-dy*conf,.65);
  }
- return out;
+ // Smooth neighboring directions without quantizing strokes to grid boundaries.
+ const sm=out.slice();
+ for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){let k=(j*GW+i)*6;for(let o=0;o<4;o++){let sum=out[k+o]*4,n=4;for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){let x=i+di,y=j+dj;if(x>=0&&x<GW&&y>=0&&y<GH){sum+=out[(y*GW+x)*6+o];n++}}sm[k+o]=sum/n}}
+ return sm
 }
-function at(field,x,y,o){let fx=clamp(x/G-.5,0,CW-1.001),fy=clamp(y/G-.5,0,CH-1.001),i=fx|0,j=fy|0,u=fx-i,v=fy-j,k=(j*CW+i)*7+o;return mix(mix(field[k],field[k+7],u),mix(field[k+CW*7],field[k+CW*7+7],u),v)}
-function makeAgents(){
- agents=[];for(let i=0;i<count;i++){
-  // Stratify large structural strokes, medium pigment masses, then fine marks.
-  const layer=i/count<.16?0:i/count<.60?1:2;
-  const x=rand()*W,y=rand()*H,scale=layer===0?mix(5,13,rand()):layer===1?mix(1.7,5.8,rand()):mix(.45,2.1,rand());
-  agents.push({x,y,ax:x,ay:y,scale,layer,aspect:mix(.15,.65,rand()),phase:rand()*6.283,seed:rand(),age:rand()*20,life:mix(14,48,rand()),a:0,r:0,g:0,b:0,vr:0,vv:0});
+function at(f,x,y,o){
+ const fx=clamp(x/G-.5,0,GW-1.001),fy=clamp(y/G-.5,0,GH-1.001),i=fx|0,j=fy|0,u=fx-i,v=fy-j,k=(j*GW+i)*6+o;
+ return mix(mix(f[k],f[k+6],u),mix(f[k+GW*6],f[k+GW*6+6],u),v)
+}
+function updateField(){
+ if(video.readyState<2||video.currentTime===sourceTime)return;
+ if(sourceTime>=0&&(video.currentTime<sourceTime||video.currentTime-sourceTime>.5)){prev=null;field=null}
+ sourceTime=video.currentTime;const f=readFrame();field=analyze(f,prev,field);prev=f;rgba=f.data;
+ for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){let k=(j*GW+i)*6,z=((GH-1-j)*GW+i)*4;flowBytes[z]=clamp(Math.round(128+field[k]*12),0,255);flowBytes[z+1]=clamp(Math.round(128-field[k+1]*12),0,255);flowBytes[z+2]=Math.round(field[k+4]*255);flowBytes[z+3]=255}
+ gl.bindTexture(gl.TEXTURE_2D,flowTex);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,GW,GH,gl.RGBA,gl.UNSIGNED_BYTE,flowBytes)
+}
+function color(x,y,radius){
+ let R=0,B=0,C=0,n=0;for(const [u,v] of [[0,0],[-.7,-.2],[.6,.4],[-.2,.7],[.3,-.6]]){let i=(clamp((y+v*radius)|0,0,SH-1)*SW+clamp((x+u*radius)|0,0,SW-1))*4;R+=rgba[i];C+=rgba[i+1];B+=rgba[i+2];n++}
+ return [R/n,C/n,B/n]
+}
+function direction(x,y,ab){
+ const vx=at(field,x,y,0),vy=at(field,x,y,1),motion=Math.hypot(vx,vy);
+ let a=.5*Math.atan2(at(field,x,y,3),at(field,x,y,2));
+ const d=Math.atan2(vy,vx),blend=clamp(motion*.65,0,.86);
+ a+=.5*Math.atan2(Math.sin(2*(d-a)),Math.cos(2*(d-a)))*blend;
+ const gesture=Math.sin(x*.035+y*.018+clock*.14)+Math.sin(y*.075-x*.025-clock*.11);
+ return a+gesture*.40*ab
+}
+function stroke(x,y,size,ab,alpha){
+ const sx=W/SW,sy=H/SH, motion=Math.hypot(at(field,x,y,0),at(field,x,y,1)),edge=at(field,x,y,4);
+ const len=size*rand(1.1,3.1)*(1+Math.min(motion,3)*.14),width=Math.max(.48,size*rand(.38,.92)),step=len/5;
+ const col=color(x,y,width*1.2),lum=col[0]*.2126+col[1]*.7152+col[2]*.0722;
+ const sat=1.08+ab*.32,tint=rand(-10,10),rgb=col.map(c=>clamp(lum+(c-lum)*sat+tint,0,255));
+ const css=(delta)=>'rgb('+rgb.map(c=>Math.round(clamp(c+delta,0,255))).join(',')+')';
+ let points=[[x,y]],a=direction(x,y,ab),px=x,py=y;
+ for(let i=0;i<5;i++){let want=direction(px,py,ab);a+=.5*Math.atan2(Math.sin(2*(want-a)),Math.cos(2*(want-a)))*.65;a+=Math.sin(i*.9+clock*.24+x*.05)*ab*.09;px=clamp(px+Math.cos(a)*step,0,SW-1);py=clamp(py+Math.sin(a)*step,0,SH-1);points.push([px,py]);if(i>1&&edge>.40&&Math.abs(color(px,py,1)[1]-col[1])>65)break}
+ if(points.length<2)return;
+ // Build a tapered continuous ribbon, with asymmetrical edges and an unbroken bristle path.
+ const left=[],right=[];for(let i=0;i<points.length;i++){const p=points[i],p0=points[Math.max(0,i-1)],p1=points[Math.min(points.length-1,i+1)],theta=Math.atan2(p1[1]-p0[1],p1[0]-p0[0]),u=i/(points.length-1),w=width*(.26+.74*Math.pow(Math.sin(Math.PI*(u*.9+.05)),.45))*rand(.85,1.14);left.push([p[0]-Math.sin(theta)*w,p[1]+Math.cos(theta)*w]);right.push([p[0]+Math.sin(theta)*w,p[1]-Math.cos(theta)*w])}
+ bc.globalAlpha=alpha;bc.fillStyle=css(0);bc.beginPath();bc.moveTo(left[0][0]*sx,left[0][1]*sy);for(let i=1;i<left.length;i++)bc.lineTo(left[i][0]*sx,left[i][1]*sy);for(let i=right.length-1;i>=0;i--)bc.lineTo(right[i][0]*sx,right[i][1]*sy);bc.closePath();bc.fill();
+ // Pigment bristles follow the same curved path instead of straight decorative lines.
+ if(size>1.8){for(let j=0;j<3;j++){const f=(j+1)/4,delta=j===0?rand(9,22):j===2?rand(-22,-8):rand(-7,7);bc.globalAlpha=alpha*rand(.15,.32);bc.lineWidth=Math.max(.5,width*sx*rand(.055,.12));bc.strokeStyle=css(delta);bc.lineCap='round';bc.lineJoin='round';bc.beginPath();for(let i=0;i<points.length;i++){let X=mix(left[i][0],right[i][0],f)*sx,Y=mix(left[i][1],right[i][1],f)*sy;i?bc.lineTo(X,Y):bc.moveTo(X,Y)}bc.stroke()}}
+ bc.globalAlpha=1
+}
+function deposit(ab,first){
+ bc.clearRect(0,0,W,H);
+ if(first){
+ // Opaque underpainting made from broad colour patches; never copy raw footage.
+ for(let y=0;y<SH;y+=6)for(let x=0;x<SW;x+=6){const c=color(x+3,y+3,4);bc.fillStyle='rgb('+c.map(v=>Math.round(v*.84)).join(',')+')';bc.fillRect(x*W/SW,y*H/SH,Math.ceil(6*W/SW),Math.ceil(6*H/SH))}
+ for(const [spacing,size] of [[9,8],[5,4.1],[3,1.9]])for(let y=0;y<SH;y+=spacing)for(let x=0;x<SW;x+=spacing)stroke(clamp(x+rand(-2,spacing),0,SW-1),clamp(y+rand(-2,spacing),0,SH-1),size*(.85+ab*.4),ab,.94)
+ }else{
+ const n=phone?280:620;
+ for(let i=0;i<n;i++){let x=rand(0,SW),y=rand(0,SH),motion=Math.hypot(at(field,x,y,0),at(field,x,y,1)),change=at(field,x,y,5),edge=at(field,x,y,4);
+  // Slow renewal in quiet areas; movement deposits more pigment. Large and fine marks coexist.
+  const zone=.5+.5*Math.sin(x*.019+y*.023+clock*.09);
+  if(rand()>clamp(.26+motion*.20+change*2.7+zone*.16,0,1))continue;
+  const u=rand(),sz=u<.20?rand(4.5,10):u<.68?rand(1.9,4.8):rand(.55,1.85);
+  stroke(x,y,sz*(.7+ab*.85)*(1-edge*.32),ab,rand(.36,.78))
  }
-}
-function resetAgent(a,f){a.x=clamp(a.ax+(rand()-.5)*10,0,W);a.y=clamp(a.ay+(rand()-.5)*10,0,H);a.age=0;a.a=at(f,a.x,a.y,3);a.r=at(f,a.x,a.y,0);a.g=at(f,a.x,a.y,1);a.b=at(f,a.x,a.y,2);a.vr=0;a.vv=0}
-function seedPainting(f){makeAgents();for(const a of agents){resetAgent(a,f);a.age=rand()*a.life*.85}bg=[at(f,W*.5,H*.5,0)*.24,at(f,W*.5,H*.5,1)*.24,at(f,W*.5,H*.5,2)*.24];ready=true;message.textContent=''}
-function draw(dt){
- if(!bank.length||!ready)return;
- const ab=+$('amount').value/100, n=bank.length;
- // Walk recorded time nonlinearly: independent painting time, no video playback needed.
- const position=(clock*(2.1+ab*1.4))%Math.max(1,2*(n-1)), q=position>n-1?2*(n-1)-position:position;
- const ia=clamp(Math.floor(q),0,n-1),ib=Math.min(n-1,ia+1),blend=q-ia,f=bank[ia],f2=bank[ib];
- for(let i=0;i<count;i++){
-  const a=agents[i];a.age+=dt;
-  if(a.age>a.life||a.x<-7||a.y<-7||a.x>W+7||a.y>H+7)resetAgent(a,f);
-  const x=a.x,y=a.y, fx=mix(at(f,x,y,4),at(f2,x,y,4),blend),fy=mix(at(f,x,y,5),at(f2,x,y,5),blend);
-  const motion=Math.hypot(fx,fy),noise=Math.sin(x*.047+y*.036+clock*.17+a.phase*.2);
-  const spring=.10+(1-ab)*.65, force=1.2+ab*3.7;
-  const targetX=fx*force+(a.ax-x)*spring+Math.sin(noise*2+a.phase)*ab*.42;
-  const targetY=fy*force+(a.ay-y)*spring+Math.cos(noise*2+a.phase)*ab*.42;
-  a.vr=mix(a.vr,targetX,Math.min(1,dt*3));a.vv=mix(a.vv,targetY,Math.min(1,dt*3));
-  a.x+=a.vr*dt;a.y+=a.vv*dt;
-  const orientation=at(f,x,y,3), fa=Math.atan2(a.vv,a.vr), direction=orientation+Math.atan2(Math.sin(2*(fa-orientation)),Math.cos(2*(fa-orientation)))*.5*clamp(motion*.34,0,.85);
-  a.a+=Math.atan2(Math.sin(2*(direction-a.a)),Math.cos(2*(direction-a.a)))*.5*Math.min(1,dt*2.5);
-  // Pigment retains its own colour while it migrates; only slowly exchanges colour with local observations.
-  const px=mix(a.ax,x,.25+ab*.35),py=mix(a.ay,y,.25+ab*.35),adapt=dt*(.12+(1-ab)*1.7);
-  a.r=mix(a.r,mix(at(f,px,py,0),at(f2,px,py,0),blend),adapt);a.g=mix(a.g,mix(at(f,px,py,1),at(f2,px,py,1),blend),adapt);a.b=mix(a.b,mix(at(f,px,py,2),at(f2,px,py,2),blend),adapt);
-  const e=at(f,x,y,6), sz=a.scale*(.76+ab*.72)*(1+clamp(motion*.18,0,.8))*(1-e*(a.layer===2?.30:.14));
-  const lum=.2126*a.r+.7152*a.g+.0722*a.b,sat=1.04+ab*.29, tint=(a.seed-.5)*.09;
-  const k=i*10;instances[k]=a.x;instances[k+1]=a.y;instances[k+2]=sz;instances[k+3]=sz*a.aspect*(1+.14*Math.sin(clock*.8+a.phase));instances[k+4]=clamp(lum+(a.r-lum)*sat+tint,0,1);instances[k+5]=clamp(lum+(a.g-lum)*sat+tint,0,1);instances[k+6]=clamp(lum+(a.b-lum)*sat+tint,0,1);instances[k+7]=Math.min(1,a.age*1.4,(a.life-a.age)*.7)*(.77+a.seed*.23);instances[k+8]=a.a;instances[k+9]=a.seed;
  }
- gl.clearColor(bg[0],bg[1],bg[2],1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(program);gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferSubData(gl.ARRAY_BUFFER,0,instances);gl.drawArraysInstanced(gl.TRIANGLES,0,6,count);
+ gl.bindTexture(gl.TEXTURE_2D,strokeTex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,brush);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false)
 }
-function animate(now){requestAnimationFrame(animate);if(!running||!visible||document.hidden||sourceMode||!ready){last=now;return}if(now-last<25)return;const dt=last?Math.min(.06,(now-last)/1000):.033;last=now;clock+=dt;draw(dt)}
-function waitEvent(event,token,timeout=12000){return new Promise((resolve,reject)=>{let id;const finish=(err)=>{clearTimeout(id);video.removeEventListener(event,ok);video.removeEventListener('error',bad);err?reject(err):resolve()};const ok=()=>finish(token===epoch?null:Error('cancelled'));const bad=()=>finish(Error('video decode or network error'));video.addEventListener(event,ok,{once:true});video.addEventListener('error',bad,{once:true});id=setTimeout(()=>finish(Error('video timeout')),timeout)})}
-async function load(url,token){
- video.pause();video.classList.remove('show');sourceMode=false;$('compare').textContent='Source';
- const loaded=waitEvent('loadeddata',token);video.src=url;video.load();await loaded;
- if(token!==epoch)throw Error('cancelled');
- sample.width=W;sample.height=H;sc=sample.getContext('2d',{willReadFrequently:true});
- const first=readFrame();if(!Number.isFinite(video.duration)||video.duration<=0)throw Error('finite video required');return first;
+function render(dt,first){
+ const ab=clamp(+$('amount').value/100+Math.sin(clock*.12)*.11,0,1);deposit(ab,first);
+ const next=1-front;gl.bindFramebuffer(gl.FRAMEBUFFER,targets[next].fb);gl.useProgram(pg);
+ bind(pg,'previous',targets[front].t,0);bind(pg,'flow',flowTex,1);bind(pg,'marks',strokeTex,2);
+ gl.uniform2f(gl.getUniformLocation(pg,'px'),1/W,1/H);gl.uniform1f(gl.getUniformLocation(pg,'dt'),dt);gl.uniform1f(gl.getUniformLocation(pg,'ab'),ab);gl.uniform1f(gl.getUniformLocation(pg,'time'),clock);gl.uniform1f(gl.getUniformLocation(pg,'first'),first?1:0);gl.drawArrays(gl.TRIANGLES,0,3);front=next;
+ gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.useProgram(display);bind(display,'image',targets[front].t,0);gl.uniform2f(gl.getUniformLocation(display,'px'),1/W,1/H);gl.drawArrays(gl.TRIANGLES,0,3)
 }
-async function scan(first,token){
- analyzing=true;bank=[];prev=first;bank.push(analyze(first,null));seedPainting(bank[0]);clock=0;
- const duration=Math.min(Math.max(.001,video.duration-.04),40), frames=Math.max(2,Math.min(150,Math.ceil(duration/.16))), step=duration/frames;
- for(let i=1;i<=frames;i++){
-  if(token!==epoch)return;
-  const seek=waitEvent('seeked',token,10000);video.currentTime=Math.min(duration,i*step);await seek;if(token!==epoch)return;
-  const frame=readFrame(), field=analyze(frame,prev);prev=frame;bank.push(field);
-  status.textContent='Extracting filmed motion · '+Math.round(i/frames*100)+'% · '+bank.length+' fields';
-  await new Promise(r=>setTimeout(r,0));
- }
- analyzing=false;status.textContent='Live simulation · '+bank.length+' recorded motion fields · '+count.toLocaleString()+' persistent strokes';video.currentTime=0;
+function animate(now){
+ requestAnimationFrame(animate);if(!loaded||paused||!visible||document.hidden||sourceMode){last=now;return}if(now-last<38)return;
+ const dt=last?Math.min(.075,(now-last)/1000):.04;last=now;clock+=dt;
+ try{if(now-lastAnalysis>90||initial){updateField();lastAnalysis=now}if(!field)return;render(dt,initial);initial=false;frameCount++;if(frameCount%100===0)status.textContent='Live · persistent pigment · normal-speed source'}catch(e){loaded=false;video.pause();message.textContent='Rendering stopped: '+e.message;status.textContent='Source or rendering error'}
 }
+function waitLoaded(token){return new Promise((resolve,reject)=>{let timer;const end=e=>{clearTimeout(timer);video.removeEventListener('loadeddata',ok);video.removeEventListener('error',bad);e?reject(e):resolve()};const ok=()=>end(token===epoch?null:Error('cancelled'));const bad=()=>end(Error('video network or decode error'));video.addEventListener('loadeddata',ok);video.addEventListener('error',bad);timer=setTimeout(()=>end(Error('video loading timeout')),14000)})}
 async function start(urls){
- const token=++epoch;ready=false;analyzing=false;bank=[];message.textContent='Loading real footage…';status.textContent='Preparing recorded motion';let err;
- for(const url of urls){
-  try{const first=await load(url,token);if(token!==epoch)return;await scan(first,token);return}catch(e){if(token!==epoch)return;err=e;ready=false;bank=[]}
- }
- if(token!==epoch)return;analyzing=false;message.textContent='Footage unavailable. Choose a local MP4 or WebM to run the experiment.';status.textContent='Source could not be analyzed · '+(err?.message||'unknown error');
+ const token=++epoch;loaded=false;video.pause();sourceMode=false;video.classList.remove('show');$('compare').textContent='Source';message.textContent='Loading original footage…';status.textContent='Preparing real-time source';let error;
+ for(const url of urls){try{const pending=waitLoaded(token);video.src=url;video.load();await pending;if(token!==epoch)return;sample.width=SW;sample.height=SH;sc=sample.getContext('2d',{willReadFrequently:true});readFrame();prev=null;field=null;initial=true;sourceTime=-1;clock=0;frameCount=0;loaded=true;message.textContent='';status.textContent='Live · persistent pigment · normal-speed source';video.playbackRate=1;if(!paused&&visible&&!document.hidden)try{await video.play()}catch(e){paused=true;$('pause').textContent='Play';status.textContent='Footage ready · press Play'}return}catch(e){if(token!==epoch)return;error=e}}
+ message.textContent='Could not access footage. Load a local normal-speed MP4 or WebM.';status.textContent=error?.message||'Source unavailable'
 }
-$('clip').onchange=()=>start(clips[$('clip').value]);
+$('clip').onchange=()=>start(clipURLs($('clip').value));
 $('file').onchange=()=>{const f=$('file').files[0];if(!f)return;if(objectURL)URL.revokeObjectURL(objectURL);objectURL=URL.createObjectURL(f);start([objectURL])};
-$('compare').onclick=()=>{if(analyzing){status.textContent='Source view available after motion extraction';return}if(!ready)return;sourceMode=!sourceMode;video.classList.toggle('show',sourceMode);$('compare').textContent=sourceMode?'Painting':'Source';if(sourceMode){video.loop=true;video.play().catch(()=>{})}else video.pause()};
-$('pause').onclick=()=>{running=!running;$('pause').textContent=running?'Pause':'Play';if(sourceMode){if(running)video.play().catch(()=>{});else video.pause()}};
+$('compare').onclick=()=>{if(!loaded)return;sourceMode=!sourceMode;video.classList.toggle('show',sourceMode);$('compare').textContent=sourceMode?'Painting':'Source';if(!sourceMode){prev=null;field=null;sourceTime=-1}};
+$('reset').onclick=()=>{initial=true;prev=null;field=null;sourceTime=-1};
+$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'Play':'Pause';if(paused)video.pause();else if(loaded)video.play().catch(()=>{})};
 $('full').onclick=async()=>{if(document.fullscreenElement){await document.exitFullscreen();return}if(stage.classList.contains('expanded')){stage.classList.remove('expanded');return}try{if(stage.requestFullscreen)await stage.requestFullscreen();else stage.classList.add('expanded')}catch(e){stage.classList.add('expanded')}};
-stage.addEventListener('click',()=>{if(stage.classList.contains('expanded'))stage.classList.remove('expanded')});document.addEventListener('keydown',e=>{if(e.key==='Escape')stage.classList.remove('expanded')});
-new IntersectionObserver(e=>{visible=e[0].isIntersecting;if(!visible&&sourceMode)video.pause();else if(visible&&sourceMode&&running)video.play().catch(()=>{})}).observe(stage);
-document.addEventListener('visibilitychange',()=>{if(document.hidden)video.pause();else if(sourceMode&&running&&visible)video.play().catch(()=>{})});
-try{initGL();resize();requestAnimationFrame(animate);start(clips.night)}catch(e){message.textContent='WebGL initialization failed: '+e.message;status.textContent='Renderer unavailable'}
+stage.addEventListener('click',()=>{if(stage.classList.contains('expanded'))stage.classList.remove('expanded')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')stage.classList.remove('expanded')});
+function syncPlayback(){if(paused||!visible||document.hidden)video.pause();else if(loaded)video.play().catch(()=>{})}
+new IntersectionObserver(e=>{visible=e[0].isIntersecting;syncPlayback()}).observe(stage);document.addEventListener('visibilitychange',syncPlayback);
+try{init();requestAnimationFrame(animate);start(clipURLs('flowers'))}catch(e){message.textContent='Renderer unavailable: '+e.message;status.textContent='WebGL initialization error'}
 </script></body></html>
