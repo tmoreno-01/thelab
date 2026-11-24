@@ -1,103 +1,157 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fff">
-<title>lab — field studies</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lab — urban studies</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:white;color:#111;font:14px Arial,Helvetica,sans-serif}header{padding:24px 28px}h1{font-size:24px;font-weight:500;letter-spacing:-.055em;margin:0}h1 a{color:inherit;text-decoration:none}main{margin:0 28px 28px;max-width:1800px}.stage{background:#121811;position:relative;aspect-ratio:16/9;overflow:hidden}.stage canvas{display:block;width:100%;height:100%;object-fit:contain}.stage:fullscreen{width:100vw;height:100vh;aspect-ratio:auto}.bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 0}.title{font-size:14px;letter-spacing:-.025em}.sub{font-size:11px;color:#777;margin-top:5px}.controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap}button,label.upload{font:inherit;font-size:12px;border:0;background:none;padding:5px 0;cursor:pointer;color:#333;text-decoration:underline;text-underline-offset:3px}button:focus-visible,label:focus-within{outline:2px solid #555}input[type=file]{position:absolute;width:1px;height:1px;opacity:0}input[type=range]{width:85px;accent-color:#222}details{color:#777;font-size:11px;line-height:1.6}details a{color:inherit}#video{display:none}@media(max-width:600px){header{padding:20px}main{margin:0 20px 20px}.controls{gap:10px}.bar{align-items:flex-start}} 
-</style>
-</head><body>
-<header><h1><a href="./">lab</a></h1></header><main>
-<div class="stage" id="stage"><canvas id="art" aria-label="Continuously evolving computational painting"></canvas></div>
-<div class="bar"><div><div class="title">001 — field studies</div><div class="sub" id="status" role="status">Preparing source…</div></div><div class="controls"><button id="view">Source</button><label>Abstraction <input id="abstraction" type="range" min="0" max="100" value="65"></label><label class="upload">Load footage<input id="file" type="file" accept="video/*"></label><button id="pause">Pause</button><button id="full">Fullscreen</button></div></div>
-<details><summary>Source &amp; process</summary>Live computational painting. Local gradient structure and estimated optical flow guide multiscale pigment strokes. Default footage: <a href="https://commons.wikimedia.org/wiki/File:Purple_flowers.webm">Purple flowers</a> by <a href="https://www.youtube.com/user/Editor">Editor</a>, <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>, transformed in real time. If remote footage is unavailable, a generated botanical motion field is used as a clearly labelled fallback. Uploaded footage stays on your device. Inspired by the approach of Quayola's <i>Jardins d’Été</i>; independently implemented.</details>
-<video id="video" muted loop playsinline crossorigin="anonymous" preload="auto"></video>
-</main>
-<script>
+*{box-sizing:border-box}body{margin:0;color:#111;background:#fff;font:14px Arial,sans-serif}header{padding:24px 28px}h1{font-size:24px;font-weight:500;letter-spacing:-.055em;margin:0}h1 a{color:inherit;text-decoration:none}main{margin:0 28px 28px;max-width:1920px}.stage{aspect-ratio:16/9;background:#121212;position:relative;overflow:hidden}canvas,video{width:100%;height:100%;display:block;object-fit:contain}video{position:absolute;inset:0;display:none;background:#111}video.show{display:block}.stage:fullscreen,.stage.expanded{width:100vw;height:100dvh;aspect-ratio:auto}.stage.expanded{position:fixed;inset:0;z-index:20}.bar,.controls{display:flex;align-items:center;gap:15px;flex-wrap:wrap}.bar{justify-content:space-between;padding:12px 0}.sub,details{font-size:11px;color:#666;line-height:1.6}button,select,label{font:inherit;font-size:12px}button{border:0;background:none;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:5px}input[type=range]{width:85px;accent-color:#222}input[type=file]{max-width:175px}a{color:inherit}#message{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#ddd;text-align:center;font-size:12px;max-width:80%;pointer-events:none}#message:empty{display:none}@media(max-width:600px){header{padding:20px}main{margin:0 20px 20px}.controls{gap:8px}}
+</style></head><body><header><h1><a href="./">lab</a></h1></header><main>
+<div class="stage" id="stage"><canvas id="art" aria-label="Motion-driven computational painting"></canvas><video id="source" muted playsinline preload="auto" crossorigin="anonymous"></video><div id="message">Loading filmed movement…</div></div>
+<div class="bar"><div>001 — urban studies<div class="sub" id="status" role="status">Preparing motion analysis</div></div><div class="controls"><select id="clip" aria-label="Source footage"><option value="night">Manhattan · night traffic</option><option value="avenue">10th Avenue · elevated</option></select><label>Local footage <input type="file" id="file" accept="video/*"></label><label>Abstraction <input type="range" id="amount" min="0" max="100" value="58"></label><button id="compare">Source</button><button id="pause">Pause</button><button id="full">Fullscreen</button></div></div>
+<details><summary>Process / footage credits</summary><p>Real filmed motion → sampled colour and structure → multiscale patch-based optical flow → a bank of recorded vector fields → autonomous persistent brush simulation. No original video pixels are composited into the painting. The source view is a separate diagnostic. Inspired by the documented methodology of <a href="https://quayola.com/jardins-dete/">Quayola’s Jardins d’Été</a>; this is an independent implementation, not his software.</p><p>Night traffic: <a href="https://commons.wikimedia.org/wiki/File:NYC_congestion_pricing_-_cars_cross_after_midnight_2.webm">NYC congestion pricing – cars cross after midnight 2</a>, Legoktm, <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Painted adaptation under CC BY-SA 4.0. Elevated traffic: <a href="https://commons.wikimedia.org/wiki/File:Time-lapse_above_10th_Avenue,_New_York.ogv">Time-lapse above 10th Avenue, New York</a>, Vincent Lim Show Chen, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC BY-SA 2.0</a>. Painted adaptation under CC BY-SA 2.0. Local footage is never uploaded. Use footage you have rights to.</p></details>
+</main><script>
 'use strict';
-const $=id=>document.getElementById(id), art=$('art'), stage=$('stage'), video=$('video'), status=$('status');
-const W=matchMedia('(max-width: 700px)').matches?960:1600,H=W*9/16|0, SW=320,SH=180;
-art.width=W;art.height=H;
-const ctx=art.getContext('2d',{alpha:false}), paint=document.createElement('canvas'), src=document.createElement('canvas');
-paint.width=W;paint.height=H;src.width=SW;src.height=SH;
-const p=paint.getContext('2d',{alpha:false}), s=src.getContext('2d',{willReadFrequently:true,alpha:false});
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), rand=(a,b)=>a+Math.random()*(b-a);
-let prev=new Float32Array(SW*SH), gray=new Float32Array(SW*SH), pixels, havePrev=false;
-const GS=8,GW=Math.ceil(SW/GS),GH=Math.ceil(SH/GS), vx=new Float32Array(GW*GH),vy=new Float32Array(GW*GH), ang=new Float32Array(GW*GH),edge=new Float32Array(GW*GH);
-let source='fallback', playing=true, showingSource=false, visible=true, initialized=false, t=0,last=0,lastVideoTime=-1,objectURL=null,request=0,sourceTimer,remoteAttempt=0;
-let seed=41729;function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}
-const leaves=Array.from({length:240},()=>({x:random()*SW,y:SH*(.2+random()*.86),l:5+random()*18,a:random()*6.28,w:2+random()*4,c:random(),phase:random()*6.28}));
-const flowers=Array.from({length:39},()=>({x:random()*SW,y:20+random()*137,r:3+random()*9,phase:random()*6.28,palette:Math.floor(random()*4),petals:5+Math.floor(random()*5)}));
-const petalPal=[['#563c64','#ac769b','#e7b4bc'],['#655a83','#b6a9ca','#e5d9e1'],['#6c3c42','#bb6766','#efad91'],['#77713c','#c3b16f','#f0dbaf']];
-function botanical(time){
- const bg=s.createLinearGradient(0,0,SW,SH);bg.addColorStop(0,'#111b19');bg.addColorStop(.55,'#24352c');bg.addColorStop(1,'#0a1516');s.fillStyle=bg;s.fillRect(0,0,SW,SH);
- for(const l of leaves){let x=l.x+Math.sin(time*.8+l.phase)*3,y=l.y+Math.cos(time*.6+l.phase)*2;s.save();s.translate(x,y);s.rotate(l.a+Math.sin(time+l.phase)*.18);s.fillStyle=['#314936','#536347','#72805a','#203b31'][Math.floor(l.c*4)];s.beginPath();s.ellipse(0,0,l.l,l.w,0,0,Math.PI*2);s.fill();s.restore()}
- for(const f of flowers){const wind=Math.sin(time*1.05+f.phase)*6+Math.sin(time*.41+f.x*.04)*5,x=f.x+wind,y=f.y+Math.sin(time*.83+f.phase)*2;s.strokeStyle='#566747';s.lineWidth=1.1;s.beginPath();s.moveTo(f.x+9,SH+5);s.quadraticCurveTo(f.x+wind*.3,(y+SH)/2,x,y);s.stroke();let colors=petalPal[f.palette];for(let k=0;k<f.petals;k++){let a=k*6.283/f.petals+f.phase+Math.sin(time*.8+f.phase)*.17;s.save();s.translate(x+Math.cos(a)*f.r*.67,y+Math.sin(a)*f.r*.58);s.rotate(a);s.fillStyle=colors[(k+f.palette)%3];s.beginPath();s.ellipse(0,0,f.r*.78,f.r*.35,0,0,6.283);s.fill();s.restore()}s.fillStyle='#bba171';s.beginPath();s.arc(x,y,f.r*.23,0,6.283);s.fill()}
+const $=id=>document.getElementById(id), art=$('art'), video=$('source'), stage=$('stage'), status=$('status'), message=$('message');
+const clips={
+night:['https://upload.wikimedia.org/wikipedia/commons/transcoded/a/a0/NYC_congestion_pricing_-_cars_cross_after_midnight_2.webm/NYC_congestion_pricing_-_cars_cross_after_midnight_2.webm.720p.vp9.webm','https://upload.wikimedia.org/wikipedia/commons/a/a0/NYC_congestion_pricing_-_cars_cross_after_midnight_2.webm'],
+avenue:['https://upload.wikimedia.org/wikipedia/commons/transcoded/b/b9/Time-lapse_above_10th_Avenue%2C_New_York.ogv/Time-lapse_above_10th_Avenue%2C_New_York.ogv.720p.vp9.webm','https://upload.wikimedia.org/wikipedia/commons/b/b9/Time-lapse_above_10th_Avenue%2C_New_York.ogv']};
+const W=320,H=180,G=8,CW=W/G,CH=Math.ceil(H/G),N=CW*CH;
+const sample=document.createElement('canvas');sample.width=W;sample.height=H;
+let sc=sample.getContext('2d',{willReadFrequently:true}), bank=[], prev=null, lastField=null, epoch=0, running=true, visible=true, sourceMode=false, analyzing=false, objectURL=null, ready=false, clock=0, last=0;
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)), mix=(a,b,t)=>a+(b-a)*t, rand=()=>Math.random();
+const phone=matchMedia('(max-width:700px)').matches, count=phone?13000:30000;
+const gl=art.getContext('webgl2',{alpha:false,antialias:false,preserveDrawingBuffer:false});
+let program,vao,buffer,instances=new Float32Array(count*10), agents=[], bg=[.055,.05,.048];
+function shader(type,code){const s=gl.createShader(type);gl.shaderSource(s,code);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
+function initGL(){
+ if(!gl)throw Error('WebGL 2 unavailable');
+ const vert=`#version 300 es
+ precision highp float;
+ layout(location=0) in vec2 corner;
+ layout(location=1) in vec4 shape;
+ layout(location=2) in vec4 pigment;
+ layout(location=3) in vec2 extra;
+ uniform vec2 res;
+ out vec2 uv;out vec4 col;out vec2 seed;
+ void main(){vec2 q=corner*shape.zw;float a=extra.x;vec2 p=vec2(q.x*cos(a)-q.y*sin(a),q.x*sin(a)+q.y*cos(a))+shape.xy;gl_Position=vec4(p.x/res.x*2.-1.,1.-p.y/res.y*2.,0.,1.);uv=corner;col=pigment;seed=extra;}`;
+ const frag=`#version 300 es
+ precision highp float;
+ in vec2 uv;in vec4 col;in vec2 seed;out vec4 outColor;
+ float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+ void main(){float x=uv.x,y=uv.y;float warp=.10*sin(x*9.+seed.y*19.)+.06*sin(x*21.+seed.y*31.);
+ float width=.83+.12*sin(x*5.+seed.y*8.);float end=pow(abs(x),5.);
+ float d=max(abs(y-warp)/width+end*.48,abs(x)*.98);
+ float grain=hash(floor(vec2(x*95.,y*24.)+seed.y*71.));float bristle=sin(y*42.+sin(x*6.+seed.y*11.)*1.8)*.5+.5;
+ float mask=1.-smoothstep(.77,.98,d+(grain-.5)*.13);
+ float relief=.91+.12*bristle+.07*grain+.13*exp(-pow((y-warp+.53)*5.,2.))-.17*exp(-pow((y-warp-.58)*5.,2.));
+ vec3 c=clamp(col.rgb*relief+vec3(.012*(grain-.5)),0.,1.);outColor=vec4(c,col.a*mask);}
+ `;
+ program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vert));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,frag));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
+ vao=gl.createVertexArray();gl.bindVertexArray(vao);const quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,8,0);
+ buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,instances.byteLength,gl.DYNAMIC_DRAW);
+ for(const [i,n,off] of [[1,4,0],[2,4,16],[3,2,32]]){gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,n,gl.FLOAT,false,40,off);gl.vertexAttribDivisor(i,1)}
+ gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.useProgram(program);gl.uniform2f(gl.getUniformLocation(program,'res'),W,H);
 }
-function resetMotion(){havePrev=false;vx.fill(0);vy.fill(0);lastVideoTime=-1;initialized=false}
-function sourceFrame(){
- if(source!=='fallback'&&video.readyState>=2){
-  if(lastVideoTime>=0&&video.currentTime+0.1<lastVideoTime)havePrev=false;
-  lastVideoTime=video.currentTime;
-  const scale=Math.max(SW/video.videoWidth,SH/video.videoHeight),w=video.videoWidth*scale,h=video.videoHeight*scale;
-  try{s.drawImage(video,(SW-w)/2,(SH-h)/2,w,h);pixels=s.getImageData(0,0,SW,SH).data;return}
-  catch(e){switchFallback('Video cannot be sampled — generated source');}
- }
- botanical(t);pixels=s.getImageData(0,0,SW,SH).data;
+function resize(){const width=Math.min(phone?1100:2200,Math.max(480,stage.clientWidth*Math.min(devicePixelRatio||1,1.6)));art.width=width|0;art.height=Math.round(width*H/W);if(gl)gl.viewport(0,0,art.width,art.height)}
+new ResizeObserver(resize).observe(stage);
+function readFrame(){
+ const scale=Math.max(W/video.videoWidth,H/video.videoHeight),ww=video.videoWidth*scale,hh=video.videoHeight*scale;
+ sc.drawImage(video,(W-ww)/2,(H-hh)/2,ww,hh);
+ const rgba=sc.getImageData(0,0,W,H).data, gray=new Float32Array(W*H);
+ for(let i=0;i<gray.length;i++){let q=i*4;gray[i]=(.2126*rgba[q]+.7152*rgba[q+1]+.0722*rgba[q+2])/255}
+ return {rgba,gray};
 }
-function analyze(){
- for(let i=0;i<gray.length;i++){let j=i*4;gray[i]=(.2126*pixels[j]+.7152*pixels[j+1]+.0722*pixels[j+2])/255}
- for(let gy=0;gy<GH;gy++)for(let gx=0;gx<GW;gx++){
-  let xx=clamp(gx*GS+4,3,SW-4),yy=clamp(gy*GS+4,3,SH-4),a=0,b=0,c=0,d=0,e=0;
-  for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){
-   let k=(yy+j)*SW+xx+i,dx=(gray[k+1]-gray[k-1])*.5,dy=(gray[k+SW]-gray[k-SW])*.5,dt=havePrev?gray[k]-prev[k]:0;a+=dx*dx;b+=dx*dy;c+=dy*dy;d+=dx*dt;e+=dy*dt
+// Backward patch matching: locate a current patch in the preceding filmed frame,
+// then convert the displacement into forward motion. Coarse and fine search.
+function analyze(frame,previous){
+ const out=new Float32Array(N*7), a=frame.gray,b=previous?.gray;
+ for(let j=0;j<CH;j++)for(let i=0;i<CW;i++){
+  const x=clamp(i*G+G/2,15,W-16),y=clamp(j*G+G/2,15,H-16),k=(j*CW+i)*7;
+  let r=0,g=0,bl=0,xx=0,xy=0,yy=0;
+  for(let v=-3;v<=3;v++)for(let u=-3;u<=3;u++){const z=(y+v)*W+x+u,q=z*4; r+=frame.rgba[q];g+=frame.rgba[q+1];bl+=frame.rgba[q+2];const dx=a[z+1]-a[z-1],dy=a[z+W]-a[z-W];xx+=dx*dx;xy+=dx*dy;yy+=dy*dy}
+  out[k]=r/(49*255);out[k+1]=g/(49*255);out[k+2]=bl/(49*255);out[k+3]=.5*Math.atan2(2*xy,xx-yy)+Math.PI/2;
+  let best=Infinity,dx=0,dy=0,zero=0;
+  if(b&&xx+yy>.012){
+   const cost=(u,v)=>{let s=0;for(let py=-4;py<=4;py+=2)for(let px=-4;px<=4;px+=2){const z=(y+py)*W+x+px;let d=a[z]-b[z+v*W+u];s+=d*d}return s+.0007*(u*u+v*v)};
+   zero=cost(0,0);best=zero;
+   for(let v=-9;v<=9;v+=3)for(let u=-9;u<=9;u+=3){let c=cost(u,v);if(c<best){best=c;dx=u;dy=v}}
+   const ox=dx,oy=dy;for(let v=oy-2;v<=oy+2;v++)for(let u=ox-2;u<=ox+2;u++){let c=cost(u,v);if(c<best){best=c;dx=u;dy=v}}
   }
-  let k=gy*GW+gx,det=(a+.006)*(c+.006)-b*b,ux=(-(c+.006)*d+b*e)/det,uy=(b*d-(a+.006)*e)/det;
-  vx[k]=vx[k]*.62+clamp(ux,-3.5,3.5)*.38;vy[k]=vy[k]*.62+clamp(uy,-3.5,3.5)*.38;
-  ang[k]=.5*Math.atan2(2*b,a-c)+Math.PI/2;edge[k]=clamp((a+c)*2,0,1);
+  const conf=zero>.018?clamp((zero-best)/zero,0,1):0;
+  out[k+4]=-dx*conf;out[k+5]=-dy*conf;out[k+6]=clamp((xx+yy)*1.6,0,1);
  }
- prev.set(gray);havePrev=true;
+ return out;
 }
-function pigment(x,y,scale,ab,opacity){
- const ix=clamp(x|0,0,SW-1),iy=clamp(y|0,0,SH-1),q=(iy*SW+ix)*4,k=Math.min(GH-1,iy/GS|0)*GW+Math.min(GW-1,ix/GS|0);
- const flow=Math.hypot(vx[k],vy[k]),phase=Math.sin(x*.032+y*.041+t*.27)+Math.cos(x*.075-y*.028-t*.19);
- let theta=ang[k]+phase*.23*ab+rand(-.37,.37)*ab;
- if(flow>.12){const fa=Math.atan2(vy[k],vx[k]),mix=clamp(flow*.22,0,.58)*ab;theta+=Math.atan2(Math.sin(2*(fa-theta)),Math.cos(2*(fa-theta)))*.5*mix}
- const sx=W/SW,sy=H/SH, len=scale*sx*rand(.65,1.55)*(1+Math.min(flow,2)*.34*ab),wid=len*rand(.19,.58);
- let px=x*sx+vx[k]*sx*ab*rand(.6,2.3),py=y*sy+vy[k]*sy*ab*rand(.6,2.3);
- const r=pixels[q],g=pixels[q+1],b=pixels[q+2],lum=.25*r+.55*g+.2*b;
- const sat=1.08+ab*.22,variation=rand(-13,13),color=(v,z=0)=>clamp(Math.round(lum+(v-lum)*sat+variation+z),0,255);
- const rr=color(r),gg=color(g),bb=color(b);
- p.save();p.translate(px,py);p.rotate(theta);p.globalAlpha=opacity;
- p.fillStyle='rgb('+rr+','+gg+','+bb+')';
- p.beginPath();p.moveTo(-len*.5,-wid*.25);p.quadraticCurveTo(-len*.22,-wid*.65,len*.44,-wid*.32);p.lineTo(len*.53,wid*.14);p.quadraticCurveTo(len*.03,wid*.65,-len*.48,wid*.30);p.closePath();p.fill();
- if(scale>2.5){p.globalAlpha=opacity*.28;p.strokeStyle='rgb('+color(r,25)+','+color(g,25)+','+color(b,25)+')';p.lineWidth=Math.max(.55,wid*.085);p.beginPath();p.moveTo(-len*.40,-wid*.18);p.quadraticCurveTo(0,-wid*.37,len*.39,-wid*.14);p.stroke();p.globalAlpha=opacity*.24;p.strokeStyle='rgb('+color(r,-27)+','+color(g,-27)+','+color(b,-27)+')';p.beginPath();p.moveTo(-len*.39,wid*.20);p.lineTo(len*.33,wid*.29);p.stroke()}
- p.restore();
+function at(field,x,y,o){let fx=clamp(x/G-.5,0,CW-1.001),fy=clamp(y/G-.5,0,CH-1.001),i=fx|0,j=fy|0,u=fx-i,v=fy-j,k=(j*CW+i)*7+o;return mix(mix(field[k],field[k+7],u),mix(field[k+CW*7],field[k+CW*7+7],u),v)}
+function makeAgents(){
+ agents=[];for(let i=0;i<count;i++){
+  // Stratify large structural strokes, medium pigment masses, then fine marks.
+  const layer=i/count<.16?0:i/count<.60?1:2;
+  const x=rand()*W,y=rand()*H,scale=layer===0?mix(5,13,rand()):layer===1?mix(1.7,5.8,rand()):mix(.45,2.1,rand());
+  agents.push({x,y,ax:x,ay:y,scale,layer,aspect:mix(.15,.65,rand()),phase:rand()*6.283,seed:rand(),age:rand()*20,life:mix(14,48,rand()),a:0,r:0,g:0,b:0,vr:0,vv:0});
+ }
 }
-function layer(step,scale,ab,alpha,prob=1){for(let y=0;y<SH;y+=step)for(let x=0;x<SW;x+=step)if(Math.random()<prob)pigment(clamp(x+rand(0,step),0,SW-1),clamp(y+rand(0,step),0,SH-1),scale,ab,alpha)}
-function paintFrame(){
- const setting=+$('abstraction').value/100,ab=clamp(setting+Math.sin(t*.055)*.18,0,1);
- if(!initialized){p.imageSmoothingEnabled=true;p.drawImage(src,0,0,W,H);layer(9,18,ab,.85);layer(5,8,ab,.91);layer(3,3.4,ab,.88);initialized=true}
- // Persistent pigment: broad marks are replaced slowly, detail accumulates between them.
- let count=W>1000?1100:650;
- for(let i=0;i<count;i++){let x=Math.random()*SW,y=Math.random()*SH,k=Math.min(GH-1,y/GS|0)*GW+Math.min(GW-1,x/GS|0),e=edge[k],f=Math.hypot(vx[k],vy[k]);let u=Math.random(),scale=u<.14?rand(11,23):u<.54?rand(4,10):rand(1.3,4);scale*=.55+ab*.9;if(e>.25&&Math.random()<.55)scale*=.53;if(f>.18)scale*=1+Math.min(f,2)*.16;pigment(x,y,scale,ab,rand(.48,.91))}
- // Preserve source structure without directly displaying the raw video in painting mode.
- ctx.drawImage(paint,0,0); 
+function resetAgent(a,f){a.x=clamp(a.ax+(rand()-.5)*10,0,W);a.y=clamp(a.ay+(rand()-.5)*10,0,H);a.age=0;a.a=at(f,a.x,a.y,3);a.r=at(f,a.x,a.y,0);a.g=at(f,a.x,a.y,1);a.b=at(f,a.x,a.y,2);a.vr=0;a.vv=0}
+function seedPainting(f){makeAgents();for(const a of agents){resetAgent(a,f);a.age=rand()*a.life*.85}bg=[at(f,W*.5,H*.5,0)*.24,at(f,W*.5,H*.5,1)*.24,at(f,W*.5,H*.5,2)*.24];ready=true;message.textContent=''}
+function draw(dt){
+ if(!bank.length||!ready)return;
+ const ab=+$('amount').value/100, n=bank.length;
+ // Walk recorded time nonlinearly: independent painting time, no video playback needed.
+ const position=(clock*(2.1+ab*1.4))%Math.max(1,2*(n-1)), q=position>n-1?2*(n-1)-position:position;
+ const ia=clamp(Math.floor(q),0,n-1),ib=Math.min(n-1,ia+1),blend=q-ia,f=bank[ia],f2=bank[ib];
+ for(let i=0;i<count;i++){
+  const a=agents[i];a.age+=dt;
+  if(a.age>a.life||a.x<-7||a.y<-7||a.x>W+7||a.y>H+7)resetAgent(a,f);
+  const x=a.x,y=a.y, fx=mix(at(f,x,y,4),at(f2,x,y,4),blend),fy=mix(at(f,x,y,5),at(f2,x,y,5),blend);
+  const motion=Math.hypot(fx,fy),noise=Math.sin(x*.047+y*.036+clock*.17+a.phase*.2);
+  const spring=.10+(1-ab)*.65, force=1.2+ab*3.7;
+  const targetX=fx*force+(a.ax-x)*spring+Math.sin(noise*2+a.phase)*ab*.42;
+  const targetY=fy*force+(a.ay-y)*spring+Math.cos(noise*2+a.phase)*ab*.42;
+  a.vr=mix(a.vr,targetX,Math.min(1,dt*3));a.vv=mix(a.vv,targetY,Math.min(1,dt*3));
+  a.x+=a.vr*dt;a.y+=a.vv*dt;
+  const orientation=at(f,x,y,3), fa=Math.atan2(a.vv,a.vr), direction=orientation+Math.atan2(Math.sin(2*(fa-orientation)),Math.cos(2*(fa-orientation)))*.5*clamp(motion*.34,0,.85);
+  a.a+=Math.atan2(Math.sin(2*(direction-a.a)),Math.cos(2*(direction-a.a)))*.5*Math.min(1,dt*2.5);
+  // Pigment retains its own colour while it migrates; only slowly exchanges colour with local observations.
+  const px=mix(a.ax,x,.25+ab*.35),py=mix(a.ay,y,.25+ab*.35),adapt=dt*(.12+(1-ab)*1.7);
+  a.r=mix(a.r,mix(at(f,px,py,0),at(f2,px,py,0),blend),adapt);a.g=mix(a.g,mix(at(f,px,py,1),at(f2,px,py,1),blend),adapt);a.b=mix(a.b,mix(at(f,px,py,2),at(f2,px,py,2),blend),adapt);
+  const e=at(f,x,y,6), sz=a.scale*(.76+ab*.72)*(1+clamp(motion*.18,0,.8))*(1-e*(a.layer===2?.30:.14));
+  const lum=.2126*a.r+.7152*a.g+.0722*a.b,sat=1.04+ab*.29, tint=(a.seed-.5)*.09;
+  const k=i*10;instances[k]=a.x;instances[k+1]=a.y;instances[k+2]=sz;instances[k+3]=sz*a.aspect*(1+.14*Math.sin(clock*.8+a.phase));instances[k+4]=clamp(lum+(a.r-lum)*sat+tint,0,1);instances[k+5]=clamp(lum+(a.g-lum)*sat+tint,0,1);instances[k+6]=clamp(lum+(a.b-lum)*sat+tint,0,1);instances[k+7]=Math.min(1,a.age*1.4,(a.life-a.age)*.7)*(.77+a.seed*.23);instances[k+8]=a.a;instances[k+9]=a.seed;
+ }
+ gl.clearColor(bg[0],bg[1],bg[2],1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(program);gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferSubData(gl.ARRAY_BUFFER,0,instances);gl.drawArraysInstanced(gl.TRIANGLES,0,6,count);
 }
-function frame(now){
- request=requestAnimationFrame(frame);if(!playing||!visible||document.hidden)return;if(now-last<42)return;let dt=last?Math.min(.075,(now-last)/1000):.042;last=now;t+=dt;
- sourceFrame();analyze();paintFrame();if(showingSource)ctx.drawImage(src,0,0,W,H);
+function animate(now){requestAnimationFrame(animate);if(!running||!visible||document.hidden||sourceMode||!ready){last=now;return}if(now-last<25)return;const dt=last?Math.min(.06,(now-last)/1000):.033;last=now;clock+=dt;draw(dt)}
+function waitEvent(event,token,timeout=12000){return new Promise((resolve,reject)=>{let id;const finish=(err)=>{clearTimeout(id);video.removeEventListener(event,ok);video.removeEventListener('error',bad);err?reject(err):resolve()};const ok=()=>finish(token===epoch?null:Error('cancelled'));const bad=()=>finish(Error('video decode or network error'));video.addEventListener(event,ok,{once:true});video.addEventListener('error',bad,{once:true});id=setTimeout(()=>finish(Error('video timeout')),timeout)})}
+async function load(url,token){
+ video.pause();video.classList.remove('show');sourceMode=false;$('compare').textContent='Source';
+ const loaded=waitEvent('loadeddata',token);video.src=url;video.load();await loaded;
+ if(token!==epoch)throw Error('cancelled');
+ sample.width=W;sample.height=H;sc=sample.getContext('2d',{willReadFrequently:true});
+ const first=readFrame();if(!Number.isFinite(video.duration)||video.duration<=0)throw Error('finite video required');return first;
 }
-function switchFallback(message){source='fallback';video.pause();src.width=SW;src.height=SH;resetMotion();status.textContent=message||'Live · generated botanical test source';}
-function startVideo(url,label){clearTimeout(sourceTimer);source='fallback';status.textContent='Loading footage · generated preview';video.pause();video.src=url;video.load();sourceTimer=setTimeout(()=>{if(source==='fallback')status.textContent='Live · generated source (footage unavailable)'},12000);video.onloadeddata=()=>{if(video.src!==url&&video.currentSrc!==url)return;try{if(!video.videoWidth)return;s.drawImage(video,0,0,SW,SH);s.getImageData(0,0,1,1);source=label;clearTimeout(sourceTimer);resetMotion();status.textContent='Live · '+label;if(playing&&visible&&!document.hidden)video.play().catch(()=>{status.textContent='Footage ready · press Play to start';playing=false;$('pause').textContent='Play'})}catch(e){switchFallback('Live · generated source (cross-origin video blocked)')}};video.onerror=()=>{if(label==='flower footage'&&remoteAttempt++===0){startVideo('https://upload.wikimedia.org/wikipedia/commons/f/f0/Purple_flowers.webm','flower footage')}else switchFallback('Live · generated source (footage unavailable)')};}
-$('view').onclick=()=>{showingSource=!showingSource;$('view').textContent=showingSource?'Painting':'Source';if(pixels)ctx.drawImage(showingSource?src:paint,0,0,W,H)};
-$('pause').onclick=()=>{playing=!playing;$('pause').textContent=playing?'Pause':'Play';if(playing){last=0;if(source!=='fallback')video.play().catch(()=>{});}else video.pause()};
-$('full').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else if(stage.requestFullscreen)await stage.requestFullscreen();else{stage.classList.toggle('expanded');stage.style.position=stage.classList.contains('expanded')?'fixed':'relative';stage.style.inset=stage.classList.contains('expanded')?'0':'auto';stage.style.zIndex=stage.classList.contains('expanded')?'10':'auto';stage.style.height=stage.classList.contains('expanded')?'100dvh':'auto'}}catch(e){status.textContent='Fullscreen unavailable in this browser'}};
-$('file').onchange=e=>{let f=e.target.files[0];if(!f)return;if(objectURL)URL.revokeObjectURL(objectURL);objectURL=URL.createObjectURL(f);startVideo(objectURL,'local footage')};
-stage.addEventListener('click',()=>{if(stage.classList.contains('expanded'))$('full').click()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&stage.classList.contains('expanded'))$('full').click()});
-new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(!visible)video.pause();else if(playing&&source!=='fallback'&&!document.hidden)video.play().catch(()=>{})},{threshold:.01}).observe(stage);
-document.addEventListener('visibilitychange',()=>{if(document.hidden)video.pause();else if(playing&&visible&&source!=='fallback')video.play().catch(()=>{})});
-p.fillStyle='#142019';p.fillRect(0,0,W,H);
-startVideo('https://upload.wikimedia.org/wikipedia/commons/transcoded/f/f0/Purple_flowers.webm/Purple_flowers.webm.480p.vp9.webm','flower footage');
-request=requestAnimationFrame(frame);
+async function scan(first,token){
+ analyzing=true;bank=[];prev=first;bank.push(analyze(first,null));seedPainting(bank[0]);clock=0;
+ const duration=Math.min(video.duration-.04,40), step=Math.max(.16,duration/150), frames=Math.max(2,Math.floor(duration/step));
+ for(let i=1;i<=frames;i++){
+  if(token!==epoch)return;
+  const seek=waitEvent('seeked',token,10000);video.currentTime=Math.min(duration,i*step);await seek;if(token!==epoch)return;
+  const frame=readFrame(), field=analyze(frame,prev);prev=frame;bank.push(field);
+  status.textContent='Extracting filmed motion · '+Math.round(i/frames*100)+'% · '+bank.length+' fields';
+  await new Promise(r=>setTimeout(r,0));
+ }
+ analyzing=false;status.textContent='Live simulation · '+bank.length+' recorded motion fields · '+count.toLocaleString()+' persistent strokes';video.currentTime=0;
+}
+async function start(urls){
+ const token=++epoch;ready=false;analyzing=false;bank=[];message.textContent='Loading real footage…';status.textContent='Preparing recorded motion';let err;
+ for(const url of urls){
+  try{const first=await load(url,token);if(token!==epoch)return;await scan(first,token);return}catch(e){if(token!==epoch)return;err=e;ready=false;bank=[]}
+ }
+ if(token!==epoch)return;analyzing=false;message.textContent='Footage unavailable. Choose a local MP4 or WebM to run the experiment.';status.textContent='Source could not be analyzed · '+(err?.message||'unknown error');
+}
+$('clip').onchange=()=>start(clips[$('clip').value]);
+$('file').onchange=()=>{const f=$('file').files[0];if(!f)return;if(objectURL)URL.revokeObjectURL(objectURL);objectURL=URL.createObjectURL(f);start([objectURL])};
+$('compare').onclick=()=>{if(analyzing){status.textContent='Source view available after motion extraction';return}if(!ready)return;sourceMode=!sourceMode;video.classList.toggle('show',sourceMode);$('compare').textContent=sourceMode?'Painting':'Source';if(sourceMode){video.loop=true;video.play().catch(()=>{})}else video.pause()};
+$('pause').onclick=()=>{running=!running;$('pause').textContent=running?'Pause':'Play';if(sourceMode){if(running)video.play().catch(()=>{});else video.pause()}};
+$('full').onclick=async()=>{if(document.fullscreenElement){await document.exitFullscreen();return}if(stage.classList.contains('expanded')){stage.classList.remove('expanded');return}try{if(stage.requestFullscreen)await stage.requestFullscreen();else stage.classList.add('expanded')}catch(e){stage.classList.add('expanded')}};
+stage.addEventListener('click',()=>{if(stage.classList.contains('expanded'))stage.classList.remove('expanded')});document.addEventListener('keydown',e=>{if(e.key==='Escape')stage.classList.remove('expanded')});
+new IntersectionObserver(e=>{visible=e[0].isIntersecting;if(!visible&&sourceMode)video.pause();else if(visible&&sourceMode&&running)video.play().catch(()=>{})}).observe(stage);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)video.pause();else if(sourceMode&&running&&visible)video.play().catch(()=>{})});
+try{initGL();resize();requestAnimationFrame(animate);start(clips.night)}catch(e){message.textContent='WebGL initialization failed: '+e.message;status.textContent='Renderer unavailable'}
 </script></body></html>
