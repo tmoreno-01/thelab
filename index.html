@@ -6,25 +6,41 @@
 <details><summary>process / credits</summary><p>Version 009 emits new tiny pigment splats each frame using measured movement as the birth-density map. Previous deposits persist on the paint surface, not as moving particle objects. <a href="https://github.com/tmoreno-01/thelab/blob/main/experiments/field_studies_009.py">Renderer 009</a> · <a href="https://github.com/tmoreno-01/thelab/actions/workflows/field-studies-009.yml">Render status</a>.</p><p>Version 008 replaces wide pigment marks with individually transported fine filaments, increased pigment density, shorter paths and less smoothing. <a href="https://github.com/tmoreno-01/thelab/blob/main/experiments/field_studies_008.py">Renderer</a> · <a href="https://github.com/tmoreno-01/thelab/actions/workflows/field-studies-008.yml">Render status</a>.</p><p>Field studies is an independent computational painting experiment. Dense optical flow, temporal change and image structure are extracted from real footage before a separate bristle and pigment simulation. Urban studies retain the source's own colours and lift shadow pigment rather than using the flower-specific palette. Technical reference: <a href="https://github.com/dli/paint">David Li's Fluid Paint</a>.</p><p>New comparison series: independent colour-key masks, edge-derived orientation, motion intensity, optical flow and fine directional pigment transport instead of discrete brush bundles. <a href="https://github.com/tmoreno-01/thelab/blob/main/experiments/field_studies_007.py">Fine pigment renderer</a> · <a href="https://github.com/tmoreno-01/thelab/actions/workflows/field-studies-007.yml">Fine pigment render status</a>.</p><p><a href="https://github.com/tmoreno-01/thelab/blob/main/experiments/field_studies_006.py">Urban renderer</a> · <a href="https://github.com/tmoreno-01/thelab/actions/workflows/field-studies-urban.yml">Render status</a></p></details>
 </main><script>
 const items=[
- {title:'008 — flowers / motion emission',desc:'009 renderer / fresh micro-splats each frame',file:'field-studies-009-flowers.mp4',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'},
- {title:'007 — flowers / micro-filaments',desc:'008 renderer / fine directional pigment',file:'field-studies-008-flowers.mp4',fallback:'field-studies-007-flowers.mp4',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'},
- {title:'004 — flowers / fine pigment',desc:'colour keys / normal-guided microtexture',file:'field-studies-007-flowers.mp4',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'},
- {title:'005 — taipei / fine pigment',desc:'colour keys / motion fields',file:'field-studies-007-taipei.mp4',source:'https://www.pexels.com/video/a-city-at-night-with-many-lights-and-cars-26102174/',credit:'Pexels'},
- {title:'006 — london / fine pigment',desc:'colour keys / motion fields',file:'field-studies-007-london.mp4',source:'https://www.pexels.com/video/city-at-night-5743582/',credit:'Pexels'},
- {title:'002 — taipei',desc:'neon / traffic',file:'field-studies-taipei.mp4',source:'https://www.pexels.com/video/a-city-at-night-with-many-lights-and-cars-26102174/',credit:'Timo Volz / Pexels'},
- {title:'003 — london',desc:'rain / reflections',file:'field-studies-london.mp4',source:'https://www.pexels.com/video/city-at-night-5743582/',credit:'George Morina / Pexels'},
- {title:'001 — flowers',desc:'directional pigment',file:'field-studies-005.mp4',fallback:'field-studies-004.mp4',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'}
+ {title:'007 — flowers',desc:'fine pigment / colour keys',file:'field-studies-007-flowers.mp4',poster:'field-studies-007-flowers.jpg',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'},
+ {title:'009 — flowers',desc:'motion emission / micro-splats',file:'field-studies-009-flowers.mp4',poster:'field-studies-009-flowers.jpg',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'},
+ {title:'008 — flowers',desc:'micro-filaments',file:'field-studies-008-flowers.mp4',poster:'field-studies-008-flowers.jpg',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'},
+ {title:'007 — taipei',desc:'fine pigment / motion fields',file:'field-studies-007-taipei.mp4',poster:'field-studies-007-taipei.jpg',source:'https://www.pexels.com/video/a-city-at-night-with-many-lights-and-cars-26102174/',credit:'Pexels'},
+ {title:'007 — london',desc:'fine pigment / motion fields',file:'field-studies-007-london.mp4',poster:'field-studies-007-london.jpg',source:'https://www.pexels.com/video/city-at-night-5743582/',credit:'Pexels'},
+ {title:'006 — taipei',desc:'neon / traffic',file:'field-studies-taipei.mp4',poster:'field-studies-taipei.jpg',source:'https://www.pexels.com/video/a-city-at-night-with-many-lights-and-cars-26102174/',credit:'Pexels'},
+ {title:'006 — london',desc:'rain / reflections',file:'field-studies-london.mp4',poster:'field-studies-london.jpg',source:'https://www.pexels.com/video/city-at-night-5743582/',credit:'Pexels'},
+ {title:'005 — flowers',desc:'directional pigment',file:'field-studies-005.mp4',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'}
 ];
-for(const item of items){
- const el=document.createElement('article');el.className='piece';el.innerHTML='<div class="stage"><video muted autoplay loop playsinline preload="metadata"></video><div class="message" role="status">render pending</div></div><div class="bar"><div>'+item.title+'<div class="sub">'+item.desc+' · <a href="'+item.source+'">'+item.credit+'</a></div></div><div class="controls"><button class="play" disabled>play</button><button class="full" disabled>fullscreen</button></div></div>';document.getElementById('grid').append(el);
- const stage=el.querySelector('.stage'),v=el.querySelector('video'),m=el.querySelector('.message'),p=el.querySelector('.play'),f=el.querySelector('.full');let visible=false,wants=true,current='',preferred=false,checking=false,failed=new Set();
- function sync(){if(current&&visible&&wants&&!document.hidden)v.play().catch(()=>{p.textContent='play'});else v.pause()}
- function use(url,primary){if(current===url)return;current=url;preferred=primary;v.src=url;m.textContent='loading';v.load();sync()}
- async function check(){if(checking||preferred)return;checking=true;try{for(const file of [item.file,item.fallback].filter(Boolean)){for(const url of ['media/'+file,'https://raw.githubusercontent.com/tmoreno-01/thelab/main/media/'+file]){if(failed.has(url))continue;try{const r=await fetch(url,{method:'HEAD',cache:'no-store'});if(r.ok&&(/video|octet-stream/.test(r.headers.get('content-type')||'')||Number(r.headers.get('content-length'))>100000)){use(url,file===item.file);return}}catch{}}}}finally{checking=false}}
- v.onloadeddata=()=>{m.textContent='';p.disabled=f.disabled=false;sync()};v.onplay=()=>p.textContent='pause';v.onpause=()=>p.textContent='play';v.onerror=()=>{failed.add(current);current='';preferred=false;m.textContent='render unavailable';check()};
- p.onclick=()=>{wants=v.paused;sync()};async function fullscreen(){if(!current)return;if(document.fullscreenElement){await document.exitFullscreen();return}if(stage.classList.contains('expanded')){stage.classList.remove('expanded');return}try{if(stage.requestFullscreen)await stage.requestFullscreen();else stage.classList.add('expanded')}catch{stage.classList.add('expanded')}}f.onclick=fullscreen;stage.onclick=fullscreen;
- if('IntersectionObserver'in window)new IntersectionObserver(es=>{visible=es[0].isIntersecting;sync()},{threshold:.01}).observe(stage);else visible=true;
- document.addEventListener('visibilitychange',sync);document.addEventListener('keydown',e=>{if(e.key==='Escape')stage.classList.remove('expanded')});
- if(item.fallback)use('media/'+item.fallback,false);check();setInterval(check,15000);
+const players=[];
+function reconcile(){
+ const candidates=players.filter(x=>x.visible&&x.wants&&!document.hidden);
+ const full=candidates.find(x=>document.fullscreenElement===x.stage||x.stage.classList.contains('expanded'));
+ const active=new Set(full?[full]:candidates.sort((a,b)=>b.ratio-a.ratio).slice(0,2));
+ for(const x of players){if(active.has(x))x.play();else x.pause();}
 }
+const observer='IntersectionObserver'in window?new IntersectionObserver(entries=>{for(const e of entries){const x=players.find(p=>p.stage===e.target);if(x){x.ratio=e.intersectionRatio;x.visible=e.isIntersecting&&e.intersectionRatio>=.05;}}reconcile()},{threshold:[0,.05,.25,.5,.75,1]}):null;
+for(const item of items){
+ const el=document.createElement('article');el.className='piece';
+ el.innerHTML='<div class="stage"><video muted loop playsinline preload="none"></video><div class="message" role="status"></div></div><div class="bar"><div>'+item.title+'<div class="sub">'+item.desc+' · <a href="'+item.source+'">'+item.credit+'</a></div></div><div class="controls"><button class="play">play</button><button class="full">fullscreen</button></div></div>';
+ document.getElementById('grid').append(el);
+ const stage=el.querySelector('.stage'),v=el.querySelector('video'),m=el.querySelector('.message'),p=el.querySelector('.play'),f=el.querySelector('.full');
+ let loaded=false,failed=false,raw=false;
+ const x={stage,ratio:0,visible:!observer,wants:true,play(){if(failed)return;if(!loaded){loaded=true;if(item.poster)v.poster='media/'+item.poster;v.src='media/'+item.file;}if(v.paused)v.play().catch(()=>{p.textContent='play'});},pause(){if(!v.paused)v.pause();}};
+ players.push(x);
+ v.onplay=()=>{p.textContent='pause';m.textContent=''};
+ v.onpause=()=>{p.textContent='play'};
+ v.onerror=()=>{if(!raw){raw=true;v.src='https://raw.githubusercontent.com/tmoreno-01/thelab/main/media/'+item.file;if(x.visible&&x.wants)v.play().catch(()=>{});}else{failed=true;m.textContent='Unable to load video';}};
+ p.onclick=()=>{if(failed){failed=false;raw=false;loaded=false;}x.wants=v.paused;reconcile()};
+ async function fullscreen(){if(document.fullscreenElement){await document.exitFullscreen();return}if(stage.classList.contains('expanded')){stage.classList.remove('expanded');reconcile();return}x.wants=true;x.visible=true;try{if(stage.requestFullscreen)await stage.requestFullscreen();else stage.classList.add('expanded')}catch{stage.classList.add('expanded')}reconcile();}
+ f.onclick=fullscreen;stage.onclick=fullscreen;
+ if(observer)observer.observe(stage);
+}
+document.addEventListener('visibilitychange',reconcile);
+document.addEventListener('fullscreenchange',reconcile);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){for(const x of players)x.stage.classList.remove('expanded');reconcile();}});
+if(!observer)reconcile();
 </script></body></html>
