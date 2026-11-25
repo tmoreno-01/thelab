@@ -29,13 +29,13 @@ for(const item of items){
  el.innerHTML='<div class="stage"><video muted loop playsinline preload="none"></video><div class="message" role="status"></div></div><div class="bar"><div>'+item.title+'<div class="sub">'+item.desc+' · <a href="'+item.source+'">'+item.credit+'</a></div></div><div class="controls"><button class="play">play</button><button class="full">fullscreen</button></div></div>';
  document.getElementById('grid').append(el);
  const stage=el.querySelector('.stage'),v=el.querySelector('video'),m=el.querySelector('.message'),p=el.querySelector('.play'),f=el.querySelector('.full');
- let loaded=false,failed=false,raw=false;
+ let loaded=false,failed=false,raw=false,retryTimer=null;
  const x={stage,ratio:0,visible:!observer,wants:true,play(){if(failed)return;if(!loaded){loaded=true;if(item.poster)v.poster='media/'+item.poster;v.src='media/'+item.file;}if(v.paused)v.play().catch(()=>{p.textContent='play'});},pause(){if(!v.paused)v.pause();}};
  players.push(x);
- v.onplay=()=>{p.textContent='pause';m.textContent=''};
+ v.onplay=()=>{p.textContent='pause';m.textContent='';clearTimeout(retryTimer);retryTimer=null;};
  v.onpause=()=>{p.textContent='play'};
- v.onerror=()=>{if(!raw){raw=true;v.src='https://raw.githubusercontent.com/tmoreno-01/thelab/main/media/'+item.file;if(x.visible&&x.wants)v.play().catch(()=>{});}else{failed=true;m.textContent='Unable to load video';}};
- p.onclick=()=>{if(failed){failed=false;raw=false;loaded=false;}x.wants=v.paused;reconcile()};
+ v.onerror=()=>{if(!raw){raw=true;v.src='https://raw.githubusercontent.com/tmoreno-01/thelab/main/media/'+item.file;if(x.visible&&x.wants)v.play().catch(()=>{});}else{failed=true;m.textContent=item.file.includes('010-')?'render publishing — retrying':'Unable to load video — click play to retry';if(item.file.includes('010-')&&!retryTimer)retryTimer=setTimeout(()=>{retryTimer=null;failed=false;raw=false;loaded=false;if(x.visible&&x.wants)reconcile();},30000);}};
+ p.onclick=()=>{if(failed){clearTimeout(retryTimer);retryTimer=null;failed=false;raw=false;loaded=false;}x.wants=v.paused;reconcile()};
  async function fullscreen(){if(document.fullscreenElement){await document.exitFullscreen();return}if(stage.classList.contains('expanded')){stage.classList.remove('expanded');reconcile();return}x.wants=true;x.visible=true;try{if(stage.requestFullscreen)await stage.requestFullscreen();else stage.classList.add('expanded')}catch{stage.classList.add('expanded')}reconcile();}
  f.onclick=fullscreen;stage.onclick=fullscreen;
  if(observer)observer.observe(stage);
