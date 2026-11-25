@@ -1,0 +1,72 @@
+name: Render detail-preserving pigment studies
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/field-studies-011.yml'
+permissions:
+  contents: write
+concurrency:
+  group: detail-preserving-pigment-studies
+  cancel-in-progress: true
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: '9054643'
+            name: flowers
+            fps: '30'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install renderer
+        run: python -m pip install numpy==2.2.6 numba==0.61.2 opencv-python-headless==4.12.0.88 imageio-ffmpeg==0.6.0
+      - name: Fetch real footage
+        env:
+          ID: ${{ matrix.id }}
+          FPS: ${{ matrix.fps }}
+        run: |
+          FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')
+          valid=0
+          for url in "https://videos.pexels.com/video-files/$ID/$ID-hd_1920_1080_${FPS}fps.mp4" "https://www.pexels.com/download/video/$ID/" "https://videos.pexels.com/video-files/$ID/$ID-hd_1920_1080_30fps.mp4" "https://videos.pexels.com/video-files/$ID/$ID-hd_1920_1080_25fps.mp4" "https://videos.pexels.com/video-files/$ID/$ID-hd_1280_720_${FPS}fps.mp4" "https://videos.pexels.com/video-files/$ID/$ID-uhd_3840_2160_${FPS}fps.mp4"; do
+            if curl -fL --max-time 90 --retry 1 -A 'Mozilla/5.0' "$url" -o /tmp/urban.mp4 && "$FFMPEG" -v error -i /tmp/urban.mp4 -frames:v 1 -f null -; then valid=1; echo "Source: $url"; break; fi
+          done
+          test "$valid" = 1
+      - name: Analyze and paint
+        env:
+          NAME: ${{ matrix.name }}
+        run: |
+          MODE=natural
+          if [ "$NAME" = flowers ]; then MODE=flowers; fi
+          OPENBLAS_NUM_THREADS=1 python experiments/field_studies_011.py /tmp/urban.mp4 /tmp/painting.mp4 6 1920 "$MODE"
+          FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')
+          mkdir -p /tmp/rendered
+          "$FFMPEG" -v error -y -i /tmp/painting.mp4 -c:v libx264 -preset fast -crf 17 -pix_fmt yuv420p -movflags +faststart "/tmp/rendered/field-studies-011-$NAME.mp4"
+          "$FFMPEG" -v error -i "/tmp/rendered/field-studies-011-$NAME.mp4" -f null -
+          "$FFMPEG" -v error -y -ss 2 -i "/tmp/rendered/field-studies-011-$NAME.mp4" -frames:v 1 -q:v 3 "/tmp/rendered/field-studies-011-$NAME.jpg"
+      - name: Store render
+        env:
+          NAME: ${{ matrix.name }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/rendered/field-studies-011-$NAME.* media/
+            git add media/field-studies-011-$NAME.*
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "Render detail-preserving pigment study: $NAME"
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 4
+          done
+          exit 1
