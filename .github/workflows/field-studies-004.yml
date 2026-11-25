@@ -1,0 +1,41 @@
+name: Render Field Studies 004
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/field-studies-004.yml'
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install renderer
+        run: python -m pip install numpy==2.2.6 numba==0.61.2 opencv-python-headless==4.12.0.88 imageio-ffmpeg==0.6.0
+      - name: Extract observations and render
+        run: |
+          curl --fail --location --retry 2 'https://videos.pexels.com/video-files/9054643/9054643-hd_1920_1080_30fps.mp4' -o /tmp/flowers.mp4
+          python experiments/field_studies_003.py analyze /tmp/flowers.mp4 /tmp/observations.npz
+          python experiments/field_studies_004.py /tmp/observations.npz /tmp/painting.mp4 5 1920
+          FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')
+          mkdir -p /tmp/rendered
+          "$FFMPEG" -v error -y -i /tmp/painting.mp4 -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart /tmp/rendered/field-studies-004.mp4
+          "$FFMPEG" -v error -i /tmp/rendered/field-studies-004.mp4 -f null -
+      - name: Store render
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --ff-only origin main
+          cp /tmp/rendered/field-studies-004.mp4 media/
+          git add media/field-studies-004.mp4
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Render field studies 004'
+          git push origin HEAD:main
