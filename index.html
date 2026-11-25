@@ -1,36 +1,25 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#ffffff">
-<title>lab — field studies</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lab — field studies</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;background:#fff;color:#111;font:14px/1.45 Arial,Helvetica,sans-serif}header{padding:24px 28px}h1{margin:0;font-size:24px;font-weight:500;letter-spacing:-.055em}a{color:inherit}h1 a{text-decoration:none}main{margin:0 28px 28px;max-width:1920px}.stage{position:relative;background:#121411;aspect-ratio:16/9;overflow:hidden;cursor:zoom-in}.stage video{display:block;width:100%;height:100%;object-fit:contain}.stage:fullscreen,.stage.expanded{width:100vw;height:100dvh;aspect-ratio:auto;cursor:zoom-out}.stage.expanded{position:fixed;inset:0;z-index:100}.bar{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:12px 0;flex-wrap:wrap}.controls{display:flex;gap:16px}button{background:none;border:0;padding:4px 0;font:inherit;font-size:12px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}button:focus-visible{outline:2px solid #555;outline-offset:4px}.sub,details{font-size:12px;color:#666}details{max-width:750px}summary{cursor:pointer}.message{position:absolute;inset:0;display:grid;place-items:center;color:#eee;pointer-events:none}.message:empty{display:none}@media(max-width:700px){header{padding:20px}main{margin:0 20px 20px}}
-</style>
-</head>
-<body>
-<header><h1><a href="./">lab</a></h1></header>
-<main>
-<div class="stage" id="stage"><video id="film" src="media/field-studies-004.mp4" muted autoplay loop playsinline preload="auto" aria-label="Field Studies, motion-derived computational painting"></video><div class="message" id="message" role="status"></div></div>
-<div class="bar"><div>001 — field studies<div class="sub" id="edition">flowers / bristle transport · 004</div></div><div class="controls"><button id="version" disabled>005 · rendering</button><button id="play">pause</button><button id="full">fullscreen</button></div></div>
-<details><summary>process / credits</summary><p>Offline computational painting derived from normal-speed filmed flower movement. Dense DIS optical flow and temporal differences drive a pressure-projected velocity field, which advects persistent pigment. Multiscale directional texture is generated from the resulting field. This is an independently implemented study inspired by Quayola’s Jardins d’Été, not the original proprietary software.</p><p>Source footage: <a href="https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/">Zuzanna Musial / Pexels</a>. Study 001: 960 × 540, 24 fps, 7 seconds. Study 004 uses moving bristle bundles, midpoint pigment advection and paint-height illumination, inspired by the public Fluid Paint engine of credited collaborator David Li. This is an independent reconstruction, not the original code. <a href="https://github.com/tmoreno-01/thelab/blob/main/experiments/field_fluid.py">Experimental renderer 001</a> · <a href="https://github.com/tmoreno-01/thelab/blob/main/experiments/field_studies_002.py">Renderer 002</a> · <a href="https://github.com/tmoreno-01/thelab/blob/main/experiments/field_studies_004.py">Renderer 004</a> · <a href="https://github.com/dli/paint">Fluid Paint reference</a> · <a href="https://github.com/tmoreno-01/thelab/blob/main/experiments/field_studies_005.py">Renderer 005</a>.</p></details>
-</main>
-<script>
-const stage=document.getElementById('stage'),v=document.getElementById('film'),p=document.getElementById('play'),f=document.getElementById('full'),m=document.getElementById('message');
-let wantsPlay=true,visible=true; const version=document.getElementById('version'), edition=document.getElementById('edition'); let latest=null,showNew=false,checking=false; const older='media/field-studies-004.mp4';
-async function checkNew(){if(checking||latest)return;checking=true;try{for(const u of ['media/field-studies-005.mp4','https://raw.githubusercontent.com/tmoreno-01/thelab/main/media/field-studies-005.mp4']){try{const res=await fetch(u,{method:'HEAD',cache:'no-store'});if(res.ok&&Number(res.headers.get('content-length')||0)>100000){latest=u;version.disabled=false;version.textContent='view 005';switchFilm(true);break}}catch{}}}finally{checking=false}}
-function switchFilm(next){if(next&&!latest)return;showNew=next;v.src=next?latest:older;edition.textContent=next?'flowers / directional pigment · 005':'flowers / bristle transport · 004';version.textContent=next?'view 004':'view 005';v.load();sync()}
-version.onclick=()=>switchFilm(!showNew);checkNew();setInterval(checkNew,30000);
-function sync(){if(wantsPlay&&visible&&!document.hidden)v.play().catch(()=>{p.textContent='play'});else v.pause()}
-v.addEventListener('play',()=>{p.textContent='pause';m.textContent=''});
-v.addEventListener('pause',()=>{p.textContent='play'});
-v.addEventListener('error',()=>{if(showNew){switchFilm(false);m.textContent='Study 005 could not play; showing 004.'}else m.textContent='Film could not be loaded.'});
-p.onclick=()=>{wantsPlay=v.paused;sync()};
-async function fullscreen(){if(document.fullscreenElement){await document.exitFullscreen();return}if(stage.classList.contains('expanded')){stage.classList.remove('expanded');return}try{if(stage.requestFullscreen)await stage.requestFullscreen();else stage.classList.add('expanded')}catch{stage.classList.add('expanded')}}
-f.onclick=fullscreen;stage.onclick=fullscreen;
-document.addEventListener('keydown',e=>{if(e.key==='Escape')stage.classList.remove('expanded')});
-document.addEventListener('visibilitychange',sync);
-if('IntersectionObserver'in window)new IntersectionObserver(es=>{visible=es[0].isIntersecting;sync()},{threshold:.01}).observe(stage);
-sync();
+*{box-sizing:border-box}html,body{margin:0;background:white;color:#111;font:14px/1.4 Arial,Helvetica,sans-serif}header{padding:24px 28px}h1{font-size:24px;letter-spacing:-.055em;font-weight:500;margin:0}a{color:inherit}h1 a{text-decoration:none}main{padding:0 28px 28px;max-width:1920px;margin:auto}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 16px}.piece{min-width:0}.stage{position:relative;aspect-ratio:16/9;background:#282a30;overflow:hidden;cursor:zoom-in}.stage video{width:100%;height:100%;display:block;object-fit:contain}.stage:fullscreen,.stage.expanded{width:100vw;height:100dvh;aspect-ratio:auto;cursor:zoom-out}.stage.expanded{position:fixed;inset:0;z-index:100}.message{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:#eee;pointer-events:none}.message:empty{display:none}.bar{display:flex;gap:12px;align-items:baseline;justify-content:space-between;padding:9px 0;flex-wrap:wrap}.controls{display:flex;gap:12px}button{background:none;border:0;padding:3px 0;font:inherit;font-size:12px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}button:disabled{opacity:.4;cursor:default}.sub,details{color:#666;font-size:12px}details{margin-top:25px;max-width:850px}summary{cursor:pointer}@media(max-width:720px){header{padding:20px}main{padding:0 20px 20px}.grid{grid-template-columns:1fr;gap:24px}}
+</style></head><body><header><h1><a href="./">lab</a></h1></header><main><div class="grid" id="grid"></div>
+<details><summary>process / credits</summary><p>Field studies is an independent computational painting experiment. Dense optical flow, temporal change and image structure are extracted from real footage before a separate bristle and pigment simulation. Urban studies retain the source's own colours and lift shadow pigment rather than using the flower-specific palette. Inspired by Quayola's Jardins d’Été and <a href="https://github.com/dli/paint">David Li's Fluid Paint</a>. Not a reproduction of the original proprietary software.</p><p><a href="https://github.com/tmoreno-01/thelab/blob/main/experiments/field_studies_006.py">Urban renderer</a> · <a href="https://github.com/tmoreno-01/thelab/actions/workflows/field-studies-urban.yml">Render status</a></p></details>
+</main><script>
+const items=[
+ {title:'002 — taipei',desc:'neon / traffic',file:'field-studies-taipei.mp4',source:'https://www.pexels.com/video/a-city-at-night-with-many-lights-and-cars-26102174/',credit:'Timo Volz / Pexels'},
+ {title:'003 — london',desc:'rain / reflections',file:'field-studies-london.mp4',source:'https://www.pexels.com/video/city-at-night-5743582/',credit:'George Morina / Pexels'},
+ {title:'001 — flowers',desc:'directional pigment',file:'field-studies-005.mp4',fallback:'field-studies-004.mp4',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'}
+];
+for(const item of items){
+ const el=document.createElement('article');el.className='piece';el.innerHTML='<div class="stage"><video muted autoplay loop playsinline preload="metadata"></video><div class="message" role="status">render pending</div></div><div class="bar"><div>'+item.title+'<div class="sub">'+item.desc+' · <a href="'+item.source+'">'+item.credit+'</a></div></div><div class="controls"><button class="play" disabled>play</button><button class="full" disabled>fullscreen</button></div></div>';document.getElementById('grid').append(el);
+ const stage=el.querySelector('.stage'),v=el.querySelector('video'),m=el.querySelector('.message'),p=el.querySelector('.play'),f=el.querySelector('.full');let visible=false,wants=true,current='',preferred=false,checking=false,failed=new Set();
+ function sync(){if(current&&visible&&wants&&!document.hidden)v.play().catch(()=>{p.textContent='play'});else v.pause()}
+ function use(url,primary){if(current===url)return;current=url;preferred=primary;v.src=url;m.textContent='loading';v.load();sync()}
+ async function check(){if(checking||preferred)return;checking=true;try{for(const file of [item.file,item.fallback].filter(Boolean)){for(const url of ['media/'+file,'https://raw.githubusercontent.com/tmoreno-01/thelab/main/media/'+file]){if(failed.has(url))continue;try{const r=await fetch(url,{method:'HEAD',cache:'no-store'});if(r.ok&&(/video|octet-stream/.test(r.headers.get('content-type')||'')||Number(r.headers.get('content-length'))>100000)){use(url,file===item.file);return}}catch{}}}}finally{checking=false}}
+ v.onloadeddata=()=>{m.textContent='';p.disabled=f.disabled=false;sync()};v.onplay=()=>p.textContent='pause';v.onpause=()=>p.textContent='play';v.onerror=()=>{failed.add(current);current='';preferred=false;m.textContent='render unavailable';check()};
+ p.onclick=()=>{wants=v.paused;sync()};async function fullscreen(){if(!current)return;if(document.fullscreenElement){await document.exitFullscreen();return}if(stage.classList.contains('expanded')){stage.classList.remove('expanded');return}try{if(stage.requestFullscreen)await stage.requestFullscreen();else stage.classList.add('expanded')}catch{stage.classList.add('expanded')}}f.onclick=fullscreen;stage.onclick=fullscreen;
+ if('IntersectionObserver'in window)new IntersectionObserver(es=>{visible=es[0].isIntersecting;sync()},{threshold:.01}).observe(stage);else visible=true;
+ document.addEventListener('visibilitychange',sync);document.addEventListener('keydown',e=>{if(e.key==='Escape')stage.classList.remove('expanded')});
+ if(item.fallback)use('media/'+item.fallback,false);check();setInterval(check,15000);
+}
 </script></body></html>
