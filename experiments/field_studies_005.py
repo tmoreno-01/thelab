@@ -1,4 +1,4 @@
-'''Bristle-based pigment transport, inspired by David Li Fluid Paint (MIT), not the proprietary Quayola software. Input observation NPZ from field_studies_003.py analyze.'''
+'''Bristle-based pigment transport, Technical reference: David Li Fluid Paint (MIT). Input observation NPZ from field_studies_003.py analyze.'''
 import numpy as np, cv2 as cv, sys,time
 from numba import njit
 cv.setNumThreads(3)
