@@ -16,18 +16,21 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Install renderer
-        run: python -m pip install numpy==2.2.6 numba==0.61.2 opencv-python-headless==4.12.0.88
+        run: python -m pip install numpy==2.2.6 numba==0.61.2 opencv-python-headless==4.12.0.88 imageio-ffmpeg==0.6.0
       - name: Download source and render
         run: |
           curl --fail --location --retry 2 'https://videos.pexels.com/video-files/9054643/9054643-hd_1920_1080_30fps.mp4' -o /tmp/flowers.mp4
-          ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate -of default=nw=1 /tmp/flowers.mp4
+          FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')
+          "$FFMPEG" -v error -i /tmp/flowers.mp4 -frames:v 1 -f null -
           python experiments/field_studies_002.py /tmp/flowers.mp4 /tmp/painting.mp4 5 1920
-          ffmpeg -v error -y -i /tmp/painting.mp4 -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart media/field-studies-002.mp4
-          ffmpeg -v error -i media/field-studies-002.mp4 -f null -
+          "$FFMPEG" -v error -y -i /tmp/painting.mp4 -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart media/field-studies-002.mp4
+          "$FFMPEG" -v error -i media/field-studies-002.mp4 -f null -
       - name: Store rendered film
         run: |
           git config user.name 'github-actions[bot]'
