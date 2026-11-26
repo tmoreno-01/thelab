@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>ANIMA / 001 — lifeafterlogic lab</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090e13;color:#e5e7e6;font:12px/1.4 Arial,Helvetica,sans-serif}canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}header{position:absolute;left:28px;right:28px;top:24px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}h1{font-size:23px;font-weight:400;letter-spacing:-.07em;margin:0}small{display:block;color:#a3b0b1;font-size:10px;letter-spacing:.1em;margin-top:4px}a,button{color:inherit}a{pointer-events:auto;text-decoration:none}footer{position:absolute;bottom:24px;left:28px;right:28px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;pointer-events:none}#meta{font-variant-numeric:tabular-nums;color:#a6b6b5;font-size:11px}#controls{display:flex;align-items:center;gap:18px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}button,select{border:0;background:transparent;color:#dde5e3;font:inherit;padding:5px 0;cursor:pointer;text-decoration:underline;text-underline-offset:4px}select{background:#151e23}#error{position:absolute;inset:0;display:none;place-items:center;padding:30px;text-align:center;background:#101419;white-space:pre-wrap;font:12px/1.6 monospace}#hint{position:absolute;bottom:58px;left:28px;color:#8f9f9f;pointer-events:none;font-size:10px} @media(max-width:640px){header{left:16px;right:16px;top:16px}footer{left:16px;right:16px;bottom:16px}#controls{gap:10px}#hint{left:16px;bottom:72px}}
+</style></head><body><canvas id="c" aria-label="Interactive living translucent organism"></canvas><header><div><h1>anima / 001</h1><small>ARTIFICIAL LIFE STUDIES — PELAGIC SPECIMEN</small></div><a href="./">lab / exit</a></header><div id="hint">drag to orbit · scroll to examine · tap or click to disturb</div><footer><div id="meta">initialising specimen</div><div id="controls"><button id="new">new specimen</button><button id="pause">pause</button><select id="quality" aria-label="Render quality"><option value="auto">adaptive</option><option value="1">high</option><option value=".65">low</option></select><button id="full">fullscreen</button></div></footer><div id="error"></div>
+<script>
+'use strict';
+const canvas=document.getElementById('c'),meta=document.getElementById('meta'),err=document.getElementById('error');
+function fail(e){err.style.display='grid';err.textContent='ANIMA could not start.\n'+String(e);console.error(e)}
+try{
+const gl=canvas.getContext('webgl2',{alpha:false,antialias:true,premultipliedAlpha:false,powerPreference:'high-performance'});
+if(!gl)throw Error('WebGL 2 is required. Try a recent Chrome, Edge or Safari browser with hardware acceleration enabled.');
+const TAU=Math.PI*2,PI=Math.PI,clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),mix=(a,b,t)=>a+(b-a)*t;
+function rng(seed){let s=seed>>>0;return()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296}}
+const VS=`#version 300 es
+precision highp float;
+layout(location=0)in vec2 uv;
+uniform mat4 vp;
+uniform float time,seed,pulse,aspectShape;
+uniform int kind;
+out vec3 P,N;out vec2 U;flat out int K;flat out int ID;
+const float PI=3.14159265359,TAU=6.28318530718;
+float hash(float x){return fract(sin(x*127.1+seed*11.7)*43758.5453);}
+vec3 bell(float a,float v){
+ float contraction=1.+.072*pulse*sin(v*2.6)+.035*sin(time*.53+v*5.+a*2.);
+ float ridges=.046*cos(a*18.+v*1.5)+.016*cos(a*36.-v*6.)+.027*sin(a*3.+v*4.+seed);
+ float r=pow(max(.0001,sin(v*1.84)),.82)*(1.+ridges)*contraction;
+ float y=1.62-1.53*pow(v,1.12)+.035*sin(a*9.+v*3.+time*.65)*pow(v,5.)+.075*pulse*v;
+ return vec3(r*cos(a)*aspectShape+.12*v*v*sin(time*.47+v*3.),y,r*sin(a)*.88+.07*v*sin(time*.36+a));
+}
+vec3 shape(vec2 q,int k,int id){
+ float u=q.x,v=q.y,a=u*TAU;float f=float(id);
+ if(k==0)return bell(a,v);
+ if(k==1){
+  float center=f*TAU/10.+seed*.13;float side=2.*u-1.;
+  vec3 root=bell(center,1.);
+  float spread=pow(max(0.,sin(v*PI)),.72),len=.94+.43*hash(f+19.);
+  float ang=center+side*(.10+.48*spread)+.24*sin(v*4.5+time*.65+f*.9)*v;
+  float rr=length(root.xz)+.26*sin(v*PI*1.2)+.22*v+.12*sin(time*.86-v*5.+f*.71)*v;
+  rr+=.085*sin(side*13.+v*17.+time*.8)*spread+.025*cos(side*35.+v*21.)*spread;
+  float y=root.y-v*len+.15*sin(side*7.+v*13.+time*.73+f)*spread+.11*pulse*v;
+  return vec3(rr*cos(ang)*aspectShape,y,rr*sin(ang)*.88);
+ }
+ if(k==2||k==3){
+  float center=f*TAU/9.+(k==3?.34:0.);
+  float r0=k==2?.39:.19;
+  float r=(k==2?.22:.12)*sin(v*PI)*(1.+.13*cos(a*7.+v*11.));
+  float yy=(k==2?.86:.18)+(k==2?.62:.78)*cos(v*PI)*(.97+.065*pulse);
+  float rr=r0+.11*sin(v*4.+f*.7+time*.52)+.03*pulse;
+  return vec3(rr*cos(center)+r*cos(a),yy,rr*sin(center)+r*sin(a));
+ }
+ if(k==4){
+  // Raised, branching radial capillaries embedded just inside the mantle.
+  float aa=f*TAU/36.+.032*sin(v*11.+f*2.)+.012*sin(v*32.+f*1.9);
+  float vv=.10+.86*v;
+  vec3 p=bell(aa,vv);
+  p.xz*=.977;
+  vec3 tangent=normalize(bell(aa,min(1.,vv+.004))-bell(aa,max(.001,vv-.004)));
+  vec3 radial=normalize(vec3(cos(aa),.2,sin(aa)));
+  vec3 b=normalize(cross(tangent,radial));vec3 n=normalize(cross(b,tangent));
+  float radius=(.007+.007*pow(max(0.,sin(v*PI)),.5))*(.68+.65*hash(f));
+  return p+radius*(cos(a)*n+sin(a)*b);
+ }
+ // Central translucent digestive column, sculpted with longitudinal lobes.
+ float r=.21*pow(max(.001,sin(v*PI)),.7)*(1.+.15*sin(a*8.+v*15.));
+ return vec3(r*cos(a)+.045*sin(v*8.+time*.7),1.20-v*2.03,r*sin(a));
+}
+void main(){
+ K=kind;ID=gl_InstanceID;U=uv;P=shape(uv,kind,ID);
+ float e=.0008;
+ vec3 du=shape(vec2(uv.x+e,uv.y),kind,ID)-shape(vec2(uv.x-e,uv.y),kind,ID);
+ vec3 dv=shape(vec2(uv.x,min(1.,uv.y+e)),kind,ID)-shape(vec2(uv.x,max(0.,uv.y-e)),kind,ID);
+ N=normalize(cross(du,dv)+vec3(0.,.00000001,0.));gl_Position=vp*vec4(P,1.);
+}`;
+const TUBE=`#version 300 es
+precision highp float;
+layout(location=0)in vec3 pos;layout(location=1)in vec3 normal;layout(location=2)in vec2 uv;layout(location=3)in float id;
+uniform mat4 vp;out vec3 P,N;out vec2 U;flat out int K;flat out int ID;
+void main(){P=pos;N=normal;U=uv;ID=int(id);K=6;gl_Position=vp*vec4(P,1.);}
+`;
+const FS=`#version 300 es
+precision highp float;
+in vec3 P,N;in vec2 U;flat in int K;flat in int ID;
+uniform vec3 eye;uniform float time,seed;uniform int palette;
+out vec4 frag;
+float h(vec3 p){p=fract(p*.3183099+vec3(.1,.2,.3));p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
+float noise(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float fb(vec3 p){return .57*noise(p)+.28*noise(p*2.07)+.15*noise(p*4.13);}
+float cells(vec2 p){vec2 i=floor(p),f=fract(p);float d1=10.,d2=10.;for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 g=vec2(float(x),float(y));vec2 o=vec2(h(vec3(i+g,seed)),h(vec3(i+g,seed+4.)));float d=dot(g+o-f,g+o-f);if(d<d1){d2=d1;d1=d;}else d2=min(d2,d);}return 1.-smoothstep(.015,.085,sqrt(d2)-sqrt(d1));}
+void main(){
+ vec3 n=normalize(N);if(!gl_FrontFacing)n=-n;vec3 v=normalize(eye-P);
+ if(dot(n,v)<0.)n=-n;
+ vec3 L=normalize(vec3(-3.2,3.4,4.3)-P),R=normalize(vec3(3.3,1.8,-4.2)-P),B=normalize(vec3(.1,-3.1,1.8)-P);
+ float nv=max(0.,dot(n,v)),nl=max(0.,dot(n,L)),nr=max(0.,dot(n,R)),nb=max(0.,dot(n,B));
+ float fres=pow(1.-nv,2.2),f=float(ID);
+ float ns=fb(P*7.+seed),fine=fb(P*49.+vec3(U*13.,seed)),grain=noise(P*164.);
+ float stripes=pow(.5+.5*sin(U.x*113.+U.y*18.+noise(P*9.)*4.),6.);
+ float micro=pow(.5+.5*sin(U.y*320.+noise(P*19.)*5.),10.);
+ float cell=K<2?cells(vec2(U.x*(K==0?112.:35.),U.y*75.)+vec2(noise(P*13.)*1.7,0.)):0.;
+ vec3 rose=vec3(.72,.19,.25),ivory=vec3(.76,.58,.42),cyan=vec3(.17,.47,.51);
+ if(palette==1){rose=vec3(.34,.12,.57);ivory=vec3(.65,.62,.78);cyan=vec3(.14,.48,.63);}
+ if(palette==2){rose=vec3(.54,.25,.095);ivory=vec3(.78,.69,.42);cyan=vec3(.20,.46,.34);}
+ float tissue=smoothstep(.20,.82,ns+.10*sin(U.y*19.+f));
+ vec3 base=mix(rose,ivory,tissue);
+ float rough=.23+.22*fine;
+ float power=mix(120.,18.,rough);
+ float spec=pow(max(0.,dot(n,normalize(L+v))),power)*1.28+pow(max(0.,dot(n,normalize(R+v))),power*.65)*1.5;
+ float soft=pow(max(0.,dot(n,normalize(L+v))),9.)*.12;
+ float trans=pow(max(0.,dot(v,-R)),2.2)*(.3+.7*nr)+pow(max(0.,dot(v,-L)),2.)*.35;
+ vec3 lit=base*(.20+.78*nl+.19*nb)+rose*trans*.57+cyan*(nr*.48+fres*.42)+spec*vec3(1.,.89,.78)+soft;
+ float ir=.5+.5*cos(13.*nv+fine*4.+vec3(0.,2.,4.)).r;
+ lit+=mix(cyan,rose,ir)*fres*.24;
+ float alpha=1.;
+ if(K==0){
+  float edge=smoothstep(.86,1.,U.y);float rib=pow(.5+.5*cos(U.x*113.+U.y*1.5),8.);
+  lit=mix(lit,lit*vec3(.88,.72,.75)+vec3(.10,.018,.025),cell*.28);
+  lit+=ivory*(rib*.17+micro*.075+fres*.24+edge*.18)+cyan*stripes*.10;
+  lit*=.83+.30*fine+.13*grain;
+  alpha=clamp(.18+fres*.47+rib*.13+edge*.20+cell*.07+spec*.19,.14,.86);
+ }else if(K==1){
+  float fold=pow(.5+.5*sin(U.x*52.+U.y*22.+f*.6),9.);
+  float rim=pow(abs(U.x*2.-1.),12.);
+  lit=mix(lit,rose*.4+lit*.65,fold*.36)+ivory*(rim*.37+micro*.12)+cyan*fres*.17;
+  lit*=.70+.50*fine;alpha=.55+.32*fres+.12*rim;
+ }else if(K==2||K==3||K==5){
+  float marbling=pow(.5+.5*sin(U.x*TAU_LOCAL()+U.y*26.+ns*6.),4.);
+  lit=mix(lit,rose*(.26+.70*nl)+ivory*.10,marbling*.45)+ivory*micro*.10;
+  lit*=.72+.4*fine;alpha=1.;
+ }else if(K==4){
+  float traveling=pow(.5+.5*sin(U.y*25.-time*1.9+f*.25),12.);
+  lit=rose*(.32+nl*.48)+ivory*(.12+fres*.12+traveling*.25)+spec*.42;alpha=.82;
+ }else{
+  float bands=pow(.5+.5*sin(U.y*175.+f*.71),13.);
+  lit=mix(rose,ivory,.35+.38*ns)*(.26+.68*nl)+cyan*(nr*.55+fres*.25)+ivory*(bands*.28+spec*.32);
+  alpha=clamp(.72+.25*fres,0.,1.);
+ }
+ lit=lit/(lit+.65);lit=pow(max(lit,0.),vec3(.72));frag=vec4(lit,alpha);
+}
+`.replace('TAU_LOCAL()','31.4159265');
+const BVS=`#version 300 es
+out vec2 U;
+void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));U=p*.5;gl_Position=vec4(p*2.-1.,0.,1.);}
+`;
+const BFS=`#version 300 es
+precision highp float;in vec2 U;out vec4 frag;uniform vec2 resolution;uniform float time,seed;
+float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+void main(){vec2 p=(gl_FragCoord.xy-.5*resolution)/resolution.y;float r=length(p*vec2(.85,1.));vec3 c=mix(vec3(.033,.076,.085),vec3(.006,.012,.020),smoothstep(0.,.9,r));c+=vec3(.013,.018,.020)*exp(-dot(p-vec2(-.21,.22),p-vec2(-.21,.22))*7.);for(int k=0;k<3;k++){float z=float(k);vec2 q=p*(13.+z*11.)+vec2(time*(.09+.025*z),time*.07);vec2 i=floor(q),f=fract(q)-vec2(h(i+z),h(i+vec2(4.,z)));float d=length(f);float a=exp(-d*d*(105.+z*62.))*h(i+9.+z)*.048/(z+1.);c+=vec3(.42,.68,.70)*a;}c+=h(gl_FragCoord.xy)*.006;frag=vec4(c,1.);}
+`;
+function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
+function program(v,f){const p=gl.createProgram();gl.attachShader(p,shader(gl.VERTEX_SHADER,v));gl.attachShader(p,shader(gl.FRAGMENT_SHADER,f));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p}
+const skin=program(VS,FS),tube=program(TUBE,FS),back=program(BVS,BFS);
+function grid(m,n){const vertices=new Float32Array((m+1)*(n+1)*2),indices=new Uint32Array(m*n*6);let k=0;for(let y=0;y<=n;y++)for(let x=0;x<=m;x++){vertices[k++]=x/m;vertices[k++]=y/n}k=0;for(let y=0;y<n;y++)for(let x=0;x<m;x++){const a=y*(m+1)+x,b=a+m+1;indices.set([a,a+1,b,b,a+1,b+1],k);k+=6}const vao=gl.createVertexArray();gl.bindVertexArray(vao);const vb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);const ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);return{vao,count:indices.length}}
+const cap=grid(192,100),frill=grid(56,60),organ=grid(40,44),vessel=grid(7,68);
+const blank=gl.createVertexArray();
+const uniforms=new Map();function loc(p,k){if(!uniforms.has(p))uniforms.set(p,new Map());const m=uniforms.get(p);if(!m.has(k))m.set(k,gl.getUniformLocation(p,k));return m.get(k)}
+function f(p,k,v){gl.uniform1f(loc(p,k),v)}function i(p,k,v){gl.uniform1i(loc(p,k),v)}
+function vec3(p,k,v){gl.uniform3fv(loc(p,k),v)}function mat(p,k,v){gl.uniformMatrix4fv(loc(p,k),false,v)}
+function normal(x,y,z){let l=Math.hypot(x,y,z)||1;return[x/l,y/l,z/l]}
+function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function matrix(a,b){const c=new Float32Array(16);for(let col=0;col<4;col++)for(let row=0;row<4;row++)for(let k=0;k<4;k++)c[col*4+row]+=a[k*4+row]*b[col*4+k];return c}
+function view(eye,target){const z=normal(eye[0]-target[0],eye[1]-target[1],eye[2]-target[2]),x=normal(...cross([0,1,0],z)),y=cross(z,x),d=a=>-(a[0]*eye[0]+a[1]*eye[1]+a[2]*eye[2]);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,d(x),d(y),d(z),1])}
+function perspective(a){let q=1/Math.tan(33*PI/360),n=.1,F=40;return new Float32Array([q/a,0,0,0,0,q,0,0,0,0,(F+n)/(n-F),-1,0,0,2*F*n/(n-F),0])}
+let seed=23.17,palette=0,aspectShape=1,clock=0,pulse=0,disturb=0,phase=0,breath=0,random=rng(2317);
+const COUNT=44,SEG=34,SIDES=6,STRIDE=9;
+let chains=[],tubeData=new Float32Array(COUNT*(SEG+1)*(SIDES+1)*STRIDE),tubeIdx=new Uint32Array(COUNT*SEG*SIDES*6);
+let ix=0;for(let k=0;k<COUNT;k++)for(let j=0;j<SEG;j++)for(let s=0;s<SIDES;s++){let a=k*(SEG+1)*(SIDES+1)+j*(SIDES+1)+s,b=a+SIDES+1;tubeIdx.set([a,a+1,b,b,a+1,b+1],ix);ix+=6}
+const tvao=gl.createVertexArray(),tvb=gl.createBuffer(),tib=gl.createBuffer();gl.bindVertexArray(tvao);gl.bindBuffer(gl.ARRAY_BUFFER,tvb);gl.bufferData(gl.ARRAY_BUFFER,tubeData.byteLength,gl.DYNAMIC_DRAW);
+for(const [a,n,off] of [[0,3,0],[1,3,3],[2,2,6],[3,1,8]]){gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,n,gl.FLOAT,false,STRIDE*4,off*4)}gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,tib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,tubeIdx,gl.STATIC_DRAW);
+function anchor(c){let a=c.a,v=.98,r=Math.pow(Math.sin(v*1.84),.82)*(1+.046*Math.cos(a*18+v*1.5)+.016*Math.cos(a*36-v*6)+.027*Math.sin(a*3+v*4+seed))*(1+.072*pulse*Math.sin(v*2.6)+.035*Math.sin(clock*.53+v*5+a*2));return[r*Math.cos(a)*aspectShape+.12*v*v*Math.sin(clock*.47+v*3),1.62-1.53*Math.pow(v,1.12)+.035*Math.sin(a*9+v*3+clock*.65)*Math.pow(v,5)+.075*pulse*v,r*Math.sin(a)*.88+.07*v*Math.sin(clock*.36+a)]}
+function reset(s){seed=s;random=rng(Math.floor(s*10000));palette=Math.floor(random()*3);aspectShape=.83+random()*.32;chains=[];for(let k=0;k<COUNT;k++){let a=k*TAU/COUNT+.14*(random()-.5),len=1.55+1.25*random(),rad=.008+.013*Math.pow(random(),1.8),c={a,len,rad,phase:random()*TAU,p:new Float32Array((SEG+1)*3),old:new Float32Array((SEG+1)*3),lambda:new Float32Array(SEG)};let A=anchor(c);for(let j=0;j<=SEG;j++){let v=j/SEG;c.p.set([A[0]+Math.cos(a)*.34*v+.12*Math.sin(v*5+c.phase)*v,A[1]-v*len,A[2]+Math.sin(a)*.34*v],j*3)}c.old.set(c.p);chains.push(c)}}
+reset(seed);
+let yaw=.18,pitch=.13,zoom=7.65,paused=false,autoOrbit=true,drag=null,scale=1,quality='auto',visible=true;
+function simulate(dt){
+ clock+=dt;phase+=dt*(.88+.16*Math.sin(clock*.13)+.07*Math.sin(clock*.29));breath=mix(breath,Math.sin(phase)+.22*Math.sin(phase*1.9),1-Math.exp(-dt*3));pulse=breath;disturb*=Math.exp(-dt*1.2);
+ for(const c of chains){
+  const p=c.p,o=c.old,A=anchor(c);p.set(A,0);o.set(A,0);let d=c.len/SEG*(1+.035*pulse);
+  c.lambda.fill(0);
+  for(let j=1;j<=SEG;j++){let k=j*3,v=j/SEG,x=p[k],y=p[k+1],z=p[k+2],sw=Math.sin(clock*.85+c.phase-v*6+z*.5),tw=Math.cos(clock*.62+c.phase*1.3-v*4+x*.8);
+   const fx=.27*sw+.13*Math.cos(c.a)*(1-v)+disturb*.54*Math.sin(c.a+clock),fy=-.31+.18*Math.sin(clock*1.13-v*4+c.phase),fz=.25*tw+.13*Math.sin(c.a)*(1-v)+disturb*.3*Math.cos(c.a+clock);
+   p[k]=x+(x-o[k])*.955+fx*dt*dt;p[k+1]=y+(y-o[k+1])*.955+fy*dt*dt;p[k+2]=z+(z-o[k+2])*.955+fz*dt*dt;o[k]=x;o[k+1]=y;o[k+2]=z;
+  }
+  // XPBD distance constraints; anchored root, compliance scaled by dt.
+  const alpha=.0000015/(dt*dt);
+  for(let it=0;it<7;it++){
+   p.set(A,0);
+   for(let j=0;j<SEG;j++){let a=j*3,b=a+3,x=p[b]-p[a],y=p[b+1]-p[a+1],z=p[b+2]-p[a+2],l=Math.hypot(x,y,z)||1e-7,w=j===0?0:1,dl=(-(l-d)-alpha*c.lambda[j])/(w+1+alpha);c.lambda[j]+=dl;let t=dl/l;if(w){p[a]-=x*t;p[a+1]-=y*t;p[a+2]-=z*t}p[b]+=x*t;p[b+1]+=y*t;p[b+2]+=z*t}
+   // Weak bending regularisation, retains supple curves without sharp kinks.
+   for(let j=1;j<SEG;j++){let k=j*3;for(let a=0;a<3;a++)p[k+a]+=(.5*(p[k+a-3]+p[k+a+3])-p[k+a])*.035}
+  }
+ }
+}
+function updateTubes(){let k=0;for(let id=0;id<COUNT;id++){const c=chains[id],p=c.p;for(let j=0;j<=SEG;j++){let a=Math.max(0,j-1)*3,b=Math.min(SEG,j+1)*3,t=normal(p[b]-p[a],p[b+1]-p[a+1],p[b+2]-p[a+2]),ref=Math.abs(t[2])<.88?[0,0,1]:[1,0,0],n=normal(...cross(t,ref)),m=cross(t,n),v=j/SEG,r=c.rad*(.18+.82*Math.pow(1-v,.7))*(1+.16*Math.sin(v*35+c.phase));for(let s=0;s<=SIDES;s++){let u=s/SIDES,cs=Math.cos(u*TAU),sn=Math.sin(u*TAU),nx=cs*n[0]+sn*m[0],ny=cs*n[1]+sn*m[1],nz=cs*n[2]+sn*m[2];tubeData.set([p[j*3]+r*nx,p[j*3+1]+r*ny,p[j*3+2]+r*nz,nx,ny,nz,u,v,id],k);k+=STRIDE}}}gl.bindBuffer(gl.ARRAY_BUFFER,tvb);gl.bufferSubData(gl.ARRAY_BUFFER,0,tubeData)}
+function common(p,vp,eye){gl.useProgram(p);mat(p,'vp',vp);vec3(p,'eye',eye);f(p,'time',clock);f(p,'seed',seed);f(p,'pulse',pulse);f(p,'aspectShape',aspectShape);i(p,'palette',palette)}
+function draw(g,kind,n=1){i(skin,'kind',kind);gl.bindVertexArray(g.vao);gl.drawElementsInstanced(gl.TRIANGLES,g.count,gl.UNSIGNED_INT,0,n)}
+function resize(){let pr=Math.min(devicePixelRatio||1,1.6),w=Math.max(2,Math.round(canvas.clientWidth*pr*scale)),h=Math.max(2,Math.round(canvas.clientHeight*pr*scale));if(w!==canvas.width||h!==canvas.height){canvas.width=w;canvas.height=h}gl.viewport(0,0,w,h)}
+let last=performance.now(),acc=0,frames=0,fps=60,windowStart=last;
+function render(now){requestAnimationFrame(render);let dt=Math.min(.05,(now-last)/1000);last=now;if(!visible)return;
+ if(!paused){acc+=dt;let steps=0;while(acc>=1/90&&steps++<5){simulate(1/90);acc-=1/90}if(steps>=5)acc=0;updateTubes();if(autoOrbit&&!drag)yaw+=dt*.045}
+ resize();let aspect=canvas.width/canvas.height,d=zoom*Math.max(1,.78/aspect),target=[0,-.48,0],eye=[Math.sin(yaw)*Math.cos(pitch)*d,target[1]+Math.sin(pitch)*d,Math.cos(yaw)*Math.cos(pitch)*d],vp=matrix(perspective(aspect),view(eye,target));
+ gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.disable(gl.CULL_FACE);gl.depthMask(true);gl.clear(gl.DEPTH_BUFFER_BIT);gl.useProgram(back);gl.uniform2f(loc(back,'resolution'),canvas.width,canvas.height);f(back,'time',clock);f(back,'seed',seed);gl.bindVertexArray(blank);gl.drawArrays(gl.TRIANGLES,0,3);
+ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);
+ common(skin,vp,eye);gl.disable(gl.CULL_FACE);draw(organ,5);draw(organ,2,9);draw(organ,3,9);
+ gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);common(tube,vp,eye);gl.bindVertexArray(tvao);gl.drawElements(gl.TRIANGLES,tubeIdx.length,gl.UNSIGNED_INT,0);
+ common(skin,vp,eye);draw(vessel,4,36);
+ // Back and front layers of translucent tissue; no depth writes.
+ gl.depthMask(false);gl.enable(gl.CULL_FACE);gl.cullFace(gl.FRONT);draw(frill,1,10);draw(cap,0);gl.cullFace(gl.BACK);draw(frill,1,10);draw(cap,0);gl.depthMask(true);gl.disable(gl.CULL_FACE);
+ frames++;if(now-windowStart>1500){fps=frames*1000/(now-windowStart);frames=0;windowStart=now;if(quality==='auto'&&!paused){if(fps<26&&scale>.53)scale=Math.max(.5,scale-.12);else if(fps>53&&scale<1)scale=Math.min(1,scale+.06)}meta.textContent='SPECIMEN '+Math.floor(seed*100).toString(16).toUpperCase()+' · '+Math.round(fps)+' FPS · '+canvas.width+' × '+canvas.height+' · LIVE';}
+}
+canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,moved:false};canvas.setPointerCapture(e.pointerId);autoOrbit=false});
+canvas.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;yaw+=dx*.006;pitch=clamp(pitch+dy*.005,-1.05,1.05);drag.x=e.clientX;drag.y=e.clientY});
+canvas.addEventListener('pointerup',()=>{if(drag&&!drag.moved)disturb=2.5;drag=null;autoOrbit=true});canvas.addEventListener('pointercancel',()=>{drag=null;autoOrbit=true});
+canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=clamp(zoom*Math.exp(e.deltaY*.001),4,13)},{passive:false});
+document.getElementById('new').onclick=()=>{reset(Math.random()*999+1);disturb=.9;updateTubes()};
+document.getElementById('pause').onclick=e=>{paused=!paused;e.target.textContent=paused?'resume':'pause';acc=0};
+document.getElementById('quality').onchange=e=>{quality=e.target.value;scale=quality==='auto'?1:Number(quality)};
+document.getElementById('full').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen()}catch(e){console.warn(e)}};
+document.addEventListener('visibilitychange',()=>{visible=!document.hidden;last=performance.now();acc=0;frames=0;windowStart=last});
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();fail('Graphics context lost. Reload to restart the specimen.');visible=false});
+updateTubes();requestAnimationFrame(render);
+}catch(e){fail(e)}
+</script></body></html>
