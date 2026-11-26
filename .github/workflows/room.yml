@@ -46,7 +46,7 @@ jobs:
             await page.waitForFunction(()=>window.roomTest||document.querySelector('#loading').textContent.includes('could not start'),{},{timeout:120000});
             const state=await page.evaluate(()=>({ready:!!window.roomTest,loading:document.querySelector('#loading').textContent,count:window.roomTest?.objects.length,missing:window.roomTest?.missing}));
             console.log(JSON.stringify(state));
-            if(!state.ready||state.count<15)throw Error('Room initialization failed');
+            if(!state.ready||state.count<15||state.missing?.some(x=>['leather armchair','stone coffee table'].includes(x)))throw Error('Room initialization or critical asset load failed');
             await page.evaluate(()=>{const r=window.roomTest; r.select(r.objects.find(x=>x.name==='leather armchair'));});
             await page.locator('#right').click();
             await page.locator('#reset').click();
@@ -70,7 +70,15 @@ jobs:
             rm -rf room
             mkdir room
             cp -a /tmp/room-dist/. room/
-            git add room
+            python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          if 'href="room/"' not in s:
+              s=s.replace('<main>', '<main><a href="room/" style="display:block;padding:17px 0 21px;margin-bottom:22px;border-top:1px solid #ddd;border-bottom:1px solid #ddd;text-decoration:none;font-size:21px;letter-spacing:-.045em">room / 001 <span style="font-size:12px;letter-spacing:0;color:#666">— interactive MuTracer interior ↗</span></a>',1)
+              p.write_text(s)
+          PY
+            git add room index.html
             if git diff --cached --quiet; then exit 0; fi
             git commit -m "Publish interactive MuTracer room"
             if git push origin HEAD:main; then exit 0; fi
