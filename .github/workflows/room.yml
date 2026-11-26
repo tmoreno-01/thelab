@@ -19,10 +19,10 @@ jobs:
       run:
         working-directory: experiments/room-src
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
       - name: Fetch CC0 materials and models
@@ -39,26 +39,39 @@ jobs:
           import {chromium} from 'playwright-core';
           const browser=await chromium.launch({executablePath:'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
           try{
-            const page=await browser.newPage({viewport:{width:640,height:420},deviceScaleFactor:1});
-            page.on('pageerror',e=>console.log('Page error',String(e)));
+            const page=await browser.newPage({viewport:{width:320,height:210},deviceScaleFactor:1});
+            const errors=[]; page.on('pageerror',e=>{errors.push(String(e));console.log('Page error',String(e))});
             page.on('console',m=>{if(m.type()==='error')console.log(m.text())});
             await page.goto('http://localhost:8765');
             await page.waitForFunction(()=>window.roomTest||document.querySelector('#loading').textContent.includes('could not start'),{},{timeout:120000});
             const state=await page.evaluate(()=>({ready:!!window.roomTest,loading:document.querySelector('#loading').textContent,count:window.roomTest?.objects.length,missing:window.roomTest?.missing}));
             console.log(JSON.stringify(state));
             if(!state.ready||state.count<15||state.missing?.some(x=>['leather armchair','stone coffee table'].includes(x)))throw Error('Room initialization or critical asset load failed');
-            await page.evaluate(()=>{const r=window.roomTest; r.select(r.objects.find(x=>x.name==='leather armchair'));});
-            await page.locator('#right').click();
-            await page.locator('#reset').click();
-            await page.waitForTimeout(10000);
-            await page.screenshot({path:'/tmp/room-smoke.png'});
+            const tested=await page.evaluate(()=>{
+              const r=window.roomTest,g=r.objects.find(x=>x.name==='leather armchair'),before=g.rotation.y;
+              r.select(g);document.querySelector('#right').click();
+              const rotated=Math.abs(g.rotation.y-before-Math.PI/12)<1e-5;
+              document.querySelector('#up').click();
+              const lifted=Math.abs(g.position.y-g.userData.home.p.y-.075)<1e-5;
+              document.querySelector('#reset').click();
+              const reset=g.position.distanceTo(g.userData.home.p)<1e-5&&g.quaternion.angleTo(g.userData.home.q)<1e-5;
+              return {rotated,lifted,reset};
+            });
+            console.log('Interaction checks: '+JSON.stringify(tested));
+            if(!Object.values(tested).every(Boolean)||errors.length)throw Error('Interaction or browser error: '+errors.join('; '));
+            await page.waitForTimeout(2500);
+            if(errors.length)throw Error(errors.join('; '));
+            try {await page.screenshot({path:'/tmp/room-smoke.png',timeout:15000});}
+            catch(e){if(e.name!=='TimeoutError')throw e;console.log('Optional screenshot timed out on software GPU; scene initialization and interaction tests passed.');}
+            if(errors.length)throw Error(errors.join('; '));
           }finally{await browser.close()}
           JS
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: room-browser-preview
           path: /tmp/room-smoke.png
+          if-no-files-found: ignore
       - name: Publish built experiment
         working-directory: .
         run: |
