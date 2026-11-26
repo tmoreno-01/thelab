@@ -14,6 +14,7 @@ const TAU=Math.PI*2,PI=Math.PI,clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),mix=(a,b
 function rng(seed){let s=seed>>>0;return()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296}}
 const VS=`#version 300 es
 precision highp float;
+precision highp int;
 layout(location=0)in vec2 uv;
 uniform mat4 vp;
 uniform float time,seed,pulse,aspectShape;
@@ -74,12 +75,14 @@ void main(){
 }`;
 const TUBE=`#version 300 es
 precision highp float;
+precision highp int;
 layout(location=0)in vec3 pos;layout(location=1)in vec3 normal;layout(location=2)in vec2 uv;layout(location=3)in float id;
 uniform mat4 vp;out vec3 P,N;out vec2 U;flat out int K;flat out int ID;
 void main(){P=pos;N=normal;U=uv;ID=int(id);K=6;gl_Position=vp*vec4(P,1.);}
 `;
 const FS=`#version 300 es
 precision highp float;
+precision highp int;
 in vec3 P,N;in vec2 U;flat in int K;flat in int ID;
 uniform vec3 eye;uniform float time,seed;uniform int palette;
 out vec4 frag;
@@ -142,7 +145,8 @@ out vec2 U;
 void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));U=p*.5;gl_Position=vec4(p*2.-1.,0.,1.);}
 `;
 const BFS=`#version 300 es
-precision highp float;in vec2 U;out vec4 frag;uniform vec2 resolution;uniform float time,seed;
+precision highp float;
+precision highp int;in vec2 U;out vec4 frag;uniform vec2 resolution;uniform float time,seed;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 void main(){vec2 p=(gl_FragCoord.xy-.5*resolution)/resolution.y;float r=length(p*vec2(.85,1.));vec3 c=mix(vec3(.033,.076,.085),vec3(.006,.012,.020),smoothstep(0.,.9,r));c+=vec3(.013,.018,.020)*exp(-dot(p-vec2(-.21,.22),p-vec2(-.21,.22))*7.);for(int k=0;k<3;k++){float z=float(k);vec2 q=p*(13.+z*11.)+vec2(time*(.09+.025*z),time*.07);vec2 i=floor(q),f=fract(q)-vec2(h(i+z),h(i+vec2(4.,z)));float d=length(f);float a=exp(-d*d*(105.+z*62.))*h(i+9.+z)*.048/(z+1.);c+=vec3(.42,.68,.70)*a;}c+=h(gl_FragCoord.xy)*.006;frag=vec4(c,1.);}
 `;
@@ -204,7 +208,7 @@ function render(now){requestAnimationFrame(render);let dt=Math.min(.05,(now-last
  common(skin,vp,eye);draw(vessel,4,36);
  // Back and front layers of translucent tissue; no depth writes.
  gl.depthMask(false);gl.enable(gl.CULL_FACE);gl.cullFace(gl.FRONT);draw(frill,1,10);draw(cap,0);gl.cullFace(gl.BACK);draw(frill,1,10);draw(cap,0);gl.depthMask(true);gl.disable(gl.CULL_FACE);
- frames++;if(now-windowStart>1500){fps=frames*1000/(now-windowStart);frames=0;windowStart=now;if(quality==='auto'&&!paused){if(fps<26&&scale>.53)scale=Math.max(.5,scale-.12);else if(fps>53&&scale<1)scale=Math.min(1,scale+.06)}meta.textContent='SPECIMEN '+Math.floor(seed*100).toString(16).toUpperCase()+' · '+Math.round(fps)+' FPS · '+canvas.width+' × '+canvas.height+' · LIVE';}
+ frames++;if(now-windowStart>1500){fps=frames*1000/(now-windowStart);frames=0;windowStart=now;if(quality==='auto'&&!paused){if(fps<26&&scale>.53)scale=Math.max(.5,scale-.12);else if(fps>53&&scale<1)scale=Math.min(1,scale+.06)}meta.textContent='SPECIMEN '+Math.floor(seed*100).toString(16).toUpperCase()+' · '+Math.round(fps)+' FPS · '+canvas.width+' × '+canvas.height+(paused?' · PAUSED':' · LIVE');}
 }
 canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,moved:false};canvas.setPointerCapture(e.pointerId);autoOrbit=false});
 canvas.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;yaw+=dx*.006;pitch=clamp(pitch+dy*.005,-1.05,1.05);drag.x=e.clientX;drag.y=e.clientY});
