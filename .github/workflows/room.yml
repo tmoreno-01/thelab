@@ -1,0 +1,79 @@
+name: Build interactive MuTracer room
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'experiments/room-src/**'
+      - '.github/workflows/room.yml'
+permissions:
+  contents: write
+concurrency:
+  group: room-build
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: experiments/room-src
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch CC0 materials and models
+        run: python3 assets.py
+      - name: Install and bundle renderer
+        run: |
+          npm install --no-save three@0.185.1 @meimu/mutracer@0.1.5 vite@7.2.2 playwright-core
+          node --input-type=module -e "import * as M from '@meimu/mutracer'; if(!M.THREESync||!M.Engine||!M.RenderLoop)throw Error('MuTracer API mismatch')"
+          npx vite build --base ./ --outDir /tmp/room-dist
+      - name: Browser smoke test
+        run: |
+          python3 -m http.server 8765 --directory /tmp/room-dist >/tmp/room-http.log 2>&1 &
+          node --input-type=module <<'JS'
+          import {chromium} from 'playwright-core';
+          const browser=await chromium.launch({executablePath:'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+          try{
+            const page=await browser.newPage({viewport:{width:640,height:420},deviceScaleFactor:1});
+            page.on('pageerror',e=>console.log('Page error',String(e)));
+            page.on('console',m=>{if(m.type()==='error')console.log(m.text())});
+            await page.goto('http://localhost:8765');
+            await page.waitForFunction(()=>window.roomTest||document.querySelector('#loading').textContent.includes('could not start'),{},{timeout:120000});
+            const state=await page.evaluate(()=>({ready:!!window.roomTest,loading:document.querySelector('#loading').textContent,count:window.roomTest?.objects.length,missing:window.roomTest?.missing}));
+            console.log(JSON.stringify(state));
+            if(!state.ready||state.count<15)throw Error('Room initialization failed');
+            await page.evaluate(()=>{const r=window.roomTest; r.select(r.objects.find(x=>x.name==='leather armchair'));});
+            await page.locator('#right').click();
+            await page.locator('#reset').click();
+            await page.waitForTimeout(10000);
+            await page.screenshot({path:'/tmp/room-smoke.png'});
+          }finally{await browser.close()}
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: room-browser-preview
+          path: /tmp/room-smoke.png
+      - name: Publish built experiment
+        working-directory: .
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            rm -rf room
+            mkdir room
+            cp -a /tmp/room-dist/. room/
+            git add room
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "Publish interactive MuTracer room"
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 3
+          done
+          exit 1
