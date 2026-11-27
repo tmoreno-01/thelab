@@ -109,7 +109,9 @@ import * as THREE from 'three';import {OrbitControls} from 'three/addons/control
 const $=id=>document.getElementById(id);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);renderer.setClearColor(0x030303);document.body.prepend(renderer.domElement);
 const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(43,innerWidth/innerHeight,.025,400),controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.maxDistance=120;
-const world=new THREE.Group(),layoutRoot=new THREE.Group();scene.add(world);world.add(layoutRoot);if(matchMedia('(pointer: coarse)').matches)$('tier').value='mobile';
+const world=new THREE.Group(),layoutRoot=new THREE.Group();scene.add(world);world.add(layoutRoot);
+let spinAngle=0;
+const spinAxis=new THREE.Vector3(),parentInverse=new THREE.Quaternion(),uprightRotation=new THREE.Quaternion(),upAxis=new THREE.Vector3(0,1,0);if(matchMedia('(pointer: coarse)').matches)$('tier').value='mobile';
 
 const vertexShader=`
 uniform sampler2D depthTex,colorTex;
@@ -183,6 +185,20 @@ function setLayoutOrientation(){
  else if(mode==='tilted')layoutRoot.rotation.set(.48,0,.38);
  else layoutRoot.rotation.set(0,0,0);
 }
+// Rotate around the arrangement's own normal, not the global Y axis.
+// Vertical rings act like a Ferris wheel: each scan remains upright while
+// its centre travels around the wheel. Horizontal layouts keep their old pose.
+function setSpin(angle){
+ spinAngle=angle;
+ const orientation=$('orientation').value;
+ spinAxis.copy(upAxis).applyQuaternion(layoutRoot.quaternion).normalize();
+ world.quaternion.setFromAxisAngle(spinAxis,angle);
+ if(orientation==='vertical'||orientation==='side'){
+  parentInverse.copy(world.quaternion).multiply(layoutRoot.quaternion).invert();
+  uprightRotation.setFromAxisAngle(upAxis,orientation==='side'?Math.PI/2:0);
+  for(const s of states)if(s.root)s.root.quaternion.copy(parentInverse).multiply(uprightRotation);
+ }
+}
 function layout(resetCam=true){
  const a=visible(),n=a.length,mode=$('layout').value,columns=Math.ceil(Math.sqrt(n||1)*1.25),rows=Math.ceil(n/columns);
  const radius=Math.max(2,Number($('ringDiameter').value)/2),maxScale=Math.max(1,...a.map(s=>s.userScale||1));
@@ -201,7 +217,7 @@ function layout(resetCam=true){
  }
  for(const s of states)if(s.root&&!a.includes(s))s.root.visible=false;
  if(resetCam){
-  world.rotation.y=0;controls.target.set(0,0,0);
+  spinAngle=0;controls.target.set(0,0,0);
   const halfV=THREE.MathUtils.degToRad(camera.fov/2),halfH=Math.atan(Math.tan(halfV)*camera.aspect),halfFov=Math.min(halfV,halfH);
   const radial=['ring','helix','arc','sphere'].includes(mode);
   const span=radial?radius+(mode==='helix'?n*.36:0)+1.45*maxScale:mode==='line'?Math.max(2,n*1.65/camera.aspect)+maxScale:Math.max(rows*1.35,columns*1.5/camera.aspect)+1.0*maxScale;
@@ -211,6 +227,7 @@ function layout(resetCam=true){
   else camera.position.set(0,radial&&n>1?radius*.23:.15,distance);
   controls.minDistance=Math.max(1.5,distance*.18);controls.maxDistance=180;controls.update();
  }
+ setSpin(spinAngle);
 }
 function updateList(){
  const list=$('list');list.replaceChildren();
@@ -255,7 +272,7 @@ async function renderMp4Loop(){
  if(!('VideoEncoder' in window)){$('exportStatus').textContent='MP4 export needs a browser with WebCodecs. Use the latest desktop Chrome or Edge.';return;}
  const [width,height]=$('exportSize').value.split('x').map(Number),duration=Number($('exportDuration').value),fps=30,total=Math.round(duration*fps);
  const size=new THREE.Vector2();renderer.getSize(size);
- const oldPixelRatio=renderer.getPixelRatio(),oldAspect=camera.aspect,oldPosition=camera.position.clone(),oldTarget=controls.target.clone(),oldRotation=world.rotation.y,oldLayout=$('layout').value;
+ const oldPixelRatio=renderer.getPixelRatio(),oldAspect=camera.aspect,oldPosition=camera.position.clone(),oldTarget=controls.target.clone(),oldRotation=spinAngle,oldLayout=$('layout').value;
  const oldControls=controls.enabled,oldDamping=controls.enableDamping,oldPlaying=playing,oldOrbit=orbit;
  let output=null,videoSource=null;
  exporting=true;playing=false;orbit=false;controls.enabled=false;controls.enableDamping=false;
@@ -275,11 +292,11 @@ async function renderMp4Loop(){
   renderer.setPixelRatio(1);renderer.setSize(width,height,false);
   camera.aspect=width/height;camera.updateProjectionMatrix();
   for(const sceneState of active)await ensureFrameReady(sceneState,0);
-  $('layout').value='ring';layout(true);world.rotation.y=0;
+  $('layout').value='ring';layout(true);setSpin(0);
   for(let frame=0;frame<total;frame++){
    const timestamp=frame/fps,angle=(frame/total)*Math.PI*2;
    await Promise.all(active.map(s=>ensureFrameReady(s,Math.floor(timestamp*s.m.fps)%s.m.num_frames)));
-   world.rotation.y=angle;renderer.render(scene,camera);
+   setSpin(angle);renderer.render(scene,camera);
    recordCtx.drawImage(renderer.domElement,0,0,width,height);
    await videoSource.add(timestamp,1/fps,{keyFrame:frame===0});
    if(frame%4===0){
@@ -301,7 +318,7 @@ async function renderMp4Loop(){
   if(videoSource){try{videoSource.close();}catch(_){}}
   exporting=false;renderer.setPixelRatio(oldPixelRatio);renderer.setSize(size.x,size.y,false);
   camera.aspect=oldAspect;camera.updateProjectionMatrix();camera.position.copy(oldPosition);controls.target.copy(oldTarget);$('layout').value=oldLayout;layout(false);
-  controls.enabled=oldControls;controls.enableDamping=oldDamping;controls.update();world.rotation.y=oldRotation;
+  controls.enabled=oldControls;controls.enableDamping=oldDamping;controls.update();setSpin(oldRotation);
   playing=oldPlaying;orbit=oldOrbit;$('orbit').textContent=orbit?'Spin on':'Spin off';last=0;
   $('startExport').disabled=false;$('closeExport').disabled=false;renderer.render(scene,camera);
  }
@@ -407,7 +424,7 @@ function validate(m,base,files){
  m.chunks.forEach((c,i)=>{if(c.start!==at||!Number.isInteger(c.count)||c.count<1||c.count>120||at+c.count>m.num_frames||!/^\d+\.lal$/.test(c.file)||files.get(base+c.file)?.size!==c.bytes)throw Error('Missing or invalid chunk '+c.file);index.fill(i,at,at+c.count);at+=c.count;});
  if(at!==m.num_frames)throw Error('Incomplete sequence');return index;
 }
-function clear(){generation++;for(const s of states){if(s.root)layoutRoot.remove(s.root);if(s.geo){s.geo.dispose();}s.mat?.dispose();s.d?.dispose();s.c?.dispose();s.chunks.clear();}states=[];geometryCache.clear();newWorker();loading=false;world.rotation.y=0;last=0;}
+function clear(){generation++;for(const s of states){if(s.root)layoutRoot.remove(s.root);if(s.geo){s.geo.dispose();}s.mat?.dispose();s.d?.dispose();s.c?.dispose();s.chunks.clear();}states=[];geometryCache.clear();newWorker();loading=false;setSpin(0);last=0;}
 async function open(filesIn){
  clear();const gen=generation;loading=true;$('intro').hidden=false;$('message').textContent='Scanning the folder…';$('errors').textContent='';
  const files=new Map(Array.from(filesIn,f=>[f.webkitRelativePath||f.name,f])),keys=[...files.keys()];let tier=$('tier').value;
@@ -482,7 +499,7 @@ function animate(now){requestAnimationFrame(animate);if(document.hidden)return;c
   const current=s.index[Math.floor(s.clock)],c=m.chunks[current];if(s.chunks.has(current)&&c.start+c.count-s.clock<Math.max(3,m.fps*.40))requestChunk(s,(current+1)%m.chunks.length);
   if(!s.chunks.has(k))requestChunk(s,k);
  }cursor=(cursor+1)%n;}
- if(orbit&&playing&&!exporting)world.rotation.y+=dt*Number($('speed').value);
+ if(orbit&&playing&&!exporting)setSpin((spinAngle+dt*Number($('speed').value))%(Math.PI*2));
  controls.update();renderer.render(scene,camera);
  ticks++;if(!report)report=now;if(now-report>900){fps=Math.round(ticks*1000/(now-report));ticks=0;report=now;const loaded=a.filter(s=>s.root).length,points=a.reduce((sum,s)=>sum+(s.geo?.drawRange.count||0),0);
  $('status').textContent=loaded+'/'+n+' visible · '+fps+' render fps · '+points.toLocaleString()+' samples · '+(a.some(s=>s.original)?'original ZIPs · ':'')+(stalled?'buffering '+stalled:'local streaming')+(rate==='auto'?' · adaptive playback':'');
