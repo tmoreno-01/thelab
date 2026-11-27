@@ -97,6 +97,15 @@ footer #status{flex:0 0 auto;max-width:115px;white-space:nowrap;font-size:10px}
 }
 
 .transform-tools{border-bottom:1px solid #393939;padding:10px 0 6px;margin-bottom:10px}.transform-tools strong{font-size:12px;font-weight:500}.transform-tools .item-scale{padding-left:0}.transform-tools .controls{margin-top:10px;gap:6px}.transform-tools button,.transform-tools select,.item-top .move-scene{font-size:11px;padding:5px 7px}.item-top .move-scene{flex:0 0 auto;border:1px solid #555;text-align:center}.item.selected{border-left:2px solid #ddd;padding-left:8px}.item-top .move-scene[aria-pressed="true"],#grab[aria-pressed="true"]{background:#eee;color:#111}.item-scale output{min-width:44px}#grabHint{margin-bottom:4px!important}
+input.precise-number{background:#151515;border:1px solid #454545;border-radius:4px;color:#eee;font:inherit;font-variant-numeric:tabular-nums;padding:5px 4px;width:63px;min-width:0;max-width:76px;text-align:right;flex:0 0 63px;outline-offset:2px}
+.item-scale input.precise-number{flex:0 0 63px;width:63px;min-width:0}
+.item-scale input[type=range]{min-width:44px}
+footer .controls input.precise-number{width:60px;min-width:0;flex:0 0 60px;padding:4px}
+.item-scale output[hidden],footer output[hidden]{display:none!important}
+.offset-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:8px 0 0 25px}
+.offset-fields label{display:flex;flex-direction:column;align-items:stretch;gap:4px;font-size:10px;color:#aaa;min-width:0}
+.offset-fields input.precise-number{width:100%;max-width:none;flex:auto}
+#undo:disabled,#redo:disabled{opacity:.4}
 </style>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.157.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.157.0/examples/jsm/"}}</script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"></head>
 <body>
@@ -105,7 +114,7 @@ footer #status{flex:0 0 auto;max-width:115px;white-space:nowrap;font-size:10px}
 <div id="intro"><h1>4D Splat Studio</h1><p>Load multiple original full_vda ZIPs together. Arrange animated reconstructions as rings, helices, arcs, spheres, grids or loose spatial studies. Adjust each scene and its individual point size, then render a 360° MP4 loop locally.</p><div><label class="pick" for="file">Choose collection folder</label> <label class="pick" for="zipfiles">Choose ZIP files</label></div><div id="message" role="status"></div></div>
 <aside id="panel" hidden><div class="controls"><button id="all">Show all</button><button id="none">Hide all</button></div><div class="transform-tools"><strong>All splats / rotation</strong><label class="item-scale">X <input id="globalRX" type="range" min="-180" max="180" value="0" step="1"><output id="globalRXValue">0°</output></label><label class="item-scale">Y <input id="globalRY" type="range" min="-180" max="180" value="0" step="1"><output id="globalRYValue">0°</output></label><div class="controls"><button id="resetTransforms">Reset transforms</button><label>Drag plane <select id="dragPlane"><option value="screen">Screen</option><option value="xy">World XY</option><option value="xz">World XZ</option><option value="yz">World YZ</option></select></label></div><p id="grabHint">Grab off · orbit the camera normally.</p></div><p>Scale, dots and rotation are independent for each scene. Use Move to select a splat, then drag in the viewport. Shift-drag or scroll in Grab mode changes depth. Click a scene name to isolate it.</p><div id="list"></div><div id="errors" role="status"></div></aside>
 <div id="exportDialog" hidden><section id="exportCard"><h2>Render a 360° loop</h2><p>Your current composition completes one full revolution on a pure black background, without UI. Individual positions and rotations are preserved. Every enabled 4D sequence plays at its source frame rate. Source motion wraps at the end of each clip, so a perfectly seamless motion loop depends on the clip's first and last frames matching. MP4 encoding happens locally; your ZIPs are never uploaded.</p><div class="export-grid"><label>Frame size<select id="exportSize"><option value="1920x1080">1920 × 1080 / landscape</option><option value="1080x1080">1080 × 1080 / square</option><option value="1080x1920">1080 × 1920 / portrait</option></select></label><label>Loop duration<select id="exportDuration"><option value="12">12 seconds</option><option value="18" selected>18 seconds</option><option value="24">24 seconds</option><option value="30">30 seconds</option></select></label></div><div class="export-actions"><button id="closeExport">Close</button><button id="startExport">Render MP4</button></div><progress id="exportProgress" max="100" value="0"></progress><div id="exportStatus">Ready when your scenes are loaded.</div></section></div>
-<footer><div class="controls"><button id="play">Pause</button><button id="orbit">Spin on</button><button id="grab" aria-pressed="false">Grab: off</button><label>Detail <select id="detail"><option value="auto">Auto</option><option value="original">Original</option><option value="fine">Fine ×4</option></select></label><label>Layout <select id="layout"><option value="ring" selected>Ring</option><option value="helix">Helix</option><option value="arc">Arc</option><option value="sphere">Sphere</option><option value="grid">Grid</option><option value="space">Scatter</option><option value="line">Line</option></select></label><label>Orientation <select id="orientation"><option value="horizontal">Horizontal</option><option value="vertical">Vertical / front</option><option value="side">Vertical / side</option><option value="tilted">Tilted</option></select></label><label>Ring Ø <input id="ringDiameter" type="range" min="0" max="100" step=".1" value="12"><output id="ringDiameterValue">12.0</output></label><label>Dot scale <input id="dotSize" type="range" min=".25" max="3.5" step=".05" value="1"><output id="dotSizeValue">1.00×</output></label><label>Spin speed <input id="speed" type="range" min=".005" max=".16" step=".005" value=".07"></label><label>Playback <select id="rate"><option value="auto">Auto</option><option value="source">Source</option><option value="12">12 fps</option><option value="18">18 fps</option></select></label><label>Depth <input id="depth" type="range" min="1.5" max="12" step=".1" value="4"></label><button id="reset">Reset view</button></div><span id="status">Awaiting ZIPs</span></footer>
+<footer><div class="controls"><button id="play">Pause</button><button id="orbit">Spin on</button><button id="grab" aria-pressed="false">Grab: off</button><button id="undo" title="Ctrl / Cmd + Z" disabled>Undo</button><button id="redo" title="Ctrl / Cmd + Shift + Z" disabled>Redo</button><label>Detail <select id="detail"><option value="auto">Auto</option><option value="original">Original</option><option value="fine">Fine ×4</option></select></label><label>Layout <select id="layout"><option value="ring" selected>Ring</option><option value="helix">Helix</option><option value="arc">Arc</option><option value="sphere">Sphere</option><option value="grid">Grid</option><option value="space">Scatter</option><option value="line">Line</option></select></label><label>Orientation <select id="orientation"><option value="horizontal">Horizontal</option><option value="vertical">Vertical / front</option><option value="side">Vertical / side</option><option value="tilted">Tilted</option></select></label><label>Ring Ø <input id="ringDiameter" type="range" min="0" max="100" step=".1" value="12"><output id="ringDiameterValue">12.0</output></label><label>Dot scale <input id="dotSize" type="range" min=".25" max="3.5" step=".05" value="1"><output id="dotSizeValue">1.00×</output></label><label>Spin speed <input id="speed" type="range" min=".005" max=".16" step=".005" value=".07"></label><label>Playback <select id="rate"><option value="auto">Auto</option><option value="source">Source</option><option value="12">12 fps</option><option value="18">18 fps</option></select></label><label>Depth <input id="depth" type="range" min="1.5" max="12" step=".1" value="4"></label><button id="reset">Reset view</button></div><span id="status">Awaiting ZIPs</span></footer>
 <script type="module">
 import * as THREE from 'three';import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const $=id=>document.getElementById(id);
@@ -171,6 +180,74 @@ function mount(s,q,rgb){
  s.mat=new THREE.ShaderMaterial({glslVersion:THREE.GLSL3,vertexShader,fragmentShader,uniforms:{depthTex:{value:s.d},colorTex:{value:s.c},gridW:{value:m.width},gridH:{value:m.height},cols:{value:m.width},stride:{value:1},samples:{value:1},intr:{value:new THREE.Vector4(k.fx,k.fy,k.cx,k.cy)},logRange:{value:new THREE.Vector2(d.log_min,d.log_max)},qmax:{value:d.quantization_max},cutoff:{value:getCutoff(s)},sizeScale:{value:Number($('dotSize').value)*(s.dotScale||1)},pixelScale:{value:pixelScale()},worldScale:{value:scale}},transparent:false,depthWrite:true,depthTest:true,alphaToCoverage:true});
  s.cloud=new THREE.Points(s.geo,s.mat);s.cloud.frustumCulled=false;s.cloud.scale.setScalar(scale);s.cloud.position.set(...b.center.map(x=>-x*scale));s.root.add(s.cloud);s.root.visible=s.enabled;applyDetail();layout(false);
 }
+// Composition history is independent of animation time and decoded GPU data.
+const undoStack=[],redoStack=[],historyLimit=100;
+let committed=null,restoring=false,wheelTimer=0;
+const historyControls=['layout','orientation','ringDiameter','dotSize','speed','depth','globalRX','globalRY','detail','rate','dragPlane'];
+function snapshot(){
+ return {controls:Object.fromEntries(historyControls.map(id=>[id,$(id).value])),manual:$('ringDiameter').dataset.manual||'',scenes:states.map(s=>({enabled:s.enabled,userScale:s.userScale||1,dotScale:s.dotScale||1,rx:s.rx||0,ry:s.ry||0,offset:s.offset?s.offset.toArray():[0,0,0]}))};
+}
+function updateHistoryUI(){$('undo').disabled=!undoStack.length||exporting||loading;$('redo').disabled=!redoStack.length||exporting||loading;}
+function commitEdit(){
+ clearTimeout(wheelTimer);wheelTimer=0;
+ if(restoring||loading||exporting||!states.length)return;
+ const next=snapshot();
+ if(committed&&JSON.stringify(next)!==JSON.stringify(committed)){
+  undoStack.push(committed);if(undoStack.length>historyLimit)undoStack.shift();redoStack.length=0;
+ }
+ committed=next;updateHistoryUI();
+}
+function resetHistory(){clearTimeout(wheelTimer);wheelTimer=0;undoStack.length=redoStack.length=0;committed=null;updateHistoryUI();}
+function syncNumber(range){if(range._numberField)range._numberField.value=range.value;}
+function addNumber(range){
+ if(range._numberField)return;
+ const number=document.createElement('input');number.type='number';number.className='precise-number';
+ number.min=range.min;number.max=range.max;number.step=range.step;number.value=range.value;number.disabled=range.disabled;
+ number.setAttribute('aria-label',(range.getAttribute('aria-label')||range.parentElement?.textContent?.trim()||range.id||'Value')+' numeric value');
+ range._numberField=number;range.after(number);
+ const out=range.parentElement?.querySelector('output');if(out)out.hidden=true;
+ range.addEventListener('input',()=>syncNumber(range));
+ range.addEventListener('change',()=>{syncNumber(range);commitEdit();});
+ number.addEventListener('change',()=>{
+  if(number.value.trim()!==''&&Number.isFinite(number.valueAsNumber)){
+   range.value=number.value;range.dispatchEvent(new Event('input',{bubbles:true}));range.dispatchEvent(new Event('change',{bubbles:true}));
+  }else syncNumber(range);
+ });
+ number.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();number.blur();}});
+}
+function syncGlobalNumbers(){
+ for(const id of historyControls){const el=$(id);if(el.type==='range')syncNumber(el);}
+ $('ringDiameterValue').textContent=Number($('ringDiameter').value).toFixed(1);
+ $('dotSizeValue').textContent=Number($('dotSize').value).toFixed(2)+'×';
+ for(const axis of ['X','Y'])$('globalR'+axis+'Value').textContent=$('globalR'+axis).value+'°';
+}
+function restoreEdit(saved){
+ if(!saved||saved.scenes.length!==states.length)return;
+ restoring=true;
+ try{
+  for(const [id,value] of Object.entries(saved.controls))$(id).value=value;
+  if(saved.manual)$('ringDiameter').dataset.manual=saved.manual;else delete $('ringDiameter').dataset.manual;
+  states.forEach((s,i)=>{
+   const v=saved.scenes[i];s.enabled=v.enabled&&!s.error;s.userScale=v.userScale;s.dotScale=v.dotScale;s.rx=v.rx;s.ry=v.ry;
+   if(!s.offset)s.offset=new THREE.Vector3();s.offset.fromArray(v.offset);
+   if(!s.enabled)s.chunks.clear();
+   if(s.root)s.root.scale.setScalar(s.userScale);
+   applyDotScale(s);if(s.mat)s.mat.uniforms.cutoff.value=getCutoff(s);
+  });
+  if(selectedScene&&!selectedScene.enabled)selectedScene=null;
+  syncGlobalNumbers();applyDetail();layout(false);updateList();updateGrabUI();
+  committed=snapshot();
+ }finally{restoring=false;updateHistoryUI();}
+}
+function undoEdit(){
+ if(loading||exporting||!states.length)return;stopDrag();commitEdit();
+ if(!undoStack.length)return;redoStack.push(snapshot());restoreEdit(undoStack.pop());
+}
+function redoEdit(){
+ if(loading||exporting||!states.length)return;stopDrag();commitEdit();
+ if(!redoStack.length)return;undoStack.push(snapshot());restoreEdit(redoStack.pop());
+}
+function refreshOffsetFields(s){if(s.offsetFields)s.offsetFields.forEach((el,i)=>{if(document.activeElement!==el)el.value=String(Math.round((s.offset?.getComponent(i)||0)*100)/100);});}
 const geometryCache=new Map();
 function geometryFor(n){if(!geometryCache.has(n))geometryCache.set(n,new THREE.BufferAttribute(new Float32Array(n*4*3),3));return geometryCache.get(n);}
 function pixelScale(){return renderer.domElement.height/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));}
@@ -254,9 +331,9 @@ function updateList(){
   const row=document.createElement('div');row.className='item'+(s===selectedScene?' selected':'');row.dataset.sceneIndex=String(states.indexOf(s));
   const top=document.createElement('div');top.className='item-top';
   const cb=document.createElement('input');cb.type='checkbox';cb.checked=s.enabled;cb.disabled=!!s.error;
-  cb.onchange=()=>{s.enabled=cb.checked;if(!s.enabled)s.chunks.clear();applyDetail();layout();};
+  cb.onchange=()=>{s.enabled=cb.checked;if(!s.enabled)s.chunks.clear();applyDetail();layout();commitEdit();};
   const b=document.createElement('button');b.textContent=s.name;b.title=s.name;b.disabled=!!s.error;
-  b.onclick=()=>{for(const a of states){a.enabled=a===s;if(a!==s)a.chunks.clear();}updateList();applyDetail();layout();};
+  b.onclick=()=>{for(const a of states){a.enabled=a===s;if(a!==s)a.chunks.clear();}updateList();applyDetail();layout();commitEdit();};
   const sm=document.createElement('small');sm.textContent=s.error?'error':s.m.width+'×'+s.m.height;
   const move=document.createElement('button');move.type='button';move.className='move-scene';move.textContent='Move';move.disabled=!!s.error||!s.enabled;move.setAttribute('aria-pressed',String(s===selectedScene&&grabMode));move.onclick=()=>{selectScene(s);setGrabMode(true);};
   top.append(cb,b,sm,move);
@@ -280,8 +357,19 @@ function updateList(){
    input.oninput=()=>{s[key]=Number(input.value);output.textContent=input.value+'°';faceVerticalCaptures();};
    label.append(name,input,output);return label;
   }
-  const reset=document.createElement('button');reset.type='button';reset.textContent='Reset position / rotation';reset.style.cssText='font-size:10px;padding:4px 7px;margin:8px 0 0 25px';reset.onclick=()=>{s.offset?.set(0,0,0);s.rx=s.ry=0;if(s.root)s.root.position.copy(s.basePosition);faceVerticalCaptures();updateList();};
-  row.append(top,scaleRow,dotRow,rotationRow('X'),rotationRow('Y'),reset);list.append(row);
+  const reset=document.createElement('button');reset.type='button';reset.textContent='Reset position / rotation';reset.style.cssText='font-size:10px;padding:4px 7px;margin:8px 0 0 25px';reset.onclick=()=>{s.offset?.set(0,0,0);s.rx=s.ry=0;if(s.root)s.root.position.copy(s.basePosition);faceVerticalCaptures();updateList();commitEdit();};
+  const offsets=document.createElement('div');offsets.className='offset-fields';s.offsetFields=[];
+  for(let axis=0;axis<3;axis++){
+   const label=document.createElement('label');label.textContent='Offset '+['X','Y','Z'][axis];
+   const input=document.createElement('input');input.type='number';input.className='precise-number';input.step='.01';input.min='-1000';input.max='1000';input.disabled=!!s.error;
+   input.setAttribute('aria-label',s.name+' offset '+['X','Y','Z'][axis]);
+   input.value=String(Math.round((s.offset?.getComponent(axis)||0)*100)/100);
+   input.onchange=()=>{if(input.value.trim()===''||!Number.isFinite(input.valueAsNumber)){input.value=String(s.offset?.getComponent(axis)||0);return;}if(!s.offset)s.offset=new THREE.Vector3();const v=Math.max(-1000,Math.min(1000,input.valueAsNumber));s.offset.setComponent(axis,v);input.value=String(v);if(s.root)s.root.position.copy(s.basePosition).add(s.offset);faceVerticalCaptures();commitEdit();};
+   input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();input.blur();}};
+   s.offsetFields.push(input);label.append(input);offsets.append(label);
+  }
+  row.append(top,scaleRow,dotRow,rotationRow('X'),rotationRow('Y'),offsets,reset);list.append(row);
+  for(const range of row.querySelectorAll('input[type=range]'))addNumber(range);
  }
  $('errors').textContent=states.filter(s=>s.error).map(s=>s.name+': '+s.error).join('\n');
 }
@@ -296,7 +384,7 @@ function updateGrabUI(){
  renderer.domElement.style.cursor=grabMode?'grab':'';
 }
 function selectScene(s){selectedScene=s;updateGrabUI();}
-function stopDrag(){if(!drag)return;const id=drag.id;drag=null;if(renderer.domElement.hasPointerCapture?.(id))renderer.domElement.releasePointerCapture(id);updateGrabUI();}
+function stopDrag(){if(!drag)return;const id=drag.id;drag=null;if(renderer.domElement.hasPointerCapture?.(id))renderer.domElement.releasePointerCapture(id);updateGrabUI();commitEdit();}
 function setGrabMode(on){stopDrag();grabMode=on;controls.enabled=!on;updateGrabUI();}
 function setPointerRay(event){
  const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);
@@ -317,7 +405,7 @@ function pickScene(){
 function moveCenter(s,worldPosition){
  layoutRoot.updateWorldMatrix(true,false);
  s.root.position.copy(layoutRoot.worldToLocal(worldPosition.clone()));
- s.offset.copy(s.root.position).sub(s.basePosition);faceVerticalCaptures();
+ s.offset.copy(s.root.position).sub(s.basePosition);refreshOffsetFields(s);faceVerticalCaptures();
 }
 const canvas=renderer.domElement;
 canvas.addEventListener('pointerdown',event=>{
@@ -346,10 +434,11 @@ canvas.addEventListener('wheel',event=>{
  event.preventDefault();event.stopImmediatePropagation();
  const p=selectedScene.root.getWorldPosition(new THREE.Vector3()),d=camera.getWorldDirection(new THREE.Vector3());
  moveCenter(selectedScene,p.addScaledVector(d,Math.sign(event.deltaY)*Math.max(.04,camera.position.distanceTo(p)*.025)));
+ clearTimeout(wheelTimer);wheelTimer=setTimeout(commitEdit,200);
 },{passive:false,capture:true});
 $('grab').onclick=()=>{setGrabMode(!grabMode);if(grabMode)$('panel').hidden=false;};
 for(const axis of ['X','Y'])$('globalR'+axis).oninput=()=>{$('globalR'+axis+'Value').textContent=$('globalR'+axis).value+'°';faceVerticalCaptures();};
-$('resetTransforms').onclick=()=>{for(const axis of ['X','Y']){$('globalR'+axis).value='0';$('globalR'+axis+'Value').textContent='0°';}for(const s of states){s.rx=s.ry=0;s.offset?.set(0,0,0);if(s.root)s.root.position.copy(s.basePosition);}faceVerticalCaptures();updateList();};
+$('resetTransforms').onclick=()=>{for(const axis of ['X','Y']){$('globalR'+axis).value='0';$('globalR'+axis+'Value').textContent='0°';}for(const s of states){s.rx=s.ry=0;s.offset?.set(0,0,0);if(s.root)s.root.position.copy(s.basePosition);}faceVerticalCaptures();syncGlobalNumbers();updateList();commitEdit();};
 async function ensureFrameReady(s,i){
  const k=s.index[i];let attempts=0;s.clock=i;
  while(s.shown!==i){
@@ -526,7 +615,7 @@ function validate(m,base,files){
  m.chunks.forEach((c,i)=>{if(c.start!==at||!Number.isInteger(c.count)||c.count<1||c.count>120||at+c.count>m.num_frames||!/^\d+\.lal$/.test(c.file)||files.get(base+c.file)?.size!==c.bytes)throw Error('Missing or invalid chunk '+c.file);index.fill(i,at,at+c.count);at+=c.count;});
  if(at!==m.num_frames)throw Error('Incomplete sequence');return index;
 }
-function clear(){stopDrag();selectedScene=null;setGrabMode(false);generation++;for(const s of states){if(s.root)layoutRoot.remove(s.root);if(s.geo){s.geo.dispose();}s.mat?.dispose();s.d?.dispose();s.c?.dispose();s.chunks.clear();}states=[];geometryCache.clear();newWorker();loading=false;setSpin(0);last=0;}
+function clear(){stopDrag();resetHistory();selectedScene=null;setGrabMode(false);generation++;for(const s of states){if(s.root)layoutRoot.remove(s.root);if(s.geo){s.geo.dispose();}s.mat?.dispose();s.d?.dispose();s.c?.dispose();s.chunks.clear();}states=[];geometryCache.clear();newWorker();loading=false;setSpin(0);last=0;}
 async function open(filesIn){
  clear();const gen=generation;loading=true;$('intro').hidden=false;$('message').textContent='Scanning the folder…';$('errors').textContent='';
  const files=new Map(Array.from(filesIn,f=>[f.webkitRelativePath||f.name,f])),keys=[...files.keys()];let tier=$('tier').value;
@@ -555,7 +644,7 @@ async function open(filesIn){
  states.push({gen,m,base,index,files,name:m.source||path.split('/').slice(-3,-2)[0],enabled:true,userScale:1,dotScale:1,error:null,chunks:new Map(),pending:new Set(),bitmap:false,shown:-1,clock:0,minDepth:.01});
  }catch(e){issues.push(path+': '+e.message);}}
  if(gen!==generation)return;loading=false;if(!$('ringDiameter').dataset.manual){const d=Math.max(6.4,states.length*3.35/Math.PI);$('ringDiameter').value=Math.min(100,d).toFixed(1);$('ringDiameterValue').textContent=Number($('ringDiameter').value).toFixed(1);}updateList();if(issues.length)$('errors').textContent+=('\n'+issues.join('\n'));if(!states.length){$('message').textContent='No complete sequences: '+issues.slice(0,2).join('; ');return;}
- layout();$('intro').hidden=true;$('panel').hidden=false;last=0;
+ layout();syncGlobalNumbers();resetHistory();committed=snapshot();$('intro').hidden=true;$('panel').hidden=false;last=0;
 }
 function requestChunk(s,k){
  if(s.chunks.has(k)||s.pending.has(k)||chunkActive>=2)return;
@@ -574,7 +663,7 @@ function requestFrame(s,i){
  if(!s.root)mount(s,f.q,rgb);else{s.d.image.data=toBytes(f.q);s.c.image.data=rgb;s.d.needsUpdate=true;s.c.needsUpdate=true;}s.shown=i;
  }catch(e){fail(s,e);}finally{bmp?.close();s.bitmap=false;bitmapActive--;}})();
 }
-function toggleAll(on){for(const s of states){s.enabled=on&&!s.error;if(!on)s.chunks.clear();}updateList();applyDetail();layout();}
+function toggleAll(on){for(const s of states){s.enabled=on&&!s.error;if(!on)s.chunks.clear();}updateList();applyDetail();layout();commitEdit();}
 $('file').onchange=e=>{selectedFiles=Array.from(e.target.files);if(selectedFiles.length)open(selectedFiles);};
 $('exportOpen').onclick=()=>{$('exportDialog').hidden=false;$('exportStatus').textContent='Ready when your scenes are loaded.';};
 $('closeExport').onclick=()=>{if(!exporting)$('exportDialog').hidden=true;};
@@ -585,7 +674,7 @@ $('showlist').onclick=()=>$('panel').hidden=!$('panel').hidden;
 $('all').onclick=()=>toggleAll(true);$('none').onclick=()=>toggleAll(false);
 $('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Pause':'Play';last=0;};
 $('orbit').onclick=()=>{orbit=!orbit;$('orbit').textContent=orbit?'Spin on':'Spin off';};
-$('layout').onchange=()=>layout();$('orientation').onchange=()=>layout();$('reset').onclick=()=>layout();$('detail').onchange=applyDetail;
+$('layout').onchange=()=>{layout();commitEdit();};$('orientation').onchange=()=>{layout();commitEdit();};$('reset').onclick=()=>layout();$('detail').onchange=()=>{applyDetail();commitEdit();};$('rate').onchange=commitEdit;$('dragPlane').onchange=commitEdit;
 $('ringDiameter').oninput=()=>{$('ringDiameter').dataset.manual='1';$('ringDiameterValue').textContent=Number($('ringDiameter').value).toFixed(1);layout(false);};
 $('dotSize').oninput=()=>{$('dotSizeValue').textContent=Number($('dotSize').value).toFixed(2)+'×';for(const s of states)applyDotScale(s);};
 // Per-scene scale is controlled in the scene list.
@@ -607,5 +696,16 @@ function animate(now){requestAnimationFrame(animate);if(document.hidden)return;c
  $('status').textContent=loaded+'/'+n+' visible · '+fps+' render fps · '+points.toLocaleString()+' samples · '+(a.some(s=>s.original)?'original ZIPs · ':'')+(stalled?'buffering '+stalled:'local streaming')+(rate==='auto'?' · adaptive playback':'');
  if($('detail').value==='auto'&&n>1){const nextBudget=fps<24?Math.max(350000,frameBudget*.8):fps>48?Math.min(1800000,frameBudget*1.08):frameBudget;if(nextBudget!==frameBudget){frameBudget=nextBudget;applyDetail();}}
  }}
+for(const range of document.querySelectorAll('footer input[type=range], .transform-tools input[type=range]'))addNumber(range);
+$('undo').onclick=undoEdit;$('redo').onclick=redoEdit;
+document.addEventListener('pointerdown',()=>{if(wheelTimer)commitEdit();},true);
+document.addEventListener('keydown',event=>{
+ if(exporting||loading||!states.length||!(event.ctrlKey||event.metaKey)||event.altKey)return;
+ const key=event.key.toLowerCase();if(key!=='z'&&key!=='y')return;
+ event.preventDefault();
+ // Commit an outstanding typed value before undoing it.
+ if(document.activeElement?.matches('input[type=number]'))document.activeElement.blur();
+ if(key==='y'||event.shiftKey)redoEdit();else undoEdit();
+});
 if(!renderer.capabilities.isWebGL2)$('message').textContent='This test requires WebGL 2.';else requestAnimationFrame(animate);
 </script></body></html>
