@@ -64,7 +64,7 @@ function extract(im,meta,variant=0){
 }
 function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
  canvas.width=canvas.height=N;const ctx=canvas.getContext("2d",{alpha:false});const inkCanvas=document.createElement("canvas");inkCanvas.width=inkCanvas.height=N;const inkCtx=inkCanvas.getContext("2d",{alpha:false});
- let R=rng(seed),originSeed=seed>>>0,frame=0,marks=0,bundles=0,atlas=[],session=[],tracks=[],density=new Float32Array(G*G),history=[],field=[0,0,0,0],recent=[],memory=readMemory(),readyState=false,failed=0,lastSources=[],previousSources=[],pendingSeed=originSeed,motion=[],anchors=[],motionEvents=0,nextMotionEvent=0;
+ let R=rng(seed),originSeed=seed>>>0,frame=0,marks=0,bundles=0,atlas=[],session=[],tracks=[],density=new Float32Array(G*G),history=[],field=[0,0,0,0],recent=[],memory=readMemory(),readyState=false,failed=0,lastSources=[],previousSources=[],pendingSeed=originSeed,motion=[],anchors=[],motionEvents=0,nextMotionEvent=0,fieldEvent=null,nextFieldEvent=0,fieldEvents=0;
  const rand=(a,b)=>mix(a,b,R()),pick=a=>a[Math.floor(R()*a.length)];
  function readMemory(){try{let m=JSON.parse(localStorage.getItem(KEY)||"{}");return{directions:Array.isArray(m.directions)?m.directions.slice(0,12):[],recent:Array.isArray(m.recent)?m.recent.slice(0,16):[]};}catch(e){return{directions:[],recent:[]};}}
  function writeMemory(){try{localStorage.setItem(KEY,JSON.stringify(memory));return true;}catch(e){return false;}}
@@ -111,12 +111,24 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
  }
  function render(){
   ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.drawImage(inkCanvas,0,0);
-  for(const m of motion){const t=clamp(m.age/m.life,0,1),fade=Math.pow(Math.max(0,Math.sin(Math.PI*t)),.62);if(fade<.015)continue;const p=motionGeometry(m),n=p.length;if(n<3)continue;ctx.save();ctx.globalAlpha=fade*(m.echo?.66:.9);ctx.strokeStyle=m.color;ctx.lineWidth=m.width*(.82+.18*Math.sin(m.age*.08+m.phase));ctx.lineCap="round";ctx.lineJoin="round";if(ctx.setLineDash){ctx.setLineDash(m.type==="fracture"?[4,2]:m.type==="ripple"?[2,2]:[]);ctx.lineDashOffset=-m.age*1.7;}ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);for(let i=1;i<n;i++)ctx.lineTo(p[i][0],p[i][1]);ctx.stroke();if(m.echo){ctx.globalAlpha=fade*.24;ctx.strokeStyle=m.color===INK?WHITE:INK;ctx.lineWidth=Math.max(.55,m.width*.55);ctx.beginPath();ctx.moveTo(p[0][0]+2,p[0][1]-2);for(let i=1;i<n;i++)ctx.lineTo(p[i][0]+2,p[i][1]-2);ctx.stroke();}if(m.nodes){ctx.globalAlpha=fade*.72;ctx.fillStyle=m.color;for(let i=3;i<n;i+=Math.max(5,Math.floor(n/5))){ctx.beginPath();ctx.arc(p[i][0],p[i][1],1.1+(i%3)*.35,0,Math.PI*2);ctx.fill();}}ctx.restore();}
+  for(const m of motion){const t=clamp(m.age/m.life,0,1),fade=Math.pow(Math.max(0,Math.sin(Math.PI*t)),.62);if(fade<.015)continue;const raw=motionGeometry(m),p=fieldEvent?raw.map(q=>disturbPoint(q[0],q[1])):raw,n=p.length;if(n<3)continue;ctx.save();ctx.globalAlpha=fade*(m.echo?.66:.9);ctx.strokeStyle=m.color;ctx.lineWidth=m.width*(.82+.18*Math.sin(m.age*.08+m.phase));ctx.lineCap="round";ctx.lineJoin="round";if(ctx.setLineDash){ctx.setLineDash(m.type==="fracture"?[4,2]:m.type==="ripple"?[2,2]:[]);ctx.lineDashOffset=-m.age*1.7;}ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);for(let i=1;i<n;i++)ctx.lineTo(p[i][0],p[i][1]);ctx.stroke();if(m.echo){ctx.globalAlpha=fade*.24;ctx.strokeStyle=m.color===INK?WHITE:INK;ctx.lineWidth=Math.max(.55,m.width*.55);ctx.beginPath();ctx.moveTo(p[0][0]+2,p[0][1]-2);for(let i=1;i<n;i++)ctx.lineTo(p[i][0]+2,p[i][1]-2);ctx.stroke();}if(m.nodes){ctx.globalAlpha=fade*.72;ctx.fillStyle=m.color;for(let i=3;i<n;i+=Math.max(5,Math.floor(n/5))){ctx.beginPath();ctx.arc(p[i][0],p[i][1],1.1+(i%3)*.35,0,Math.PI*2);ctx.fill();}}ctx.restore();}
   ctx.restore();
  }
  function launchMotionBurst(){
   const place=candidatePlacement(),a=chooseSource(),b=chooseSource(a.id),pa=choosePath(a,new Set());if(!pa)return;const pb=matchPath(b,pa,new Set()),cx=place.x,cy=place.y,rx=rand(95,240),ry=rx*rand(.52,1.18),angle=rand(-Math.PI,Math.PI),rawA=transformPath(pa,cx,cy,rx,ry,angle,R()<.5,rand(7,28)),rawB=pb?transformPath(pb,cx+rand(-24,24),cy+rand(-24,24),rx*rand(.86,1.12),ry*rand(.86,1.12),angle+rand(-.35,.35),R()<.5,rand(5,22)):rawA,local=densityAt(cx,cy,34),color=local>.39?WHITE:INK,count=R()<.28?2:1;
   for(let i=0;i<count;i++)addMotion(rawA,rawB,color,rand(1,2.8),[a.id,b.id]);motionEvents++;
+ }
+ function launchFieldEvent(){
+  fieldEvent={type:pick(["shockwave","attractor","shear","lens","mirror"]),x:rand(150,810),y:rand(150,810),age:0,life:Math.floor(rand(190,330)),phase:rand(0,Math.PI*2),strength:rand(18,43),radius:rand(180,420),speed:rand(3.2,6.2),width:rand(55,115)};fieldEvents++;
+ }
+ function disturbPoint(x,y){
+  const e=fieldEvent;if(!e)return[x,y];const t=clamp(e.age/e.life,0,1),fade=Math.sin(Math.PI*t),dx=x-e.x,dy=y-e.y,dist=Math.hypot(dx,dy)||1,fall=Math.exp(-dist/e.radius),phase=e.phase+e.age*.035;let ox=0,oy=0;
+  if(e.type==="shockwave"){const front=e.age*e.speed,delta=dist-front,band=Math.exp(-Math.pow(delta/e.width,2)),push=Math.sin(delta*.055+e.phase)*e.strength*band*fade;ox=dx/dist*push;oy=dy/dist*push;}
+  else if(e.type==="attractor"){const pull=Math.sin(phase)*e.strength*fall*fade;ox=-dx/dist*pull;oy=-dy/dist*pull;}
+  else if(e.type==="shear"){ox=Math.sin(y*.016+phase)*e.strength*fade*(.35+.65*fall);oy=Math.cos(x*.013-phase*.8)*e.strength*.42*fade*(.35+.65*fall);}
+  else if(e.type==="lens"){const scale=1+Math.sin(phase)*.28*fall*fade;ox=dx*(scale-1);oy=dy*(scale-1);}
+  else if(e.type==="mirror"){const flip=clamp(fall*fade*.92,0,1);ox=-2*dx*flip;oy=dy*.08*flip;}
+  return[x+ox,y+oy];
  }
  function makeBundle(initial=false){
   const place=candidatePlacement(),a=chooseSource(),b=chooseSource(a.id),cx=place.x,cy=place.y,rx=rand(125,310),ry=rx*rand(.52,1.22),ang=rand(-Math.PI,Math.PI),flip=R()<.5,warpAmount=rand(3,22),ops=[],usedA=new Set(),usedB=new Set(),count=Math.floor(rand(26,48)),polarity=place.d>.44?WHITE:INK;
@@ -149,7 +161,7 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
   const stride=Math.max(1,Math.floor((hi-lo)/28));for(let i=lo;i<=hi;i+=stride)touchDensity(p[i][0],p[i][1],op.w,op.color);if(to>=1)marks++;
  }
  function initialise(s){
-  originSeed=s>>>0;R=rng(originSeed);frame=marks=bundles=motionEvents=0;tracks=[];motion=[];anchors=[];nextMotionEvent=Math.floor(rand(55,110));density=new Float32Array(G*G);history=[];recent=[];field=[rand(0,6),rand(0,6),rand(0,6),rand(0,6)];paper();chooseSession();
+  originSeed=s>>>0;R=rng(originSeed);frame=marks=bundles=motionEvents=fieldEvents=0;tracks=[];motion=[];anchors=[];fieldEvent=null;nextMotionEvent=Math.floor(rand(55,110));nextFieldEvent=Math.floor(rand(170,280));density=new Float32Array(G*G);history=[];recent=[];field=[rand(0,6),rand(0,6),rand(0,6),rand(0,6)];paper();chooseSession();
   // Four overlapping source plates establish a continuous page, not isolated stickers.
   const placements=[[rand(240,370),rand(250,390)],[rand(600,760),rand(220,370)],[rand(350,600),rand(560,740)],[rand(700,840),rand(650,810)]];
   for(const [x,y] of placements)makeBundle(true);
@@ -165,11 +177,11 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
  function remember(){if(!readyState)return false;const direction={sources:session.map(s=>s.id),families:session.map(s=>s.family),seed:originSeed,created:Date.now()};memory.directions.unshift(direction);memory.directions=memory.directions.slice(0,12);memory.recent=recent.slice(-16);writeMemory();return true;}
  function step(){if(!readyState)return;frame++;field[0]+=(R()-.5)*.025;field[1]+=(R()-.5)*.025;field[2]+=(R()-.5)*.018;field[3]+=(R()-.5)*.018;
   for(const t of tracks){t.age++;while(t.cursor<t.items.length&&t.items[t.cursor].start<=t.age)t.live.push({...t.items[t.cursor++],last:0});for(const op of t.live){let f=clamp((t.age-op.start)/op.dur,0,1);if(f>op.last)paint(op,op.last,f);op.last=f;}t.live=t.live.filter(o=>o.last<1);}
-  for(const m of motion)m.age++;const expired=motion.filter(m=>m.age>=m.life);for(const m of expired)if(m.settle&&R()<.68){const finalPath=motionGeometry(m,1);paint({p:finalPath,w:m.width*.82,color:m.color,fill:false},0,1);}motion=motion.filter(m=>m.age<m.life);
+  if(fieldEvent){fieldEvent.age++;if(fieldEvent.age>=fieldEvent.life)fieldEvent=null;}if(frame>=nextFieldEvent){launchFieldEvent();nextFieldEvent=frame+Math.floor(rand(180,360));}for(const m of motion)m.age++;const expired=motion.filter(m=>m.age>=m.life);for(const m of expired)if(m.settle&&R()<.68){const finalPath=motionGeometry(m,1);paint({p:finalPath,w:m.width*.82,color:m.color,fill:false},0,1);}motion=motion.filter(m=>m.age<m.life);
   tracks=tracks.filter(t=>t.cursor<t.items.length||t.live.length);if(frame>=nextMotionEvent){launchMotionBurst();nextMotionEvent=frame+Math.floor(rand(76,174));}if(frame%17===0&&tracks.length<15)makeBundle(false);if(frame%41===0&&tracks.length<13)makeBundle(false);render();
  }
  const ready=buildAtlas();
- return{ready,step,reset,remember,get frame(){return frame},get seconds(){return frame/FPS},get seed(){return originSeed},get finished(){return false},get stats(){return{marks,bundles,active:tracks.length,moving:motion.length,events:motionEvents,sources:session.map(s=>s.label),families:[...new Set(session.map(s=>s.family))],memory:memory.directions.length,atlas:atlas.length,contours:atlas.reduce((n,a)=>n+a.paths.length,0),images:SOURCES.length,failed}}};
+ return{ready,step,reset,remember,get frame(){return frame},get seconds(){return frame/FPS},get seed(){return originSeed},get finished(){return false},get stats(){return{marks,bundles,active:tracks.length,moving:motion.length,events:motionEvents,fieldEvents,sources:session.map(s=>s.label),families:[...new Set(session.map(s=>s.family))],memory:memory.directions.length,atlas:atlas.length,contours:atlas.reduce((n,a)=>n+a.paths.length,0),images:SOURCES.length,failed}}};
 }
 function getMemoryCount(){try{return JSON.parse(localStorage.getItem(KEY)||"{}").directions?.length||0;}catch(e){return 0;}}
 root.Palimpsest005={create,FPS,SIZE:N,SOURCES,getMemoryCount};
