@@ -55,12 +55,12 @@ function makeMotif(type,origin,a,L,seed,white=false){
  case "eye":{
  line([[0,0],[.18,-.25],[.52,-.39],[.81,-.22],[1,0],[.77,.25],[.48,.35],[.17,.21],[0,0]],1.6);eye(.50,0,.43,.25);for(let j=0;j<12;j++){let f=j/11;line([[.13+f*.7,.28*Math.sin(f*Math.PI)],[.12+f*.75,.35*Math.sin(f*Math.PI)+.05]],.65);}port(.50,-.39,-1.2);port(1,0,0);port(.48,.35,1.3);break;}
  case "arch":case "chamber":{
- let x=.08,y=-.35,w=.79,h=.69,d=.13;line([[0,0],[x,y],[x+w,y],[x+w+d,y+d],[x+w+d,y+h],[x+d,y+h],[0,0]],1.8,false);line([[x,y],[x+d,y+d],[x+w+d,y+d]],1.1);line([[x+d,y+d],[x+d,y+h]],1.1);
+ let x=.08,y=-.35,w=.79,h=.69,d=.13;line([[0,0],[x,y],[x+w,y],[x+w+d,y+d],[x+w+d,y+h],[x+d,y+h],[0,0]],1.8,C,false);line([[x,y],[x+d,y+d],[x+w+d,y+d]],1.1);line([[x+d,y+d],[x+d,y+h]],1.1);
  for(let i=0;i<4;i++){let u=.18+i*.17;let top=-.14-R(0,.06);line([[u,.28],[u,top],[u+.07,top-.08],[u+.14,top],[u+.14,.28]],1.25);line([[u+.04,.26],[u+.04,top+.03],[u+.07,top-.025],[u+.10,top+.03],[u+.10,.26]],.9);if(i%2===0)hatch([[u+.045,.25],[u+.045,top+.03],[u+.10,top+.03],[u+.10,.25]],.018,1.3,.9);}
  for(let i=0;i<7;i++){let v=-.25+i*.09;line([[x,v],[x+d,v+d],[x+w+d,v+d]],.7);}
  hatch([[x,y],[x+d,y+d],[x+d,y+h],[x,y+h-d]],.022,1.1,.8);port(.51,-.35,-1.1,"root");port(1,.05,0);port(.64,.34,1.25,"stairs");break;}
  case "stairs":{
- let p=[[0,0]];let n=8+Math.floor(R(0,5));for(let i=0;i<n;i++){let u=i/n,v=-i*.055;p.push([u+.07,v],[u+.07,v-.055],[u+1/n,v-.055]);}line(p,1.7,false);let q=p.map(([x,y])=>[x,y+.28]);line(q,1.2,false);for(let i=1;i<p.length;i+=3){let b=p[i];line([b,[b[0],b[1]+.28]],.9,false);}
+ let p=[[0,0]];let n=8+Math.floor(R(0,5));for(let i=0;i<n;i++){let u=i/n,v=-i*.055;p.push([u+.07,v],[u+.07,v-.055],[u+1/n,v-.055]);}line(p,1.7,C,false);let q=p.map(([x,y])=>[x,y+.28]);line(q,1.2,C,false);for(let i=1;i<p.length;i+=3){let b=p[i];line([b,[b[0],b[1]+.28]],.9,C,false);}
  line([[0,.28],[.33,.27],[.70,.1],[1,-n*.055+.28]],1.6);hatch([[.05,.05],[.30,-.13],[.66,-.32],[.95,-.49],[.95,-.20],[.05,.28]],.034,.98,.68);port(.96,-n*.055,-.25,"arch");port(.33,.27,1.3);break;}
  case "root":{
  function branch(x,y,ang,l,dep){let b=R(-.55,.55),p=[];for(let i=0;i<=20;i++){let u=i/20;p.push([x+l*u*Math.cos(ang+b*u),y+l*u*Math.sin(ang+b*u)]);}line(p,.65+dep*.55);if(dep>0){for(let i=0;i<3;i++){let u=.38+i*.28,q=p[Math.round(u*20)];branch(q[0],q[1],ang+b*u+(i%2?1:-1)*R(.35,.85),l*R(.36,.51),dep-1);}}else{let e=p[p.length-1],aa=ang+b;line([e,[e[0]+Math.cos(aa-.4)*l*.40,e[1]+Math.sin(aa-.4)*l*.40],[e[0]+Math.cos(aa)*l*.65,e[1]+Math.sin(aa)*l*.65],[e[0]+Math.cos(aa+.4)*l*.40,e[1]+Math.sin(aa+.4)*l*.40],e],.7);}}
