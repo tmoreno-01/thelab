@@ -1,0 +1,57 @@
+name: Render PALIMPSEST 001
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'experiments/palimpsest-src/**'
+      - '.github/workflows/palimpsest.yml'
+permissions:
+  contents: write
+concurrency:
+  group: palimpsest-render
+  cancel-in-progress: true
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install renderer dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip
+          python -m pip install numpy==2.2.6 opencv-python-headless==4.11.0.86
+      - name: Render the 8-second drawing
+        run: |
+          python experiments/palimpsest-src/palimpsest.py /tmp/palimpsest-001.mp4
+          test -s /tmp/palimpsest-001.mp4
+          ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 /tmp/palimpsest-001.mp4
+          ffmpeg -v error -i /tmp/palimpsest-001.mp4 -f null -
+          mkdir -p /tmp/palimpsest-output
+          cp /tmp/palimpsest-001.mp4 /tmp/palimpsest-output/
+          cp /tmp/palimpsest-001_096.jpg /tmp/palimpsest-output/palimpsest-001.jpg
+          cp /tmp/palimpsest-001_048.jpg /tmp/palimpsest-output/palimpsest-001-detail.jpg
+      - name: Publish to GitHub Pages
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p palimpsest
+            cp -a /tmp/palimpsest-output/. palimpsest/
+            git add palimpsest
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "Publish PALIMPSEST 001 drawing test"
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 3
+          done
+          exit 1
