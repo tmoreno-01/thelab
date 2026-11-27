@@ -64,7 +64,7 @@ function extract(im,meta,variant=0){
 }
 function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
  canvas.width=canvas.height=N;const ctx=canvas.getContext("2d",{alpha:false});const inkCanvas=document.createElement("canvas");inkCanvas.width=inkCanvas.height=N;const inkCtx=inkCanvas.getContext("2d",{alpha:false});
- let R=rng(seed),originSeed=seed>>>0,frame=0,marks=0,bundles=0,atlas=[],session=[],tracks=[],density=new Float32Array(G*G),history=[],field=[0,0,0,0],recent=[],memory=readMemory(),readyState=false,failed=0,lastSources=[],previousSources=[],pendingSeed=originSeed,anchors=[],engravings=0,morphs=0,nestedForms=0;
+ let R=rng(seed),originSeed=seed>>>0,frame=0,marks=0,bundles=0,atlas=[],session=[],tracks=[],density=new Float32Array(G*G),history=[],field=[0,0,0,0],recent=[],memory=readMemory(),readyState=false,failed=0,lastSources=[],previousSources=[],pendingSeed=originSeed,anchors=[],engravings=0,morphs=0,nestedForms=0,strokes=0,slowStrokes=0;
  const rand=(a,b)=>mix(a,b,R()),pick=a=>a[Math.floor(R()*a.length)];
  function readMemory(){try{let m=JSON.parse(localStorage.getItem(KEY)||"{}");return{directions:Array.isArray(m.directions)?m.directions.slice(0,12):[],recent:Array.isArray(m.recent)?m.recent.slice(0,16):[]};}catch(e){return{directions:[],recent:[]};}}
  function writeMemory(){try{localStorage.setItem(KEY,JSON.stringify(memory));return true;}catch(e){return false;}}
@@ -83,11 +83,38 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
   return fav;
  }
  function chooseSource(exclude){let options=session.filter(s=>s.paths.length&&(!exclude||s.id!==exclude));if(!options.length)options=session.filter(s=>s.paths.length);let weights=options.map(s=>{let rec=recent.slice(-10).filter(x=>x===s.id).length+(previousSources.slice(0,10).filter(x=>x===s.id).length*.9);let novelty=1/(1+rec*1.8);let complexity=.6+s.feature.complexity*.7;return novelty*complexity*(s.family==="drawn"?.8:1);});let total=weights.reduce((a,b)=>a+b,0),v=R()*total;for(let i=0;i<options.length;i++){v-=weights[i];if(v<=0)return options[i];}return options[0];}
- function matchPath(source,target,used){if(!source||!source.paths.length)return null;let best=[],targetAspect=target.aspect||1,targetCurvature=target.curvature||0;for(let i=0;i<source.paths.length;i++){if(used.has(i))continue;let p=source.paths[i];if(p.len<7)continue;let score=Math.abs(Math.log((p.len+1)/(target.len+1)))*.38+Math.abs(Math.log((p.aspect||1)/targetAspect))*.72+Math.abs((p.curvature||0)-targetCurvature)*.34+(p.closed===target.closed?0:.42)+Math.abs(p.level-target.level)/255*.16+R()*.22;best.push({p,i,score});}if(!best.length)return choosePath(source,used);best.sort((a,b)=>a.score-b.score);let choice=best[Math.floor(Math.pow(R(),1.8)*Math.min(8,best.length))];used.add(choice.i);return choice.p;}
+ function chooseCounterSource(source){
+  const options=session.filter(s=>s.id!==source.id&&s.paths.length);
+  if(!options.length)return chooseSource(source.id);
+  const affinity={
+   botanical:{urban:1.5,architectural:1.45,object:1.25,drawn:1.08,particle:1.35,abstract:1.2,organic:.92},
+   urban:{botanical:1.5,organic:1.35,object:1.2,architectural:1.02,particle:1.35,drawn:1.12,abstract:1.25},
+   object:{botanical:1.3,urban:1.2,architectural:1.15,drawn:1.4,organic:1.35,particle:1.2,abstract:1.25},
+   drawn:{object:1.4,botanical:1.12,urban:1.1,architectural:1.2,particle:1.1,abstract:1.3,organic:1.15},
+   particle:{urban:1.35,botanical:1.35,object:1.2,architectural:1.2,organic:1.2,abstract:1.3,drawn:1.1},
+   architectural:{botanical:1.45,organic:1.4,object:1.15,drawn:1.2,particle:1.2,abstract:1.2,urban:1.04},
+   organic:{urban:1.35,architectural:1.4,object:1.25,particle:1.2,botanical:1.1,drawn:1.1,abstract:1.25},
+   abstract:{botanical:1.2,urban:1.25,object:1.25,drawn:1.3,particle:1.3,organic:1.25,architectural:1.15}
+  };
+  const weights=options.map(s=>{
+   const rec=recent.slice(-10).filter(x=>x===s.id).length+previousSources.slice(0,10).filter(x=>x===s.id).length*.9;
+   const novelty=1/(1+rec*1.7),contrast=s.family===source.family?.28:(affinity[source.family]?.[s.family]||1.15);
+   const featureDistance=Math.abs(s.feature.mean-source.feature.mean)*.35+Math.abs(s.feature.variance-source.feature.variance)*.35+Math.abs(s.feature.edge-source.feature.edge)*.5;
+   return novelty*contrast*(.85+featureDistance*.75)*(.85+s.feature.complexity*.3);
+  });
+  let total=weights.reduce((a,b)=>a+b,0),v=R()*total;
+  for(let i=0;i<options.length;i++){v-=weights[i];if(v<=0)return options[i];}
+  return options[0];
+ }
+ function matchPath(source,target,used){if(!source||!source.paths.length)return null;let best=[],targetAspect=target.aspect||1,targetCurvature=target.curvature||0;for(let i=0;i<source.paths.length;i++){if(used.has(i))continue;let p=source.paths[i];if(p.len<7)continue;let score=Math.abs(Math.log((p.len+1)/(target.len+1)))*.34+Math.abs(Math.log((p.aspect||1)/targetAspect))*.68+Math.abs((p.curvature||0)-targetCurvature)*.38+(p.closed===target.closed?0:.42)+(p.closed&&target.closed?Math.abs(Math.log((p.area+30)/(target.area+30)))*.18:0)+Math.abs(p.level-target.level)/255*.14+R()*.12;best.push({p,i,score});}if(!best.length)return choosePath(source,used);best.sort((a,b)=>a.score-b.score);let choice=best[Math.floor(Math.pow(R(),1.8)*Math.min(8,best.length))];used.add(choice.i);return choice.p;}
  function candidatePlacement(){
   let best=null;const coverage=density.reduce((a,b)=>a+b,0)/density.length,target=coverage>.24?.105:coverage>.13?.19:.29;
-  for(let i=0;i<42;i++){const x=rand(75,885),y=rand(75,885),d=densityAt(x,y,rand(32,86)),gx=densityAt(x+32,y,26)-densityAt(x-32,y,26),gy=densityAt(x,y+32,26)-densityAt(x,y-32,26),edge=Math.hypot(gx,gy),near=anchors.reduce((n,a)=>n+Math.exp(-distance([x,y],[a.x,a.y])/132)*Math.exp(-(frame-a.age)/650),0),quadrant=(x>N/2?1:0)+(y>N/2?2:0),qCount=anchors.filter(a=>((a.x>N/2?1:0)+(a.y>N/2?2:0))===quadrant&&frame-a.age<1100).length,edgeBalance=Math.min(1,edge*2.8),score=1-Math.abs(d-target)*2.7-near*.19-qCount*.052+edgeBalance*.20+R()*.34;if(!best||score>best.score)best={x,y,d,score};}
-  return best||{x:480,y:480,d:0};
+  for(let i=0;i<48;i++){
+   const x=rand(75,885),y=rand(75,885),d=densityAt(x,y,rand(32,86)),gx=densityAt(x+32,y,26)-densityAt(x-32,y,26),gy=densityAt(x,y+32,26)-densityAt(x,y-32,26),edge=Math.hypot(gx,gy),orientation=Math.atan2(gy,gx)+Math.PI*.5;
+   const near=anchors.reduce((n,a)=>n+Math.exp(-distance([x,y],[a.x,a.y])/132)*Math.exp(-(frame-a.age)/650),0),quadrant=(x>N/2?1:0)+(y>N/2?2:0),qCount=anchors.filter(a=>((a.x>N/2?1:0)+(a.y>N/2?2:0))===quadrant&&frame-a.age<1100).length,edgeBalance=Math.min(1,edge*2.8),negativeSpace=clamp((.32-d)/.32,0,1),score=1-Math.abs(d-target)*2.7-near*.19-qCount*.052+edgeBalance*.20+negativeSpace*.10+R()*.30;
+   if(!best||score>best.score)best={x,y,d,edge,orientation,score};
+  }
+  return best||{x:480,y:480,d:0,edge:0,orientation:0};
  }
  function choosePath(source,used){if(!source||!source.paths.length)return null;let pool=source.paths.filter((p,i)=>!used.has(i)&&p.len>7);if(!pool.length){used.clear();pool=source.paths;}let weights=pool.map(p=>Math.min(1.8,.35+p.len/85)*(p.closed&&p.area>25?1.25:1)*(p.level>50&&p.level<210?1.1:.85));let sum=weights.reduce((a,b)=>a+b,0),v=R()*sum;for(let i=0;i<pool.length;i++){v-=weights[i];if(v<=0){let index=source.paths.indexOf(pool[i]);used.add(index);return pool[i];}}return pool[0];}
  function resample(path,n){if(path.length<2)return path;let lengths=[0];for(let i=1;i<path.length;i++)lengths.push(lengths[i-1]+distance(path[i-1],path[i]));let total=lengths[lengths.length-1]||1,out=[];for(let j=0;j<n;j++){let d=total*j/(n-1),i=1;while(i<lengths.length-1&&lengths[i]<d)i++;let t=(d-lengths[i-1])/(lengths[i]-lengths[i-1]||1);out.push([mix(path[i-1][0],path[i][0],t),mix(path[i-1][1],path[i][1],t)]);}return out;}
@@ -99,30 +126,44 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
   for(let k=lo+spacing*.5;k<hi;k+=spacing){const hits=[];for(let i=0;i<path.length-1;i++){const a=path[i],b=path[i+1],u=a[0]*nx+a[1]*ny-k,v=b[0]*nx+b[1]*ny-k;if((u<=0&&v>0)||(v<=0&&u>0)){const t=u/(u-v),x=mix(a[0],b[0],t),y=mix(a[1],b[1],t);hits.push(x*dx+y*dy);}}hits.sort((a,b)=>a-b);for(let j=0;j+1<hits.length;j+=2){const lo=hits[j],hi=hits[j+1];if(hi-lo<7)continue;ops.push([[lo*dx+k*nx,lo*dy+k*ny],[hi*dx+k*nx,hi*dy+k*ny]]);}}
   return ops;
  }
+ function queueStroke(ops,p,w,color,start,role,meta={}){
+  const len=pathLength(p),curve=clamp((meta.curvature||0)*7,0,1),large=meta.closed&&meta.area>180?1:0;
+  let speed,min,max,factor=1;
+  if(role==="primary"){speed=rand(4.0,9.2);min=10;max=96;factor+=curve*.85+large*.18;}
+  else if(role==="engrave"){speed=rand(1.7,4.1);min=11;max=112;factor+=curve*.35;}
+  else if(role==="crosshatch"){speed=rand(2.0,4.6);min=12;max=92;factor+=curve*.25;}
+  else if(role==="nested"){speed=rand(2.8,6.3);min=13;max=86;factor+=curve*.5;}
+  else if(role==="echo"){speed=rand(6.0,12.5);min=8;max=48;}
+  else if(role==="morph"){speed=rand(3.4,7.0);min=12;max=88;factor+=curve*.4;}
+  else{speed=rand(4.8,10.2);min=9;max=68;}
+  const dur=Math.round(clamp(len/Math.max(.1,speed)*factor,min,max));
+  ops.push({p,w,color,start,dur,fill:false,role});strokes++;if(dur>=40)slowStrokes++;
+  return dur;
+ }
  function makeBundle(initial=false){
-  const place=candidatePlacement(),a=chooseSource(),b=chooseSource(a.id),cx=place.x,cy=place.y,rx=rand(125,310),ry=rx*rand(.52,1.22),ang=rand(-Math.PI,Math.PI),flip=R()<.5,warpAmount=rand(3,22),ops=[],usedA=new Set(),usedB=new Set(),count=Math.floor(rand(26,48)),polarity=place.d>.44?WHITE:INK;
+  const place=candidatePlacement(),a=chooseSource(),b=chooseCounterSource(a),cx=place.x,cy=place.y,scaleBias=place.d<.12?1.16:place.d>.25?.82:1,rx=clamp(rand(130,290)*scaleBias,108,330),ry=rx*rand(.52,1.22),ang=place.edge>.035&&R()<.72?place.orientation+rand(-.62,.62):a.feature.orientation*.28+rand(-Math.PI,Math.PI)*.72,flip=R()<.5,warpAmount=rand(3,22),ops=[],usedA=new Set(),usedB=new Set(),count=Math.floor(rand(25,45)*(place.d>.27?.78:place.d<.12?1.14:1)),polarity=place.d>.44?WHITE:INK;
   const startOffset=initial?0:Math.floor(rand(0,22));
   for(let i=0;i<count;i++){
    const pa=choosePath(a,usedA);if(!pa)continue;const raw=transformPath(pa,cx,cy,rx,ry,ang,flip,warpAmount);if(raw.length<5||pathLength(raw)<7)continue;
    const mid=raw[Math.floor(raw.length*.5)]||[cx,cy],local=densityAt(mid[0],mid[1],22),toneColor=pa.level<112?INK:pa.level>178?WHITE:(R()<.5?INK:WHITE),color=R()<.16?(polarity===INK?WHITE:INK):local>.44?WHITE:local<.17?INK:(R()<.72?toneColor:(toneColor===INK?WHITE:INK));
-   const width=clamp(.65+pa.len/92+rand(-.45,1.2),.55,4.4),start=startOffset+Math.floor(rand(0,62)),dur=Math.floor(clamp(pathLength(raw)/rand(28,65),4,18));
-   if(pa.closed&&pa.area>85&&R()<.18){ops.push({p:raw,w:width,color,start:start+Math.floor(rand(0,4)),dur:Math.max(4,dur),fill:true,closed:true});}
-   ops.push({p:raw,w:width,color,start,dur,fill:false});
-   if(pa.closed&&pa.area>70&&R()<.30){const hatchColor=color===INK?WHITE:INK,hatchAngle=ang+pa.orientation+rand(-.42,.42),hatches=hatchPolygon(raw,rand(7,12),hatchAngle,hatchColor,rand(.55,1.0),18);for(const hatch of hatches)ops.push({p:hatch,w:rand(.55,.95),color:hatchColor,start:start+Math.floor(rand(2,12)),dur:Math.max(4,Math.floor(dur*rand(.8,1.6))),fill:false});if(hatches.length&&R()<.28){const cross=hatchPolygon(raw,rand(11,16),hatchAngle+Math.PI*.5,color,rand(.5,.8),10);for(const hatch of cross)ops.push({p:hatch,w:rand(.5,.78),color,start:start+Math.floor(rand(8,18)),dur:Math.max(4,dur),fill:false});}if(hatches.length)engravings++;}
-   if(pa.closed&&pa.area>150&&R()<.14){const c=pathCentre(raw),scales=[rand(.84,.91),rand(.67,.78)];for(let j=0;j<scales.length;j++){const contour=nestedContour(raw,scales[j],c[0]+rand(-2,2),c[1]+rand(-2,2));ops.push({p:contour,w:Math.max(.55,width*(.62-j*.13)),color:j===0?(color===INK?WHITE:INK):color,start:start+Math.floor(rand(5,17)),dur:Math.max(4,dur+3),fill:false});}nestedForms++;}
-   if(R()<.27){const echo=raw.map(([x,y])=>[x+rand(-7,7),y+rand(-7,7)]);ops.push({p:echo,w:Math.max(.55,width*.48),color:color===INK?WHITE:INK,start:start+Math.floor(rand(3,16)),dur:Math.max(4,dur),fill:false});}
+   const width=clamp(.65+pa.len/92+rand(-.45,1.2),.55,4.4),start=startOffset+Math.floor(rand(0,34));
+   const primaryDur=queueStroke(ops,raw,width,color,start,"primary",pa);
+   if(pa.closed&&pa.area>85&&R()<.18){ops.push({p:raw,w:width,color,start:start+Math.floor(rand(0,5)),dur:primaryDur,fill:true,closed:true});}
+   if(pa.closed&&pa.area>70&&R()<.30){const hatchColor=color===INK?WHITE:INK,hatchAngle=ang+pa.orientation+rand(-.42,.42),hatches=hatchPolygon(raw,rand(7,12),hatchAngle,hatchColor,rand(.55,1.0),18);for(const hatch of hatches)queueStroke(ops,hatch,rand(.55,.95),hatchColor,start+Math.floor(rand(8,38)),"engrave",pa);if(hatches.length&&R()<.28){const cross=hatchPolygon(raw,rand(11,16),hatchAngle+Math.PI*.5,color,rand(.5,.8),10);for(const hatch of cross)queueStroke(ops,hatch,rand(.5,.78),color,start+Math.floor(rand(18,46)),"crosshatch",pa);}if(hatches.length)engravings++;}
+   if(pa.closed&&pa.area>150&&R()<.14){const c=pathCentre(raw),scales=[rand(.84,.91),rand(.67,.78)];for(let j=0;j<scales.length;j++){const contour=nestedContour(raw,scales[j],c[0]+rand(-2,2),c[1]+rand(-2,2));queueStroke(ops,contour,Math.max(.55,width*(.62-j*.13)),j===0?(color===INK?WHITE:INK):color,start+Math.floor(rand(12,42)),"nested",pa);}nestedForms++;}
+   if(R()<.27){const echo=raw.map(([x,y])=>[x+rand(-7,7),y+rand(-7,7)]);queueStroke(ops,echo,Math.max(.55,width*.48),color===INK?WHITE:INK,start+Math.floor(rand(3,24)),"echo",pa);}
    if(R()<.38){
     const pb=matchPath(b,pa,usedB);
-    if(pb){const rb=transformPath(pb,cx+rand(-rx*.13,rx*.13),cy+rand(-ry*.13,ry*.13),rx*rand(.88,1.13),ry*rand(.88,1.13),ang+rand(-.24,.24),R()<.5,warpAmount*.7),morphStart=start+Math.floor(rand(10,25)),tone=R()<.42?(color===INK?WHITE:INK):color;
-     ops.push({p:raw,w:width+1.05,color:WHITE,start:morphStart,dur:Math.max(4,dur*.65),fill:false});
-     const stages=[.27,.53,.78];for(let stage=0;stage<stages.length;stage++){const morph=interpolatePath(raw,rb,stages[stage]);ops.push({p:morph,w:Math.max(.62,width*(.88-stage*.10)),color:stage===1?tone:color,start:morphStart+stage*3,dur:Math.max(4,dur+stage*2),fill:false});}
-     if(R()<.76)ops.push({p:rb,w:Math.max(.7,width*.68),color:tone===INK?WHITE:INK,start:morphStart+Math.floor(rand(11,20)),dur:Math.max(4,dur),fill:false});morphs++;
+    if(pb){const rb=transformPath(pb,cx+rand(-rx*.13,rx*.13),cy+rand(-ry*.13,ry*.13),rx*rand(.88,1.13),ry*rand(.88,1.13),ang+rand(-.24,.24),R()<.5,warpAmount*.7),morphStart=start+Math.floor(rand(18,42)),tone=R()<.42?(color===INK?WHITE:INK):color,gap=Math.floor(rand(7,15));
+     queueStroke(ops,raw,width+1.05,WHITE,morphStart,"outline",pa);
+     const stages=[.27,.53,.78];for(let stage=0;stage<stages.length;stage++){const morph=interpolatePath(raw,rb,stages[stage]);queueStroke(ops,morph,Math.max(.62,width*(.88-stage*.10)),stage===1?tone:color,morphStart+stage*gap,"morph",pa);}
+     if(R()<.76)queueStroke(ops,rb,Math.max(.7,width*.68),tone===INK?WHITE:INK,morphStart+gap*3+Math.floor(rand(3,12)),"morph",pb);morphs++;
     }
    }
   }
   if(!ops.length)return;
   ops.sort((x,y)=>x.start-y.start);const track={age:0,cursor:0,live:[],items:ops,center:[cx,cy],sources:[a.id,b.id],family:[a.family,b.family]};tracks.push(track);anchors.push({x:cx,y:cy,age:frame});if(anchors.length>36)anchors.shift();recent.push(a.id,b.id);if(recent.length>32)recent=recent.slice(-32);bundles++;history.push([a.id,b.id]);if(history.length>24)history.shift();
-  if(initial){for(const op of ops)paint(op,0,1);track.cursor=ops.length;track.live=[];}
+  if(initial){for(const op of ops)paint(op,0,1);slowStrokes-=ops.filter(op=>!op.fill&&op.dur>=40).length;track.cursor=ops.length;track.live=[];}
  }
  function paint(op,from,to){
   const p=op.p,n=p.length-1;if(n<1)return;const lo=Math.max(0,Math.floor(from*n)),hi=Math.min(n,Math.ceil(to*n));if(hi<=lo)return;
@@ -133,7 +174,7 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
  }
  function render(){ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.clearRect(0,0,N,N);ctx.drawImage(inkCanvas,0,0);ctx.restore();}
  function initialise(s){
-  originSeed=s>>>0;R=rng(originSeed);frame=marks=bundles=engravings=morphs=nestedForms=0;tracks=[];anchors=[];density=new Float32Array(G*G);history=[];recent=[];field=[rand(0,6),rand(0,6),rand(0,6),rand(0,6)];paper();chooseSession();
+  originSeed=s>>>0;R=rng(originSeed);frame=marks=bundles=engravings=morphs=nestedForms=strokes=slowStrokes=0;tracks=[];anchors=[];density=new Float32Array(G*G);history=[];recent=[];field=[rand(0,6),rand(0,6),rand(0,6),rand(0,6)];paper();chooseSession();
   // Four overlapping source plates establish a continuous page, not isolated stickers.
   const placements=[[rand(240,370),rand(250,390)],[rand(600,760),rand(220,370)],[rand(350,600),rand(560,740)],[rand(700,840),rand(650,810)]];
   for(const [x,y] of placements)makeBundle(true);
@@ -150,7 +191,7 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
  function step(){if(!readyState)return;frame++;field[0]+=(R()-.5)*.025;field[1]+=(R()-.5)*.025;field[2]+=(R()-.5)*.018;field[3]+=(R()-.5)*.018;for(const t of tracks){t.age++;while(t.cursor<t.items.length&&t.items[t.cursor].start<=t.age)t.live.push({...t.items[t.cursor++],last:0});for(const op of t.live){let f=clamp((t.age-op.start)/op.dur,0,1);if(f>op.last)paint(op,op.last,f);op.last=f;}t.live=t.live.filter(o=>o.last<1);}tracks=tracks.filter(t=>t.cursor<t.items.length||t.live.length);if(frame%15===0&&tracks.length<15)makeBundle(false);if(frame%37===0&&tracks.length<13)makeBundle(false);render();
  }
  const ready=buildAtlas();
- return{ready,step,reset,remember,get frame(){return frame},get seconds(){return frame/FPS},get seed(){return originSeed},get finished(){return false},get stats(){return{marks,bundles,active:tracks.length,engravings,nestedForms,morphs,sources:session.map(s=>s.label),families:[...new Set(session.map(s=>s.family))],memory:memory.directions.length,atlas:atlas.length,contours:atlas.reduce((n,a)=>n+a.paths.length,0),images:SOURCES.length,failed}}};
+ return{ready,step,reset,remember,get frame(){return frame},get seconds(){return frame/FPS},get seed(){return originSeed},get finished(){return false},get stats(){return{marks,bundles,active:tracks.length,engravings,nestedForms,morphs,strokes,slowStrokes,sources:session.map(s=>s.label),families:[...new Set(session.map(s=>s.family))],memory:memory.directions.length,atlas:atlas.length,contours:atlas.reduce((n,a)=>n+a.paths.length,0),images:SOURCES.length,failed}}};
 }
 function getMemoryCount(){try{return JSON.parse(localStorage.getItem(KEY)||"{}").directions?.length||0;}catch(e){return 0;}}
 root.Palimpsest006={create,FPS,SIZE:N,SOURCES,getMemoryCount};
