@@ -12,7 +12,9 @@ const SOURCES=[
 {id:"flowers-12",label:"Flowers 12",family:"botanical",url:"../media/field-studies-012-flowers.jpg"},
 {id:"london-field",label:"London field study",family:"urban",url:"../media/field-studies-london.jpg"},
 {id:"taipei-field",label:"Taipei field study",family:"urban",url:"../media/field-studies-taipei.jpg"},
-{id:"ink-study",label:"Ink study",family:"drawn",url:"./palimpsest-001-detail.jpg"}
+{id:"ink-study",label:"Ink study",family:"drawn",url:"./palimpsest-001-detail.jpg"},
+{id:"plant-surface",label:"Plant surface",family:"botanical",url:"../room/assets-local/potted_plant_02/potted_plant_02_leaves_diff_2k.jpg"},
+{id:"ceramic-form",label:"Ceramic form",family:"object",url:"../room/assets-local/ceramic_vase_04/ceramic_vase_04_diff_2k.jpg"}
 ];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),mix=(a,b,t)=>a+(b-a)*t;
 function rng(seed){let s=seed>>>0;return()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296);}
@@ -70,10 +72,10 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
   let pool=atlas.filter(a=>!ids.includes(a.id));for(let i=pool.length-1;i>0;i--){let j=Math.floor(R()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
   while(ids.length<Math.min(5,atlas.length)&&pool.length){let candidate=pool.shift();if(ids.length&&ids.every(id=>atlas.find(a=>a.id===id)?.family===candidate.family)&&R()<.72){pool.push(candidate);if(pool.length===1)break;continue;}ids.push(candidate.id);}
   if(ids.length<3)ids=atlas.slice(0,Math.min(5,atlas.length)).map(a=>a.id);
-  session=ids.map(id=>atlas.find(a=>a.id===id)).filter(Boolean);lastSources=session.map(s=>s.id);
+  session=ids.map(id=>atlas.find(a=>a.id===id)).filter(Boolean);lastSources=session.map(s=>s.id);memory.recent=lastSources.slice();writeMemory();
   return fav;
  }
- function chooseSource(exclude){let options=session.filter(s=>!exclude||s.id!==exclude);if(!options.length)options=session;let weights=options.map(s=>{let rec=recent.slice(-10).filter(x=>x===s.id).length;let novelty=1/(1+rec*1.8);let complexity=.6+s.feature.complexity*.7;return novelty*complexity*(s.family==="drawn"?.8:1);});let total=weights.reduce((a,b)=>a+b,0),v=R()*total;for(let i=0;i<options.length;i++){v-=weights[i];if(v<=0)return options[i];}return options[0];}
+ function chooseSource(exclude){let options=session.filter(s=>!exclude||s.id!==exclude);if(!options.length)options=session;let weights=options.map(s=>{let rec=recent.slice(-10).filter(x=>x===s.id).length+(memory.recent.slice(-10).filter(x=>x===s.id).length*.7);let novelty=1/(1+rec*1.8);let complexity=.6+s.feature.complexity*.7;return novelty*complexity*(s.family==="drawn"?.8:1);});let total=weights.reduce((a,b)=>a+b,0),v=R()*total;for(let i=0;i<options.length;i++){v-=weights[i];if(v<=0)return options[i];}return options[0];}
  function candidatePlacement(){let best=null;for(let i=0;i<22;i++){let x=rand(90,870),y=rand(90,870),d=densityAt(x,y,rand(38,88)),target=d>.48?.19:.34,near=tracks.reduce((n,t)=>n+(distance([x,y],t.center)<150?1:0),0),score=1-Math.abs(d-target)*2.2-near*.16+R()*.65;if(!best||score>best.score)best={x,y,d,score};}return best||{x:480,y:480,d:0};}
  function choosePath(source,used){let pool=source.paths.filter((p,i)=>!used.has(i)&&p.len>7);if(!pool.length){used.clear();pool=source.paths;}let weights=pool.map(p=>Math.min(1.8,.35+p.len/85)*(p.closed&&p.area>25?1.25:1)*(p.level>50&&p.level<210?1.1:.85));let sum=weights.reduce((a,b)=>a+b,0),v=R()*sum;for(let i=0;i<pool.length;i++){v-=weights[i];if(v<=0){let index=source.paths.indexOf(pool[i]);used.add(index);return pool[i];}}return pool[0];}
  function resample(path,n){if(path.length<2)return path;let lengths=[0];for(let i=1;i<path.length;i++)lengths.push(lengths[i-1]+distance(path[i-1],path[i]));let total=lengths[lengths.length-1]||1,out=[];for(let j=0;j<n;j++){let d=total*j/(n-1),i=1;while(i<lengths.length-1&&lengths[i]<d)i++;let t=(d-lengths[i-1])/(lengths[i]-lengths[i-1]||1);out.push([mix(path[i-1][0],path[i][0],t),mix(path[i-1][1],path[i][1],t)]);}return out;}
@@ -83,7 +85,7 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
   const startOffset=initial?0:Math.floor(rand(0,22));
   for(let i=0;i<count;i++){
    const pa=choosePath(a,usedA),raw=transformPath(pa,cx,cy,rx,ry,ang,flip,warpAmount);if(raw.length<5||pathLength(raw)<7)continue;
-   const local=densityAt(cx,cy,Math.max(28,rx*.24)),color=R()<.18?(polarity===INK?WHITE:INK):(local>.43?WHITE:INK);
+   const mid=raw[Math.floor(raw.length*.5)]||[cx,cy],local=densityAt(mid[0],mid[1],22),toneColor=pa.level<112?INK:pa.level>178?WHITE:(R()<.5?INK:WHITE),color=R()<.16?(polarity===INK?WHITE:INK):local>.44?WHITE:local<.17?INK:(R()<.72?toneColor:(toneColor===INK?WHITE:INK));
    const width=clamp(.65+pa.len/92+rand(-.45,1.2),.55,4.4),start=startOffset+Math.floor(rand(0,62)),dur=Math.floor(clamp(pathLength(raw)/rand(28,65),4,18));
    if(pa.closed&&pa.area>85&&R()<.18){ops.push({p:raw,w:width,color,start:start+Math.floor(rand(0,4)),dur:Math.max(4,dur),fill:true,closed:true});}
    ops.push({p:raw,w:width,color,start,dur,fill:false});
@@ -127,7 +129,7 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
   tracks=tracks.filter(t=>t.cursor<t.items.length||t.live.length);if(frame%17===0&&tracks.length<15)makeBundle(false);if(frame%41===0&&tracks.length<13)makeBundle(false);
  }
  const ready=buildAtlas();
- return{ready,step,reset,remember,get frame(){return frame},get seconds(){return frame/FPS},get seed(){return originSeed},get finished(){return false},get stats(){return{marks,bundles,active:tracks.length,sources:session.map(s=>s.label),families:[...new Set(session.map(s=>s.family))],memory:memory.directions.length,atlas:atlas.length,failed}}};
+ return{ready,step,reset,remember,get frame(){return frame},get seconds(){return frame/FPS},get seed(){return originSeed},get finished(){return false},get stats(){return{marks,bundles,active:tracks.length,sources:session.map(s=>s.label),families:[...new Set(session.map(s=>s.family))],memory:memory.directions.length,atlas:atlas.length,contours:atlas.reduce((n,a)=>n+a.paths.length,0),failed}}};
 }
 function getMemoryCount(){try{return JSON.parse(localStorage.getItem(KEY)||"{}").directions?.length||0;}catch(e){return 0;}}
 root.Palimpsest005={create,FPS,SIZE:N,SOURCES,getMemoryCount};
