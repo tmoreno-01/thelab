@@ -33,20 +33,29 @@
 }
 a.lab-link{color:#aaa;text-decoration:none}a.lab-link:hover{color:#fff;text-decoration:underline;text-underline-offset:4px}
 </style>
+#panel{width:min(360px,46vw)}
+.item-scale{gap:8px}
+.item-scale span{min-width:48px}
+.item-scale output{width:42px}
+footer .controls label{white-space:nowrap}
+#ringDiameter,#dotSize{width:76px}
+#ringDiameterValue,#dotSizeValue{display:inline-block;min-width:34px;color:#ddd;font-size:10px;font-variant-numeric:tabular-nums}
+@media(max-width:650px){#panel{width:min(340px,88vw)}#ringDiameter,#dotSize{width:54px}footer .controls{gap:7px}footer .controls label{gap:4px}}
+
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.157.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.157.0/examples/jsm/"}}</script></head>
 <body>
 <header><span><a class="lab-link" href="../">lab / exit</a> &nbsp; / &nbsp; 4D Splat Studio</span><div class="controls"><label>Quality <select id="tier"><option value="desktop">Desktop</option><option value="mobile">Mobile</option><option value="original">Full-resolution originals</option></select></label><label class="pick" for="file">Open folder</label><label class="pick" for="zipfiles">Open ZIPs</label><button id="showlist">Scenes / scale</button><button id="exportOpen">Render MP4 loop</button></div></header>
 <input id="file" type="file" webkitdirectory multiple><input id="zipfiles" type="file" accept=".zip" multiple>
-<div id="intro"><h1>4D Splat Studio</h1><p>Load multiple original full_vda ZIPs together. Each animated reconstruction becomes its own splat in a slowly rotating ring. Adjust each scene independently, then render a 360° MP4 loop locally.</p><div><label class="pick" for="file">Choose collection folder</label> <label class="pick" for="zipfiles">Choose ZIP files</label></div><div id="message" role="status"></div></div>
-<aside id="panel" hidden><div class="controls"><button id="all">Show all</button><button id="none">Hide all</button></div><p>Each scene has its own scale control. Click a name to isolate it; tick the box to include or exclude it from the ring and MP4.</p><div id="list"></div><div id="errors" role="status"></div></aside>
+<div id="intro"><h1>4D Splat Studio</h1><p>Load multiple original full_vda ZIPs together. Arrange animated reconstructions as rings, helices, arcs, spheres, grids or loose spatial studies. Adjust each scene and its individual point size, then render a 360° MP4 loop locally.</p><div><label class="pick" for="file">Choose collection folder</label> <label class="pick" for="zipfiles">Choose ZIP files</label></div><div id="message" role="status"></div></div>
+<aside id="panel" hidden><div class="controls"><button id="all">Show all</button><button id="none">Hide all</button></div><p>Each scene has its own overall scale and dot-size control. Click a name to isolate it; tick the box to include or exclude it from the arrangement and MP4.</p><div id="list"></div><div id="errors" role="status"></div></aside>
 <div id="exportDialog" hidden><section id="exportCard"><h2>Render a 360° loop</h2><p>The camera completes one full revolution while every enabled 4D sequence plays at its source frame rate. Source motion wraps at the end of each clip, so a perfectly seamless motion loop depends on the clip's first and last frames matching. MP4 encoding happens locally; your ZIPs are never uploaded.</p><div class="export-grid"><label>Frame size<select id="exportSize"><option value="1920x1080">1920 × 1080 / landscape</option><option value="1080x1080">1080 × 1080 / square</option><option value="1080x1920">1080 × 1920 / portrait</option></select></label><label>Loop duration<select id="exportDuration"><option value="12">12 seconds</option><option value="18" selected>18 seconds</option><option value="24">24 seconds</option><option value="30">30 seconds</option></select></label></div><div class="export-actions"><button id="closeExport">Close</button><button id="startExport">Render MP4</button></div><progress id="exportProgress" max="100" value="0"></progress><div id="exportStatus">Ready when your scenes are loaded.</div></section></div>
-<footer><div class="controls"><button id="play">Pause</button><button id="orbit">Spin on</button><label>Layout <select id="layout"><option value="ring" selected>Ring</option><option value="space">Space</option><option value="grid">Grid</option></select></label><label>Spin speed <input id="speed" type="range" min=".005" max=".16" step=".005" value=".07"></label><label>Detail <select id="detail"><option value="auto">Auto</option><option value="original">Original</option><option value="fine">Fine ×4</option></select></label><label>Playback <select id="rate"><option value="auto">Auto</option><option value="source">Source</option><option value="12">12 fps</option><option value="18">18 fps</option></select></label><label>Depth <input id="depth" type="range" min="1.5" max="12" step=".1" value="4"></label><button id="reset">Reset view</button></div><span id="status">Awaiting ZIPs</span></footer>
+<footer><div class="controls"><button id="play">Pause</button><button id="orbit">Spin on</button><label>Layout <select id="layout"><option value="ring" selected>Ring</option><option value="helix">Helix</option><option value="arc">Arc</option><option value="sphere">Sphere</option><option value="grid">Grid</option><option value="space">Scatter</option><option value="line">Line</option></select></label><label>Orientation <select id="orientation"><option value="horizontal">Horizontal</option><option value="vertical">Vertical / front</option><option value="side">Vertical / side</option><option value="tilted">Tilted</option></select></label><label>Ring Ø <input id="ringDiameter" type="range" min="4" max="100" step=".5" value="12"><output id="ringDiameterValue">12.0</output></label><label>Dots <input id="dotSize" type="range" min=".25" max="3.5" step=".05" value="1"><output id="dotSizeValue">1.00×</output></label><label>Spin speed <input id="speed" type="range" min=".005" max=".16" step=".005" value=".07"></label><label>Detail <select id="detail"><option value="auto">Auto</option><option value="original">Original</option><option value="fine">Fine ×4</option></select></label><label>Playback <select id="rate"><option value="auto">Auto</option><option value="source">Source</option><option value="12">12 fps</option><option value="18">18 fps</option></select></label><label>Depth <input id="depth" type="range" min="1.5" max="12" step=".1" value="4"></label><button id="reset">Reset view</button></div><span id="status">Awaiting ZIPs</span></footer>
 <script type="module">
 import * as THREE from 'three';import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const $=id=>document.getElementById(id);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);renderer.setClearColor(0x030303);document.body.prepend(renderer.domElement);
 const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(43,innerWidth/innerHeight,.025,400),controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.maxDistance=120;
-const world=new THREE.Group();scene.add(world);if(matchMedia('(pointer: coarse)').matches)$('tier').value='mobile';
+const world=new THREE.Group(),layoutRoot=new THREE.Group();scene.add(world);world.add(layoutRoot);if(matchMedia('(pointer: coarse)').matches)$('tier').value='mobile';
 
 const vertexShader=`
 uniform sampler2D depthTex,colorTex;
@@ -70,7 +79,7 @@ void main(){
  if(sub==2){if(xy.y+stride>=gridH)valid=0.;else{S d=readP(xy+ivec2(0,stride));if(joined(p,d))p=mid(p,d);else valid=0.;}}
  if(sub==3){if(xy.x+stride>=gridW||xy.y+stride>=gridH)valid=0.;else{S r=readP(xy+ivec2(stride,0)),d=readP(xy+ivec2(0,stride)),q=readP(xy+ivec2(stride,stride));if(joined(p,r)&&joined(p,d)&&joined(r,q)&&joined(d,q))p=mid(mid(p,r),mid(d,q));else valid=0.;}}
  vec4 mv=modelViewMatrix*vec4(p.p,1.);gl_Position=valid>.5?projectionMatrix*mv:vec4(2.,2.,2.,1.);
- gl_PointSize=clamp(p.z/intr.x*pixelScale*worldScale/max(.01,-mv.z)*sizeScale*float(stride)*(samples==4?1.05:1.65),1.,10.);vColor=p.c;
+ gl_PointSize=clamp(p.z/intr.x*pixelScale*worldScale/max(.01,-mv.z)*sizeScale*float(stride)*(samples==4?1.05:1.65),1.,32.);vColor=p.c;
 }`;
 const fragmentShader=`in vec3 vColor;flat in float valid;out vec4 outColor;void main(){if(valid<.5)discard;vec2 q=(gl_PointCoord-.5)*2.;float r=dot(q,q);if(r>1.)discard;outColor=vec4(vColor,1.-smoothstep(.58,1.,r));}`;
 
@@ -97,38 +106,56 @@ function estimateBounds(s,q){
 }
 function mount(s,q,rgb){
  const m=s.m,n=m.width*m.height,k=m.intrinsics,d=m.depth_encoding,b=estimateBounds(s,q),scale=2.2/b.span;
- s.root=new THREE.Group();world.add(s.root);s.root.scale.setScalar(s.userScale||1);s.geo=new THREE.BufferGeometry();
+ s.root=new THREE.Group();layoutRoot.add(s.root);s.root.scale.setScalar(s.userScale||1);s.geo=new THREE.BufferGeometry();
  // Shared dummy geometry per dimensions; positions are calculated in the vertex shader.
  s.geo.setAttribute('position',geometryFor(n));
  s.d=texture(toBytes(q),m.width,m.height,THREE.RGFormat);s.c=texture(rgb,m.width,m.height,THREE.RGBAFormat);
- s.mat=new THREE.ShaderMaterial({glslVersion:THREE.GLSL3,vertexShader,fragmentShader,uniforms:{depthTex:{value:s.d},colorTex:{value:s.c},gridW:{value:m.width},gridH:{value:m.height},cols:{value:m.width},stride:{value:1},samples:{value:1},intr:{value:new THREE.Vector4(k.fx,k.fy,k.cx,k.cy)},logRange:{value:new THREE.Vector2(d.log_min,d.log_max)},qmax:{value:d.quantization_max},cutoff:{value:getCutoff(s)},sizeScale:{value:1},pixelScale:{value:pixelScale()},worldScale:{value:scale}},transparent:false,depthWrite:true,depthTest:true,alphaToCoverage:true});
+ s.mat=new THREE.ShaderMaterial({glslVersion:THREE.GLSL3,vertexShader,fragmentShader,uniforms:{depthTex:{value:s.d},colorTex:{value:s.c},gridW:{value:m.width},gridH:{value:m.height},cols:{value:m.width},stride:{value:1},samples:{value:1},intr:{value:new THREE.Vector4(k.fx,k.fy,k.cx,k.cy)},logRange:{value:new THREE.Vector2(d.log_min,d.log_max)},qmax:{value:d.quantization_max},cutoff:{value:getCutoff(s)},sizeScale:{value:Number($('dotSize').value)*(s.dotScale||1)},pixelScale:{value:pixelScale()},worldScale:{value:scale}},transparent:false,depthWrite:true,depthTest:true,alphaToCoverage:true});
  s.cloud=new THREE.Points(s.geo,s.mat);s.cloud.frustumCulled=false;s.cloud.scale.setScalar(scale);s.cloud.position.set(...b.center.map(x=>-x*scale));s.root.add(s.cloud);s.root.visible=s.enabled;applyDetail();layout(false);
 }
 const geometryCache=new Map();
 function geometryFor(n){if(!geometryCache.has(n))geometryCache.set(n,new THREE.BufferAttribute(new Float32Array(n*4*3),3));return geometryCache.get(n);}
 function pixelScale(){return renderer.domElement.height/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));}
+function applyDotScale(s){if(s.mat)s.mat.uniforms.sizeScale.value=Number($('dotSize').value)*(s.dotScale||1);}
 function applyDetail(){
  const a=visible(),total=a.reduce((v,s)=>v+s.m.width*s.m.height,0),mode=$('detail').value;
  const stride=mode==='auto'?Math.max(1,Math.ceil(Math.sqrt(total/frameBudget))):1,samples=mode==='fine'?4:1;
  for(const s of states){if(!s.mat)continue;const w=s.m.width,h=s.m.height,cols=Math.ceil(w/stride),rows=Math.ceil(h/stride),u=s.mat.uniforms;u.stride.value=stride;u.cols.value=cols;u.samples.value=samples;s.geo.setDrawRange(0,cols*rows*samples);}
 }
+function setLayoutOrientation(){
+ const mode=$('orientation').value;
+ if(mode==='vertical')layoutRoot.rotation.set(Math.PI/2,0,0);
+ else if(mode==='side')layoutRoot.rotation.set(0,0,Math.PI/2);
+ else if(mode==='tilted')layoutRoot.rotation.set(.48,0,.38);
+ else layoutRoot.rotation.set(0,0,0);
+}
 function layout(resetCam=true){
  const a=visible(),n=a.length,mode=$('layout').value,columns=Math.ceil(Math.sqrt(n||1)*1.25),rows=Math.ceil(n/columns);
- const radius=Math.max(3.2,n*3.35/(2*Math.PI)),maxScale=Math.max(1,...a.map(s=>s.userScale||1));
+ const radius=Math.max(2,Number($('ringDiameter').value)/2),maxScale=Math.max(1,...a.map(s=>s.userScale||1));
+ setLayoutOrientation();
  for(let i=0;i<n;i++){
   const s=a[i];if(!s.root)continue;let x=0,y=0,z=0,rx=0,ry=0,rz=0;
-  if(n>1&&mode==='ring'){const t=2*Math.PI*i/n;x=Math.sin(t)*radius;z=Math.cos(t)*radius;ry=t;y=Math.sin(i*1.8)*.28;}
-  else if(n>1){x=(i%columns-(columns-1)/2)*3.0;y=((rows-1)/2-Math.floor(i/columns))*2.55;if(mode==='space'){z=Math.sin(i*2.4)*.75;ry=Math.sin(i*1.8)*.28;rx=Math.sin(i*2.1)*.12;rz=Math.cos(i*2.2)*.12;}}
+  if(n>1){
+   if(mode==='ring'){const t=2*Math.PI*i/n;x=Math.sin(t)*radius;z=Math.cos(t)*radius;ry=t;y=Math.sin(i*1.8)*.12;}
+   else if(mode==='helix'){const t=2*Math.PI*i/n*1.2;x=Math.sin(t)*radius;z=Math.cos(t)*radius;y=(i-(n-1)/2)*.72;ry=t;}
+   else if(mode==='arc'){const t=(i/(n-1)-.5)*Math.PI*1.5;x=Math.sin(t)*radius;z=Math.cos(t)*radius;ry=t;}
+   else if(mode==='sphere'){const phi=Math.acos(1-2*(i+.5)/n),theta=Math.PI*(1+Math.sqrt(5))*i;x=radius*Math.sin(phi)*Math.cos(theta);y=radius*Math.cos(phi);z=radius*Math.sin(phi)*Math.sin(theta);ry=theta+Math.PI/2;}
+   else if(mode==='line'){x=(i-(n-1)/2)*3.25;z=0;ry=0;}
+   else{x=(i%columns-(columns-1)/2)*3.0;y=((rows-1)/2-Math.floor(i/columns))*2.55;if(mode==='space'){z=Math.sin(i*2.4)*.75;ry=Math.sin(i*1.8)*.28;rx=Math.sin(i*2.1)*.12;rz=Math.cos(i*2.2)*.12;}}
+  }
   s.root.position.set(x,y,z);s.root.rotation.set(rx,ry,rz);s.root.visible=true;s.root.scale.setScalar(s.userScale||1);
  }
  for(const s of states)if(s.root&&!a.includes(s))s.root.visible=false;
  if(resetCam){
   world.rotation.y=0;controls.target.set(0,0,0);
   const halfV=THREE.MathUtils.degToRad(camera.fov/2),halfH=Math.atan(Math.tan(halfV)*camera.aspect),halfFov=Math.min(halfV,halfH);
-  const span=mode==='ring'&&n>1?radius+1.45*maxScale:Math.max(rows*1.35,columns*1.5/camera.aspect)+1.0*maxScale;
-  const distance=span/Math.tan(halfFov)+.9;
-  camera.position.set(0,mode==='ring'&&n>1?radius*.23:.15,distance);
-  controls.minDistance=Math.max(1.5,distance*.18);controls.maxDistance=160;controls.update();
+  const radial=['ring','helix','arc','sphere'].includes(mode);
+  const span=radial?radius+(mode==='helix'?n*.36:0)+1.45*maxScale:mode==='line'?Math.max(2,n*1.65/camera.aspect)+maxScale:Math.max(rows*1.35,columns*1.5/camera.aspect)+1.0*maxScale;
+  const distance=span/Math.tan(halfFov)+.9,orientation=$('orientation').value;
+  if(orientation==='side')camera.position.set(distance,.15,.15);
+  else if(orientation==='vertical')camera.position.set(0,.15,distance);
+  else camera.position.set(0,radial&&n>1?radius*.23:.15,distance);
+  controls.minDistance=Math.max(1.5,distance*.18);controls.maxDistance=180;controls.update();
  }
 }
 function updateList(){
@@ -147,7 +174,14 @@ function updateList(){
   const slider=document.createElement('input');slider.type='range';slider.min='.35';slider.max='2.5';slider.step='.05';slider.value=String(s.userScale||1);slider.disabled=!!s.error;
   const value=document.createElement('output');value.textContent=(s.userScale||1).toFixed(2)+'×';
   slider.oninput=()=>{s.userScale=Number(slider.value);value.textContent=s.userScale.toFixed(2)+'×';if(s.root)s.root.scale.setScalar(s.userScale);};
-  scaleRow.append(caption,slider,value);row.append(top,scaleRow);list.append(row);
+  scaleRow.append(caption,slider,value);
+  const dotRow=document.createElement('label');dotRow.className='item-scale';
+  const dotCaption=document.createElement('span');dotCaption.textContent='Dot size';
+  const dotSlider=document.createElement('input');dotSlider.type='range';dotSlider.min='.25';dotSlider.max='3.5';dotSlider.step='.05';dotSlider.value=String(s.dotScale||1);dotSlider.disabled=!!s.error;
+  const dotValue=document.createElement('output');dotValue.textContent=(s.dotScale||1).toFixed(2)+'×';
+  dotSlider.oninput=()=>{s.dotScale=Number(dotSlider.value);dotValue.textContent=s.dotScale.toFixed(2)+'×';applyDotScale(s);};
+  dotRow.append(dotCaption,dotSlider,dotValue);
+  row.append(top,scaleRow,dotRow);list.append(row);
  }
  $('errors').textContent=states.filter(s=>s.error).map(s=>s.name+': '+s.error).join('\n');
 }
@@ -319,7 +353,7 @@ function validate(m,base,files){
  m.chunks.forEach((c,i)=>{if(c.start!==at||!Number.isInteger(c.count)||c.count<1||c.count>120||at+c.count>m.num_frames||!/^\d+\.lal$/.test(c.file)||files.get(base+c.file)?.size!==c.bytes)throw Error('Missing or invalid chunk '+c.file);index.fill(i,at,at+c.count);at+=c.count;});
  if(at!==m.num_frames)throw Error('Incomplete sequence');return index;
 }
-function clear(){generation++;for(const s of states){if(s.root)world.remove(s.root);if(s.geo){s.geo.dispose();}s.mat?.dispose();s.d?.dispose();s.c?.dispose();s.chunks.clear();}states=[];geometryCache.clear();newWorker();loading=false;world.rotation.y=0;last=0;}
+function clear(){generation++;for(const s of states){if(s.root)layoutRoot.remove(s.root);if(s.geo){s.geo.dispose();}s.mat?.dispose();s.d?.dispose();s.c?.dispose();s.chunks.clear();}states=[];geometryCache.clear();newWorker();loading=false;world.rotation.y=0;last=0;}
 async function open(filesIn){
  clear();const gen=generation;loading=true;$('intro').hidden=false;$('message').textContent='Scanning the folder…';$('errors').textContent='';
  const files=new Map(Array.from(filesIn,f=>[f.webkitRelativePath||f.name,f])),keys=[...files.keys()];let tier=$('tier').value;
@@ -340,14 +374,14 @@ async function open(filesIn){
    $('message').textContent='Indexing '+(loose?path.split('/').slice(-2,-1)[0]||path:path.split('/').pop())+'…';
    const {m,index,archive}=await originalSequence(files.get(path),loose?folderArchive(files,path):null);
    if(gen!==generation)return;
-   states.push({gen,m,index,archive,name:m.source||(loose?path.split('/').slice(-2,-1)[0]||path:path.split('/').pop()),enabled:true,userScale:1,error:null,chunks:new Map(),pending:new Set(),bitmap:false,shown:-1,clock:0,minDepth:.01,original:true});
+   states.push({gen,m,index,archive,name:m.source||(loose?path.split('/').slice(-2,-1)[0]||path:path.split('/').pop()),enabled:true,userScale:1,dotScale:1,error:null,chunks:new Map(),pending:new Set(),bitmap:false,shown:-1,clock:0,minDepth:.01,original:true});
   }catch(e){issues.push(path+': '+e.message);}}
  }
  for(const path of paths.sort()){try{const m=JSON.parse(await files.get(path).text()),base=path.slice(0,path.lastIndexOf('/')+1),index=validate(m,base,files);
  if(gen!==generation)return;
- states.push({gen,m,base,index,files,name:m.source||path.split('/').slice(-3,-2)[0],enabled:true,userScale:1,error:null,chunks:new Map(),pending:new Set(),bitmap:false,shown:-1,clock:0,minDepth:.01});
+ states.push({gen,m,base,index,files,name:m.source||path.split('/').slice(-3,-2)[0],enabled:true,userScale:1,dotScale:1,error:null,chunks:new Map(),pending:new Set(),bitmap:false,shown:-1,clock:0,minDepth:.01});
  }catch(e){issues.push(path+': '+e.message);}}
- if(gen!==generation)return;loading=false;updateList();if(issues.length)$('errors').textContent+=('\n'+issues.join('\n'));if(!states.length){$('message').textContent='No complete sequences: '+issues.slice(0,2).join('; ');return;}
+ if(gen!==generation)return;loading=false;if(!$('ringDiameter').dataset.manual){const d=Math.max(6.4,states.length*3.35/Math.PI);$('ringDiameter').value=Math.min(100,d).toFixed(1);$('ringDiameterValue').textContent=Number($('ringDiameter').value).toFixed(1);}updateList();if(issues.length)$('errors').textContent+=('\n'+issues.join('\n'));if(!states.length){$('message').textContent='No complete sequences: '+issues.slice(0,2).join('; ');return;}
  layout();$('intro').hidden=true;$('panel').hidden=false;last=0;
 }
 function requestChunk(s,k){
@@ -378,7 +412,9 @@ $('showlist').onclick=()=>$('panel').hidden=!$('panel').hidden;
 $('all').onclick=()=>toggleAll(true);$('none').onclick=()=>toggleAll(false);
 $('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Pause':'Play';last=0;};
 $('orbit').onclick=()=>{orbit=!orbit;$('orbit').textContent=orbit?'Spin on':'Spin off';};
-$('layout').onchange=()=>layout();$('reset').onclick=()=>layout();$('detail').onchange=applyDetail;
+$('layout').onchange=()=>layout();$('orientation').onchange=()=>layout();$('reset').onclick=()=>layout();$('detail').onchange=applyDetail;
+$('ringDiameter').oninput=()=>{$('ringDiameter').dataset.manual='1';$('ringDiameterValue').textContent=Number($('ringDiameter').value).toFixed(1);layout(true);};
+$('dotSize').oninput=()=>{$('dotSizeValue').textContent=Number($('dotSize').value).toFixed(2)+'×';for(const s of states)applyDotScale(s);};
 // Per-scene scale is controlled in the scene list.
 $('depth').oninput=()=>{for(const s of states)if(s.mat)s.mat.uniforms.cutoff.value=getCutoff(s);};
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);for(const s of states)if(s.mat)s.mat.uniforms.pixelScale.value=pixelScale();});
