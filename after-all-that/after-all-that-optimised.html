@@ -582,38 +582,41 @@ function advancePigmentEvents(dt){
 }
 function applyPigmentEvents(){
  if(testNumber<136||!pigmentEvents.length)return;
+ const stride=3;
  for(const e of pigmentEvents){
-  const u=clamp((age-e.start)/e.duration,0,1),fadeIn=smooth(0,.18,u),fadeOut=1-smooth(.70,.99,u),envelope=fadeIn*fadeOut;
-  if(envelope<.006)continue;
-  const rx=e.rx*(.88+.12*waveSin(u*Math.PI)),ry=e.ry*(.88+.12*waveSin(u*Math.PI)),bound=Math.max(rx,ry)*1.08;
-  const cx=e.x,cy=e.y,ax=waveCos(e.angle),ay=waveSin(e.angle),nx=-ay,ny=ax;
-  const x0=clamp(Math.floor(cx-bound),1,W-2),x1=clamp(Math.ceil(cx+bound),1,W-2),y0=clamp(Math.floor(cy-bound),1,H-2),y1=clamp(Math.ceil(cy+bound),1,H-2);
-  const phase=e.phase+age*e.speed,blend=smooth(.36,.72,u),salt=e.seed+Math.floor(age*2);
-  for(let y=y0;y<=y1;y++){
-   const row=y*W,dy=y-cy;
-   for(let x=x0;x<=x1;x++){
-    const i=row+x;if(field[i]===0&&renderField[i]===0)continue;
-    const dx=x-cx,along=dx*ax+dy*ay,across=dx*nx+dy*ny,shape=fastHypot(along/rx,across/ry);
-    if(shape>1.25)continue;
-    const irregular=waveSin(along/ry*2.1+e.phase)*.11+waveSin(across/ry*3.2-phase*.7)*.075;
-    const mask=1-smooth(.38,1.04,shape+irregular);if(mask<.025)continue;
-    const edges=(field[i-1]===0?1:0)+(field[i+1]===0?1:0)+(field[i-W]===0?1:0)+(field[i+W]===0?1:0);
-    const edgeWeight=.48+Math.min(.52,edges*.15),grain=motionNoise(x>>1,y>>1,salt+31);
-    let wave,gate,m=blend<.5?e.modeA:e.modeB;
-    if(m===0){wave=waveSin(along*.095-phase*1.4+waveSin(across*.07+e.phase)*1.9);gate=smooth(-.45,.55,wave);}
-    else if(m===1){wave=waveSin(along*.13+e.phase+waveSin(across*.16-phase*.5)*3.1);gate=smooth(-.25,.68,wave);}
-    else if(m===2){let step=((along/(7+e.ry*.035)-phase*.24)%1+1)%1;gate=step<.28?1:.10;wave=step;}
-    else if(m===3){wave=waveSin((along+across*.72)*.072-phase+waveSin(across*.11+e.phase)*2.2);gate=smooth(-.2,.72,wave);}
-    else if(m===4){wave=waveSin(along*.055+e.phase)*waveSin(across*.12-phase);gate=smooth(-.1,.62,wave);}
+  const u=clamp((age-e.start)/e.duration,0,1),env=smooth(0,.18,u)*(1-smooth(.70,.99,u));
+  if(env<.006)continue;
+  if(!e.map||age>=e.map.next){
+   const rx=e.rx*(.88+.12*waveSin(u*Math.PI)),ry=e.ry*(.88+.12*waveSin(u*Math.PI)),bound=Math.max(rx,ry)*1.22;
+   const cx=e.x,cy=e.y,ax=waveCos(e.angle),ay=waveSin(e.angle),nx=-ay,ny=ax;
+   const x0=clamp(Math.floor(cx-bound),1,W-2),x1=clamp(Math.ceil(cx+bound),1,W-2),y0=clamp(Math.floor(cy-bound),1,H-2),y1=clamp(Math.ceil(cy+bound),1,H-2);
+   const cap=Math.ceil((x1-x0+1)/stride)*Math.ceil((y1-y0+1)/stride);
+   let m=e.map;if(!m||m.dst.length<cap)m=e.map={dst:new Int32Array(cap),entry:new Float32Array(cap),exit:new Float32Array(cap),col:new Uint8Array(cap)};
+   m.n=0;m.next=age+mapInterval;m.x1=x1;m.y1=y1;m.salt=e.seed+Math.floor(age*2);
+   const phase=e.phase+age*e.speed,mode=smooth(.36,.72,u)<.5?e.modeA:e.modeB;
+   for(let y=y0;y<=y1;y+=stride)for(let x=x0;x<=x1;x+=stride){
+    const dx=x+1-cx,dy=y+1-cy,along=dx*ax+dy*ay,across=dx*nx+dy*ny,shape=fastHypot(along/rx,across/ry);if(shape>1.24)continue;
+    const irregular=waveSin(along/ry*2.1+e.phase)*.11+waveSin(across/ry*3.2-phase*.7)*.075,mask=1-smooth(.38,1.04,shape+irregular);if(mask<.025)continue;
+    let wave,gate;
+    if(mode===0){wave=waveSin(along*.095-phase*1.4+waveSin(across*.07+e.phase)*1.9);gate=smooth(-.45,.55,wave);}
+    else if(mode===1){wave=waveSin(along*.13+e.phase+waveSin(across*.16-phase*.5)*3.1);gate=smooth(-.25,.68,wave);}
+    else if(mode===2){const step=((along/(7+e.ry*.035)-phase*.24)%1+1)%1;gate=step<.28?1:.10;}
+    else if(mode===3){wave=waveSin((along+across*.72)*.072-phase+waveSin(across*.11+e.phase)*2.2);gate=smooth(-.2,.72,wave);}
+    else if(mode===4){wave=waveSin(along*.055+e.phase)*waveSin(across*.12-phase);gate=smooth(-.1,.62,wave);}
     else{wave=waveSin(across*.105-phase*1.7+waveSin(along*.045+e.phase)*2.5);gate=smooth(-.3,.62,wave);}
-    const entry=mask*edgeWeight*envelope*e.amp*gate;
-    const exit=smooth(.70,.98,u)*mask*edgeWeight*(.25+.75*smooth(-.4,.55,waveSin(along*.10+phase+waveSin(across*.08)*2)));
-    if(field[i]===1&&grain<entry*.78){
-     const stripe=Math.floor((along+e.phase*9)/(8+e.ry*.025)),which=Math.abs(stripe+Math.floor(grain*3))%3,colour=e.colours[which];
-     renderField[i]=colour;pigmentTransitions++;
-     if(e.residue.length<1100&&!e.residueSeen.has(i)){e.residueSeen.add(i);e.residue.push(i);}
-    }else if(field[i]===1&&renderField[i]>1&&grain<exit*.88){renderField[i]=1;}
-    else if(field[i]>1&&grain<exit*.62){renderField[i]=1;}
+    const k=m.n++;m.dst[k]=y*W+x;m.entry[k]=mask*env*e.amp*gate;m.exit[k]=smooth(.70,.98,u)*mask*(.25+.75*smooth(-.4,.55,waveSin(along*.10+phase+waveSin(across*.08)*2)));m.col[k]=((Math.floor((along+e.phase*9)/(8+e.ry*.025))%3)+3)%3;
+   }
+  }
+  const m=e.map;
+  for(let k=0;k<m.n;k++){
+   const base=m.dst[k],bx=base%W,by=(base/W)|0,ex=Math.min(m.x1+1,bx+stride),ey=Math.min(m.y1+1,by+stride);
+   for(let y=by;y<ey;y++)for(let x=bx;x<ex;x++){
+    const i=y*W+x;if(field[i]===0)continue;
+    const grain=motionNoise(x>>1,y>>1,m.salt+31);
+    if(grain>=Math.max(m.entry[k]*.78,m.exit[k]*.88))continue;
+    const edges=(field[i-1]===0)+(field[i+1]===0)+(field[i-W]===0)+(field[i+W]===0),weight=.48+Math.min(.52,edges*.15);
+    if(field[i]===1&&grain<m.entry[k]*weight*.78){renderField[i]=e.colours[(m.col[k]+Math.floor(grain*3))%3];pigmentTransitions++;if(e.residue.length<1100&&!e.residueSeen.has(i)){e.residueSeen.add(i);e.residue.push(i);}}
+    else if(renderField[i]>1&&grain<m.exit[k]*weight*(field[i]===1?.88:.62))renderField[i]=1;
    }
   }
  }
@@ -663,88 +666,60 @@ function motionNoise(x,y,salt){
 }
 function smooth(a,b,x){let t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);}
 function apply62CMotionFields(){
- if(!motionSource||!motionX||!motionFields.length)return;
- const aspect=W/H;motionSource.set(renderField);
- const rebuild=!motionMapReady||age>=nextMotionMap;
- if(rebuild){
+ if(!motionSource||!motionFields.length)return;
+ const stride=requestedStudy===139?4:3,cols=Math.ceil(W/stride),rows=Math.ceil(H/stride),aspect=W/H;
+ if(!motionMapReady||age>=nextMotionMap){
+  // Compute continuous field geometry on a small control lattice; sample actual
+  // image pixels individually. This never reduces the artwork's resolution.
   for(let k=0;k<motionIndexCount;k++){const i=motionIndices[k];motionX[i]=motionY[i]=motionStrength[i]=motionMemory[i]=motionErase[i]=motionColour[i]=motionHue[i]=0;}
-  motionIndexCount=0;motionTouched=0;
+  motionIndexCount=motionTouched=0;
   for(const p of motionFields){
    const u=clamp((age-p.start)/p.duration,0,1),envelope=age<p.start?0:waveSin(Math.PI*u)**1.3;
    if(envelope<.006)continue;
-   const radius=p.radius*(.72+.4*waveSin(Math.PI*u)),cx=p.x*W,cy=p.y*H,bound=radius*H/.62+2;
-   const x0=clamp(Math.floor(cx-bound),0,W-1),x1=clamp(Math.ceil(cx+bound),0,W-1);
-   const y0=clamp(Math.floor(cy-bound),0,H-1),y1=clamp(Math.ceil(cy+bound),0,H-1);
+   const radius=p.radius*(.72+.4*waveSin(Math.PI*u)),cx=p.x*W,cy=p.y*H,bound=radius*H/.62+stride;
+   const x0=clamp(Math.floor((cx-bound)/stride),0,cols-1),x1=clamp(Math.ceil((cx+bound)/stride),0,cols-1);
+   const y0=clamp(Math.floor((cy-bound)/stride),0,rows-1),y1=clamp(Math.ceil((cy+bound)/stride),0,rows-1);
    const ax=waveCos(p.angle),ay=waveSin(p.angle),nx=-ay,ny=ax,phase=p.phase;
-   for(let y=y0;y<=y1;y++){
-    const vy=(y+.5)/H-p.y,row=y*W;
+   for(let y=y0;y<=y1;y++){const vy=(y*stride+stride*.5)/H-p.y,row=y*cols;
     for(let x=x0;x<=x1;x++){
-     const vx=((x+.5)/W-p.x)*aspect,along=vx*ax+vy*ay,across=vx*nx+vy*ny;
+     const vx=((x*stride+stride*.5)/W-p.x)*aspect,along=vx*ax+vy*ay,across=vx*nx+vy*ny;
      const shape=fastHypot(along*.62,across*1.35)/Math.max(.001,radius);if(shape>1.24)continue;
      const irregular=waveSin(along/radius*9+phase)*.12+waveSin(across/radius*17-phase)*.07;
-     const mask=(1-smooth(.32,1.03,shape+irregular))*p.amp*envelope;
-     if(mask<.012)continue;
-     motionTouched++;
-     let strength=mask*(.72+.28*waveSin(phase+along*32)),ox=0,oy=0;
-     const k=p.kind;
-     if(k===0){
-      const hinge=Math.tanh((across-waveSin(along*18+phase)*radius*.12)/(radius*.09)),ripple=waveSin(along/radius*4+u*5)*2;
-      ox=ax*hinge*(2+6*strength)+nx*ripple;oy=ay*hinge*(2+6*strength)+ny*ripple;
-     }else if(k===1){
-      const shear=clamp(across/radius,-1,1)*(3+8*strength)-2*waveSin(across/radius*7);
-      ox=nx*shear;oy=ny*shear;
-     }else if(k===2){
-      const fork=waveSin(along/radius*11+phase),shift=2+4*strength,branch=Math.sign(fork)*(1+4*strength);
-      ox=ax*shift+nx*branch;oy=ay*shift+ny*branch;strength*=.45+.55*smooth(-.15,.45,fork);
-     }else if(k===3){
-      ox=ax*(3+7*strength)+nx*2;oy=ay*(3+7*strength)+ny*2;
-      motionMemory[row+x]=Math.max(motionMemory[row+x],strength*.75);
-     }else if(k===4){
-      const ripple=waveSin(across/radius*12+u*8)*2;
-      ox=ax*(3+8*strength)+nx*ripple;oy=ay*(3+8*strength)+ny*ripple;
-     }else if(k===5){
-      ox=ax*.75;oy=ay*.75;motionErase[row+x]=Math.max(motionErase[row+x],strength*.70);
-     }else if(k===6){
-      const zip=waveSin(along/radius*22+u*10+across/radius*5),shift=Math.sign(zip)*(2+6*strength);
-      ox=nx*shift+ax*2;oy=ny*shift+ay*2;
-     }else{
-      const curl=waveSin(along/radius*6)*2;ox=ax*3+nx*curl;oy=ay*3+ny*curl;
-      if(strength>motionColour[row+x]){
-       motionColour[row+x]=strength;
-       motionHue[row+x]=Math.floor(((phase%(Math.PI*2)+Math.PI*2)%(Math.PI*2))/(Math.PI*2)*4);
-      }
-     }
-     const index=row+x;
-     if(motionStrength[index]===0&&strength>0)motionIndices[motionIndexCount++]=index;
-     motionX[index]+=ox*strength;motionY[index]+=oy*strength;
-     motionStrength[index]=Math.max(motionStrength[index],strength);
+     const mask=(1-smooth(.32,1.03,shape+irregular))*p.amp*envelope;if(mask<.012)continue;
+     let strength=mask*(.72+.28*waveSin(phase+along*32)),ox=0,oy=0;const k=p.kind,i=row+x;
+     if(k===0){const hinge=Math.tanh((across-waveSin(along*18+phase)*radius*.12)/(radius*.09)),ripple=waveSin(along/radius*4+u*5)*2;ox=ax*hinge*(2+6*strength)+nx*ripple;oy=ay*hinge*(2+6*strength)+ny*ripple;}
+     else if(k===1){const shear=clamp(across/radius,-1,1)*(3+8*strength)-2*waveSin(across/radius*7);ox=nx*shear;oy=ny*shear;}
+     else if(k===2){const fork=waveSin(along/radius*11+phase),shift=2+4*strength,branch=Math.sign(fork)*(1+4*strength);ox=ax*shift+nx*branch;oy=ay*shift+ny*branch;strength*=.45+.55*smooth(-.15,.45,fork);}
+     else if(k===3){ox=ax*(3+7*strength)+nx*2;oy=ay*(3+7*strength)+ny*2;motionMemory[i]=Math.max(motionMemory[i],strength*.75);}
+     else if(k===4){const ripple=waveSin(across/radius*12+u*8)*2;ox=ax*(3+8*strength)+nx*ripple;oy=ay*(3+8*strength)+ny*ripple;}
+     else if(k===5){ox=ax*.75;oy=ay*.75;motionErase[i]=Math.max(motionErase[i],strength*.70);}
+     else if(k===6){const zip=waveSin(along/radius*22+u*10+across/radius*5),shift=Math.sign(zip)*(2+6*strength);ox=nx*shift+ax*2;oy=ny*shift+ay*2;}
+     else{const curl=waveSin(along/radius*6)*2;ox=ax*3+nx*curl;oy=ay*3+ny*curl;if(strength>motionColour[i]){motionColour[i]=strength;motionHue[i]=Math.floor(phase/(Math.PI*2)*4);}}
+     if(motionStrength[i]===0&&strength>0)motionIndices[motionIndexCount++]=i;
+     motionX[i]+=ox*strength;motionY[i]+=oy*strength;motionStrength[i]=Math.max(motionStrength[i],strength);
     }
    }
   }
+  motionTouched=motionIndexCount*stride*stride;
   nextMotionMap=age+mapInterval;motionMapReady=true;
  }
- const pixelScale=clamp(H/720,.75,2.2)*motionProfile.pixelScale,salt=(testNumber*991)|0;
+ if(!motionIndexCount)return;
+ motionSource.set(renderField);
+ const pixelScale=clamp(H/720,.75,2.2)*motionProfile.pixelScale,salt=testNumber*991;
  motionMoved=0;
  for(let j=0;j<motionIndexCount;j++){
-  const i=motionIndices[j],x=i%W,y=(i/W)|0,amount=motionStrength[i];
-  if(amount<=.04)continue;
+  const i=motionIndices[j],amount=motionStrength[i];if(amount<=.04)continue;
+  const bx=(i%cols)*stride,by=((i/cols)|0)*stride,ex=Math.min(W,bx+stride),ey=Math.min(H,by+stride);
   const ox=clamp(Math.round(motionX[i]*pixelScale),-24,24),oy=clamp(Math.round(motionY[i]*pixelScale),-24,24);
-  const tx=x+ox,ty=y+oy;
-  if(tx>=0&&tx<W&&ty>=0&&ty<H&&motionNoise(x>>1,y>>1,salt+913)<amount*.93){
-   renderField[i]=motionSource[ty*W+tx];motionMoved++;
+  const mx=Math.round(motionX[i]*pixelScale*3),my=Math.round(motionY[i]*pixelScale*3);
+  const mem=motionMemory[i],erase=motionErase[i],colour=motionColour[i];
+  for(let y=by;y<ey;y++)for(let x=bx;x<ex;x++){
+   const dst=y*W+x,tx=x+ox,ty=y+oy;
+   if((ox||oy)&&tx>=0&&tx<W&&ty>=0&&ty<H&&motionNoise(x>>1,y>>1,salt+913)<amount*.93){renderField[dst]=motionSource[ty*W+tx];motionMoved++;}
+   if(mem>.08&&motionNoise(x>>1,y>>1,salt+127)<mem*.10)renderField[dst]=motionSource[clamp(y+my,0,H-1)*W+clamp(x+mx,0,W-1)];
+   if(erase>.08&&motionNoise(x>>1,y>>1,salt+251)<erase*.025)renderField[dst]=paletteLum[field[dst]]>127?1:0;
+   if(colour>.10&&renderField[dst]===0&&motionNoise(x>>1,y>>1,salt+383)<colour*.020)renderField[dst]=2+(motionHue[i]%4);
   }
-  const mem=motionMemory[i];
-  if(mem>.08&&motionNoise(x>>1,y>>1,salt+127)<mem*.10){
-   const mx=clamp(x+Math.round(motionX[i]*pixelScale*3),0,W-1),my=clamp(y+Math.round(motionY[i]*pixelScale*3),0,H-1);
-   renderField[i]=motionSource[my*W+mx];
-  }
-  const erase=motionErase[i];
-  if(erase>.08&&motionNoise(x>>1,y>>1,salt+251)<erase*.025){
-   const base=palette[field[i]]||palette[1],lum=base[0]*.299+base[1]*.587+base[2]*.114;
-   renderField[i]=lum>127?1:0;
-  }
-  const colour=motionColour[i];
-  if(colour>.10&&motionNoise(x>>1,y>>1,salt+383)<colour*.020&&renderField[i]===0)renderField[i]=2+(motionHue[i]%4);
  }
 }
 function applyFlowPockets(){
