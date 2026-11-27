@@ -50,7 +50,11 @@ function init(){
 function resize(){
  let r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=Math.max(2,Math.round(r.width*d));canvas.height=Math.max(2,Math.round(r.height*d));
  // Identical crisp lattice pitch in preview and fullscreen; preserve current state.
- let k=Math.min(1,(quality?2300:1500)/canvas.width,(quality?1400:950)/canvas.height),density=Math.sqrt(7.2),nw=Math.max(30,Math.round(canvas.width*k*density/5.07)),nh=Math.max(24,Math.round(canvas.height*k*density/5.07));
+ let k=Math.min(1,(quality?2300:1500)/canvas.width,(quality?1400:950)/canvas.height),density=Math.sqrt(7.2);let nw=Math.max(30,Math.round(canvas.width*k*density/5.07)),nh=Math.max(24,Math.round(canvas.height*k*density/5.07));
+ // The simulation lattice is born once in the preview. Fullscreen and later viewport
+ // resizes only change the display surface: never rebuild the live field, agents,
+ // pigment roots, feedback regions or GPU history textures.
+ if(W>0&&H>0){nw=W;nh=H;}
  if(nw===W&&nh===H){draw();return}
  pendingPlan=null;let old=field,ow=W,oh=H;W=nw;H=nh;small.width=W;small.height=H;rgba=sc.createImageData(W,H);rgba32=new Uint32Array(rgba.data.buffer);renderField=new Uint8Array(W*H);allocateMotionBuffers();ink=new Uint8Array(W*H);inkOwner=new Uint8Array(W*H);inkSerial=0;inkCells=0;inkNext=age;territoryVisits.fill(-100);territoryBirths=0;
  if(!old)init();else{field=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++)field[y*W+x]=old[Math.min(oh-1,Math.floor(y*oh/H))*ow+Math.min(ow-1,Math.floor(x*ow/W))];active=[];colonies=[];fronts=[];microSlips=[];slipHistory=[];flowPockets=[];flowHistory=[];feedbackFields=[];feedbackHistory=[];feedbackReady=false;pigmentEvents=[];pigmentHistory=[];nextFeedback=age+range(.1,.5);nextPigment=age+range(2.5,4.5);nextSlip=age+(testNumber>=127?range(3.5,6):range(4.5,7.5));nextFlow=age+range(2,4);previous=null;}
