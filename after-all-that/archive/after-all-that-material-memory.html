@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>LifeAfterLogic / After All That — Corrupted Strata</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;overscroll-behavior:none}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated;pointer-events:none}
+#err{position:fixed;left:12px;bottom:12px;color:#ccc;font:12px monospace;max-width:90vw}
+#err:empty{display:none}
+</style>
+<canvas id="art" aria-label="Residue, an autonomous evolving digital artwork"></canvas><div id="err" role="status"></div>
+
+
+<script>
+'use strict';
+const canvas=document.getElementById('art'), el=id=>document.getElementById(id);
+window.addEventListener('error',e=>{el('err').textContent=e.message||'Rendering error'});window.addEventListener('unhandledrejection',e=>{el('err').textContent=String(e.reason?.message||e.reason)});
+const profiles=[
+{id:'material',name:'106 — Material Memory',variant:1,layout:1,density:1.55,fracture:.47,drift:.88,learn:1.3,exchange:1.15,recall:1,cut:1,commitRate:1,obsess:.9,damage:.65,flow:.65,grammar:1,design:0,temper:0},
+{id:'pressure',name:'107 — Latent Pressure',variant:1,layout:1,density:1.35,fracture:.4,drift:.82,learn:1.35,exchange:1.1,recall:1.1,cut:.85,commitRate:.9,obsess:1,damage:.6,flow:.65,grammar:1,design:1,temper:1},
+{id:'emergence',name:'108 — Emergent Faults',variant:1,layout:1,density:1.6,fracture:.5,drift:.9,learn:1.4,exchange:1.3,recall:1.15,cut:1.2,commitRate:1.15,obsess:1,damage:.75,flow:.75,grammar:1,design:2,temper:2}
+];
+const query=new URLSearchParams(location.search),profile=profiles.find(p=>p.id===query.get('study'))||profiles[0],variant=profile.variant,preview=query.has('preview');
+document.title='lifeafterlogic / '+profile.name;
+let movementTex=null,movementBytes=new Uint8Array(256*24),movementDirty=true,stageChanges=0,comboChanges=0,reconstructionTrials=0,reconstructionAccepted=0,motionNext=0,pigmentEvents=[],pigmentCount=0,relayCount=0,misrepairCount=0,curiosityCount=0,nextRelay=0,architecturePaths=[],routeCount=0,faultCount=0,routeSerial=0,nextStructural=0,noveltyRejects=0,forcedChanges=0,goalChanges=0,materialEvents=0,coalitionCount=0,nextCoalition=0;let sourceImages=[],patternSequence=[],patternCursor=0,nextColour=8,colourEnd=0,colourID=0,nextWeather=12,weather=0,burst=0,nextSnapshot=45,archiveIndex=0;
+const snapshots=[];let snapshotWrites=0,historyNext=0,historyCount=0,historyPixels=0,motifCount=0,motifArchive=[],focusMotif=null,focusUntil=0,focusNext=0,historyCoverage=new Uint8Array(64*48),lineageBank=new Map(),historyAge=0;let cognition=new Map(),senseTex,senseFB,sensePixels=new Uint8Array(96*64*4),previousSense=null,senseNext=0,programNext=0,learnCount=0,acceptCount=0,rejectCount=0,exchangeCount=0,recallCount=0,perceptionCount=0,signalQueue=[],learnArchive=[],scarPaths=[],scarNext=0,scarDrawNext=0,colourPatch=null;let entropy=1,nextEntropy=0,nextFracture=0,fractureField,fractureCanvas,fractureCtx,fractureAge=0,fractureLife=24;const randomPool=new Uint32Array(1024);let poolIndex=randomPool.length;function fresh(){if(poolIndex>=randomPool.length){crypto.getRandomValues(randomPool);poolIndex=0}return randomPool[poolIndex++]/4294967296}
+const gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,preserveDrawingBuffer:false});
+if(!gl){el('err').textContent='WebGL2 unavailable in this browser.';throw Error('WebGL2 unavailable')}
+let W,H,seed=0,step=0,paused=false,targets=[],fb=[],base,regions,archive,read=0,last=0,acc=0,epoch=0,age=0,nextEvent=0,boxes=[],rand,baseData,fieldData,memoryData,events=0,quality=1,layout=0,paletteIndex=0,era=0,nextEra=90;
+const vs=`#version 300 es
+void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.-1.,0.,1.);}`;
+const fs=`#version 300 es
+precision highp float;precision highp int;
+uniform sampler2D prev,original,field,memoryTex,fractures,movement;
+uniform int tick,entropy,climate,accentID,study;
+uniform float key,flowMix,fractureStrength,drift,imprint;
+uniform ivec2 dim;
+out vec4 outColor;
+uint hashU(uint x){x^=x>>16u;x*=0x7feb352du;x^=x>>15u;x*=0x846ca68bu;x^=x>>16u;return x;}
+float noise(ivec2 p,int salt){return float(hashU(uint(p.x)*1597334677u^uint(p.y)*3812015801u^uint(salt)*2891336453u)&65535u)/65535.;}
+ivec2 cp(ivec2 p){return clamp(p,ivec2(0),dim-1);}
+vec4 get(sampler2D tex,ivec2 p){return texelFetch(tex,cp(p),0);}
+float lum(vec3 c){return dot(c,vec3(.299,.587,.114));}
+float tri(float x){return 1.-4.*abs(fract(x)-.5);}
+float smoothNoise(vec2 p,int salt){ivec2 i=ivec2(floor(p));vec2 f=fract(p);f=f*f*(3.-2.*f);return mix(mix(noise(i,salt),noise(i+ivec2(1,0),salt),f.x),mix(noise(i+ivec2(0,1),salt),noise(i+ivec2(1,1),salt),f.x),f.y);}
+vec2 perp(vec2 v){return vec2(-v.y,v.x);}
+vec2 law(int mode,vec2 p,vec2 axis,vec2 grad,float time,float scale,int salt){
+ vec2 n=perp(axis),z=p/scale;float a=dot(z,axis),b=dot(z,n);
+ vec2 normal=length(grad)>.06?normalize(grad):axis;
+ float f=smoothNoise(z*.72+vec2(time*.07,-time*.045),salt),g=smoothNoise(z*1.7+vec2(-time*.05,time*.08),salt+73);
+ if(mode==0)return axis*(.3+f*.9);
+ if(mode==1)return n*(.3+g*.9);
+ if(mode==2)return axis*tri(b*.45-time*.11);
+ if(mode==3)return vec2(f-.5,g-.5)*2.8;
+ if(mode==4)return normal*tri(a*.35+time*.09);
+ if(mode==5)return perp(normal)*(.4+g);
+ if(mode==6)return axis*sign(tri(floor(b*.65)*.38-time*.045))*.8;
+ if(mode==7)return n*sin(a*2.3-time*.29);
+ if(mode==8)return axis*tri(a*.25-time*.07)*1.6+n*tri(b*.31+time*.04)*.4;
+ if(mode==9)return vec2(sin(b*1.2+time*.13),cos(a*1.4-time*.15));
+ if(mode==10)return -normal*(.2+.8*f);
+ if(mode==11)return perp(normal)*tri(a*.9+b*.4-time*.15);
+ if(mode==12)return axis*(g>.56?1.3:0.)+n*(f>.63?.8:0.);
+ if(mode==13)return n*tri(floor(a*.9)*.29+time*.06);
+ if(mode==14)return vec2(g-.5,.5-f)*2.;
+ if(mode==15)return axis*tri(a*.7+b*.4-time*.12)*step(.45,f);
+ // Four new flow operators: delayed relay, hinge, pressure, hesitation.
+ if(mode==16){float slot=floor(b*1.7);float q=fract(time*.11-slot*.137);return axis*step(.43,q)*step(q,.77)*sign(tri(slot*.19+.3));}
+ if(mode==17){float seam=tri(floor(a*.8)*.31);return n*sign(b-seam)*tri(a*.45-time*.1)*.9+axis*tri(b*.5+time*.09)*.35;}
+ if(mode==18){float front=tri(a*.32-time*.08);return axis*sign(front)*pow(1.-abs(front),.7)*1.8;}
+ if(mode==19)return (axis*(.7+.5*g)+n*.4*tri(a))*step(.30,fract(time*.22+f*.55))*step(fract(time*.22+f*.55),.53);
+ if(mode==20){float rail=tri(floor(b*1.8)*.37+time*.08);return axis*sign(rail)*step(.25,abs(rail))*1.4;}
+ if(mode==21){float split=tri(a*.38-time*.13);return n*sign(split)*pow(abs(split),.4)*1.3;}
+ if(mode==22){float cell=fract(floor(a*1.3)*.17+floor(b*.8)*.31+time*.06);return (axis*step(.45,cell)+n*step(cell,.27))*.9;}
+ if(mode==23)return perp(normal)*sign(tri(a*.6-time*.12))*(.4+1.1*smoothstep(.1,.6,length(grad)));
+ if(mode==24){float cell=floor(b*1.4);float pulse=fract(time*.11+cell*.29);return axis*sign(tri(cell*.4))*step(.68,pulse)*1.65;}
+ if(mode==25){float split=tri(a*.19+time*.07);return n*sign(split)*smoothstep(.1,.65,abs(split))*1.3;}
+ if(mode==26){float pressure=sin(a*1.4+b*.22-time*.16);return -normal*pressure*(.25+1.1*smoothstep(.06,.5,length(grad)));}
+ if(mode==27){float beat=fract(time*.13+floor(b*2.)*.13);return axis*(step(.24,beat)-step(.76,beat)*1.7);}
+ if(mode==28){float branch=tri(b*.65+time*.08);return mix(perp(normal),axis,step(.25,branch))*sign(tri(a*.39-time*.045));}
+ return n*tri(a*.82+floor(b*.8)*.37-time*.12)*step(.35,f);
+}
+void main(){
+ ivec2 p=ivec2(gl_FragCoord.xy);vec2 z=vec2(p);
+ vec4 old=get(prev,p),home=get(original,p),mem=get(memoryTex,p),fl=get(field,p);
+ int id=int(round(fl.r*255.)),salt=id*137+int(key)*29;
+ vec4 r0=texelFetch(movement,ivec2(0,id),0),r1=texelFetch(movement,ivec2(1,id),0),r2=texelFetch(movement,ivec2(2,id),0),r3=texelFetch(movement,ivec2(3,id),0),r4=texelFetch(movement,ivec2(4,id),0),r5=texelFetch(movement,ivec2(5,id),0);
+ int op=int(round(r0.r*255.)),secondary=int(round(r0.g*255.)),restore=int(round(r0.b*255.)),stage=int(round(r0.a*255.));
+ float t=float(tick)/30.,pace=r1.r,strength=r1.g,angle=r1.b*6.28318,blend=r1.a,progress=r2.r,trust=r2.g,react=r2.b;
+ vec2 ax=vec2(cos(angle),sin(angle)),nx=perp(ax);
+ vec3 l=get(prev,p+ivec2(-1,0)).rgb,r=get(prev,p+ivec2(1,0)).rgb,u=get(prev,p+ivec2(0,1)).rgb,d=get(prev,p+ivec2(0,-1)).rgb;
+ vec2 grad=vec2(lum(r)-lum(l),lum(u)-lum(d));float edge=length(grad);
+ float scale=max(3.,float(min(dim.x,dim.y))*(.055+.13*r2.a));
+ float localTime=t*(.23+pace*.9)+float(id)*.71;
+ // Slowly changing cadence makes even an active instruction non-metronomic.
+ localTime+=sin(t*.073+float(id)*1.91)*.8+sin(t*.031+float(id)*.53)*1.1;
+ float spatial=smoothNoise(z/(scale*1.4)+vec2(localTime*.025),salt+7);
+ float envelope=stage==0?(.16+.84*smoothstep(0.,.55,progress)):stage==1?1.:stage==2?(1.-smoothstep(.05,.85,progress))*.8:0.;
+ float amplitude=(.32+strength*1.35)*envelope*(.6+.4*react);
+ // Two separately selected movement families combine, with coherent fractional offsets.
+ int mainLaw=op<32?op%16:16+op-32;
+ float confidence=r4.r,relay=r4.g,mismatch=r4.b,revision=r4.a;
+ int goal=int(round(r5.r*255.));float urgency=r5.g,stress=r5.b,temper=r5.a;
+ vec2 delta=law(mainLaw,z,ax,grad,localTime,scale,salt)*amplitude;
+ delta+=law(secondary%30,z,nx,grad,localTime*.63,scale*.43,salt+211)*amplitude*blend;
+ if(op>=16&&op<32)delta+=law((op+5)%16,z,ax,grad,localTime*.39,scale*2.6,salt+31)*amplitude*.36;
+ // A received impulse spreads through the existing material as a delayed front.
+ float relayFront=1.-smoothstep(.08,.29,abs(tri(dot(z,ax)/(scale*2.)-localTime*.17)));
+ delta+=nx*relay*relayFront*envelope*.7;
+ // Confidence changes continuity rather than adding uncorrelated noise.
+ delta*=.72+.45*confidence;
+ if(goal==0)delta*=.55+.25*urgency;
+ if(goal==1)delta+=perp(length(grad)>.06?normalize(grad):ax)*stress*.6*envelope;
+ if(goal==2)delta*=.25+.25*stress;
+ if(goal==3)delta+=ax*relay*envelope*.85;
+ if(mainLaw==24&&stage==1)delta*=1.+.45*stress;
+ vec4 fault=get(fractures,p);float seamForce=max(fault.a,max(get(fractures,p+ivec2(1,0)).a,get(fractures,p+ivec2(0,1)).a));
+ if(seamForce>.08&&stage!=3)delta+=nx*sign(tri(dot(z,ax)/scale-localTime*.11))*seamForce*envelope*1.5;
+ // Phase coherent rounding: whole local neighbourhoods move together rather than snow.
+ vec2 rndRound=vec2(fract(t*(.39+pace*.61)+spatial),fract(t*(.31+pace*.43)+spatial*.81));
+ ivec2 shift=ivec2(sign(delta)*floor(abs(delta)+rndRound));
+ ivec2 q=cp(p+clamp(shift,ivec2(-3),ivec2(3)));
+ bool crossOwner=int(round(get(field,q).r*255.))!=id;
+ float gate=stage==3?0.:smoothstep(.10,.38,spatial)*envelope;
+ if(goal==2)gate*=.48;if(goal==1)gate=min(1.,gate*(1.+urgency*.3));
+ float clock=fract(t*(.48+pace*1.2)+float(id)*.381);
+ vec3 val=old.rgb;
+ if(clock<gate&&(!crossOwner||react>.73||relay>.5&&relayFront>.45||seamForce>.3))val=get(prev,q).rgb;
+ // Compression and edge inheritance differ from ordinary displacement.
+ if(stage==1&&op%16==10&&clock<gate*.45)val=lum(val)<lum(old.rgb)?val:old.rgb;
+ if(stage==1&&op%16==5&&edge>.22&&clock<gate*.38)val=lum(val)>lum(old.rgb)?val:old.rgb;
+ if(mainLaw==18&&stage==1&&clock<gate*.48){vec3 ahead=get(prev,cp(p+ivec2(round(ax*2.)))).rgb;val=lum(ahead)<lum(val)?ahead:val;}
+ float a=dot(z,ax),b=dot(z,nx),period=max(4.,scale*(.42+.55*trust));
+ float front=fract(localTime*(.052+.045*pace)+float(id)*.271);
+ float x=fract(a/period-front),y=fract(b/(period*.83)+front*.71);
+ float mask=0.;vec3 target=home.rgb;
+ // Reconstruction operates as coherent moving fronts, independent of the motion vector.
+ if(restore==0)mask=step(x,.13);
+ else if(restore==1)mask=step(y,.13);
+ else if(restore==2)mask=step(fract(x+y),.14);
+ else if(restore==3)mask=step(fract(x+.22*tri(y*2.)),.13);
+ else if(restore==4){mask=step(fract(y+.24*floor(a/period)),.16);target=mem.rgb;}
+ else if(restore==5){mask=step(fract(x-.19*floor(b/period)),.13);target=lum(mem.rgb)<lum(home.rgb)?mem.rgb:home.rgb;}
+ else if(restore==6)mask=step(x,.34)*step(y,.34);
+ else if(restore==7)mask=step(fract(spatial+front),.11);
+ else if(restore==8){mask=step(fract(x+y*.45),.14);target=get(original,p+ivec2(round(nx*tri(y)*2.))).rgb;}
+ else if(restore==9){mask=step(y,.22)*smoothstep(.04,.28,edge);target=home.rgb;}
+ else if(restore==10){mask=step(fract(x*.7+y),.17);target=lum(home.rgb)>.5?home.rgb:mem.rgb;}
+ else if(restore==11){mask=step(fract(x+.30*tri(y)),.15);target=home.rgb;}
+ else if(restore==12){mask=step(fract(x+.27*floor(b/period)),.19);target=get(original,p+ivec2(round(ax*(1.+floor(mismatch*2.))))).rgb;}
+ else if(restore==13){mask=step(y,.20);vec3 echo=get(memoryTex,p+ivec2(round(nx*(1.+floor(mismatch*2.))))).rgb;target=lum(echo)<.5?echo:home.rgb;}
+ else if(restore==14){mask=step(fract(x+y*.8),.21);ivec2 snap=ivec2(round(nx*sign(tri(a/period))*2.));target=get(original,p+snap).rgb;}
+ else{mask=step(fract(x+tri(y)*.4),.22);target=lum(home.rgb)<lum(mem.rgb)?get(original,p+ivec2(round(ax))).rgb:mem.rgb;}
+ float repair=stage==3?.88:stage==2?.65:stage==0?.36:.22;
+ if(goal==0)repair=min(.95,repair+.14*urgency);
+ float phaseGate=fract(t*(.72+trust*.21)+float(id)*.117);
+ bool repairing=mask>.5&&phaseGate<repair;
+ if(repairing)val=target;
+ // Learned revisions create subtle, stepped misregistrations along existing edges.
+ float seam=abs(tri((a+.28*floor(b/period)*period)/(period*2.3)-front*.24));
+ if(revision>.08&&seam<.13&&edge>.10&&stage==2&&phaseGate<revision*.52){val=get(original,p+ivec2(round(nx*sign(tri(b/period))))).rgb;}
+ // A small regular repair probability prevents total loss of contrast.
+ if(noise(p,tick/2+salt+entropy)<.008+repair*.013)val=home.rgb;
+ // Pigment enters the feedback itself only where material actually changes.
+ // Existing pigment is advected with the image and removed by repair and exhaustion.
+ float changed=abs(lum(val)-lum(old.rgb)),err=abs(lum(old.rgb)-lum(home.rgb));
+ float chroma=max(max(val.r,val.g),val.b)-min(min(val.r,val.g),val.b);
+ float structure=max(smoothstep(.065,.45,edge),seamForce*.8);
+ if(chroma>.035){float loss=temper<.25?.009:temper<.75?.017:.006;if(repairing)loss+=.025;val=mix(val,vec3(lum(val)),loss);}
+ if(r3.a>.001){
+  float activity=max(smoothstep(.045,.38,changed),repairing?smoothstep(.09,.55,err):0.);
+  float receptive=structure*activity;
+  float grain=smoothNoise(z/2.7,salt+193);
+  float chance=r3.a*receptive*(.10+.23*grain);
+  if(noise(p,tick+salt+123)<chance&&receptive>.035){
+   float shade=.32+.68*smoothstep(.02,.75,lum(val));
+   vec3 pigment=mix(r3.rgb*.60,r3.rgb,shade);
+   val=mix(val,pigment,.62+.23*r3.a);
+  }
+ }
+ vec4 cut=get(fractures,p);
+ if(cut.a>.05&&noise(p,tick+salt+17)<cut.a*fractureStrength*.018)val=cut.rgb;
+ outColor=vec4(val,envelope);
+}`;
+const display=`#version 300 es
+precision highp float;uniform sampler2D tex;uniform vec2 viewSize;out vec4 outColor;void main(){outColor=texture(tex,gl_FragCoord.xy/viewSize);}`;
+function program(f){function sh(type,src){let s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}let p=gl.createProgram();let a=sh(gl.VERTEX_SHADER,vs),b=sh(gl.FRAGMENT_SHADER,f);gl.attachShader(p,a);gl.attachShader(p,b);gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));gl.deleteShader(a);gl.deleteShader(b);return p}
+let sim;try{sim=program(fs)}catch(e){console.warn('Material shader failed; using monochrome renderer',e);sim=program(`#version 300 es
+precision highp float;precision highp int;
+uniform sampler2D prev,original,field,memoryTex,fractures,movement;
+uniform int tick,entropy,climate,accentID,study;
+uniform float key,flowMix,fractureStrength,drift,imprint;
+uniform ivec2 dim;
+out vec4 outColor;
+uint hashU(uint x){x^=x>>16u;x*=0x7feb352du;x^=x>>15u;x*=0x846ca68bu;x^=x>>16u;return x;}
+float noise(ivec2 p,int salt){return float(hashU(uint(p.x)*1597334677u^uint(p.y)*3812015801u^uint(salt)*2891336453u)&65535u)/65535.;}
+ivec2 cp(ivec2 p){return clamp(p,ivec2(0),dim-1);}
+vec4 get(sampler2D tex,ivec2 p){return texelFetch(tex,cp(p),0);}
+float lum(vec3 c){return dot(c,vec3(.299,.587,.114));}
+float tri(float x){return 1.-4.*abs(fract(x)-.5);}
+float smoothNoise(vec2 p,int salt){ivec2 i=ivec2(floor(p));vec2 f=fract(p);f=f*f*(3.-2.*f);return mix(mix(noise(i,salt),noise(i+ivec2(1,0),salt),f.x),mix(noise(i+ivec2(0,1),salt),noise(i+ivec2(1,1),salt),f.x),f.y);}
+vec2 perp(vec2 v){return vec2(-v.y,v.x);}
+vec2 law(int mode,vec2 p,vec2 axis,vec2 grad,float time,float scale,int salt){
+ vec2 n=perp(axis),z=p/scale;float a=dot(z,axis),b=dot(z,n);
+ vec2 normal=length(grad)>.06?normalize(grad):axis;
+ float f=smoothNoise(z*.72+vec2(time*.07,-time*.045),salt),g=smoothNoise(z*1.7+vec2(-time*.05,time*.08),salt+73);
+ if(mode==0)return axis*(.3+f*.9);
+ if(mode==1)return n*(.3+g*.9);
+ if(mode==2)return axis*tri(b*.45-time*.11);
+ if(mode==3)return vec2(f-.5,g-.5)*2.8;
+ if(mode==4)return normal*tri(a*.35+time*.09);
+ if(mode==5)return perp(normal)*(.4+g);
+ if(mode==6)return axis*sign(tri(floor(b*.65)*.38-time*.045))*.8;
+ if(mode==7)return n*sin(a*2.3-time*.29);
+ if(mode==8)return axis*tri(a*.25-time*.07)*1.6+n*tri(b*.31+time*.04)*.4;
+ if(mode==9)return vec2(sin(b*1.2+time*.13),cos(a*1.4-time*.15));
+ if(mode==10)return -normal*(.2+.8*f);
+ if(mode==11)return perp(normal)*tri(a*.9+b*.4-time*.15);
+ if(mode==12)return axis*(g>.56?1.3:0.)+n*(f>.63?.8:0.);
+ if(mode==13)return n*tri(floor(a*.9)*.29+time*.06);
+ if(mode==14)return vec2(g-.5,.5-f)*2.;
+ if(mode==15)return axis*tri(a*.7+b*.4-time*.12)*step(.45,f);
+ // Four new flow operators: delayed relay, hinge, pressure, hesitation.
+ if(mode==16){float slot=floor(b*1.7);float q=fract(time*.11-slot*.137);return axis*step(.43,q)*step(q,.77)*sign(tri(slot*.19+.3));}
+ if(mode==17){float seam=tri(floor(a*.8)*.31);return n*sign(b-seam)*tri(a*.45-time*.1)*.9+axis*tri(b*.5+time*.09)*.35;}
+ if(mode==18){float front=tri(a*.32-time*.08);return axis*sign(front)*pow(1.-abs(front),.7)*1.8;}
+ if(mode==19)return (axis*(.7+.5*g)+n*.4*tri(a))*step(.30,fract(time*.22+f*.55))*step(fract(time*.22+f*.55),.53);
+ if(mode==20){float rail=tri(floor(b*1.8)*.37+time*.08);return axis*sign(rail)*step(.25,abs(rail))*1.4;}
+ if(mode==21){float split=tri(a*.38-time*.13);return n*sign(split)*pow(abs(split),.4)*1.3;}
+ if(mode==22){float cell=fract(floor(a*1.3)*.17+floor(b*.8)*.31+time*.06);return (axis*step(.45,cell)+n*step(cell,.27))*.9;}
+ return perp(normal)*sign(tri(a*.6-time*.12))*(.4+1.1*smoothstep(.1,.6,length(grad)));
+}
+void main(){
+ ivec2 p=ivec2(gl_FragCoord.xy);vec2 z=vec2(p);
+ vec4 old=get(prev,p),home=get(original,p),mem=get(memoryTex,p),fl=get(field,p);
+ int id=int(round(fl.r*255.)),salt=id*137+int(key)*29;
+ vec4 r0=texelFetch(movement,ivec2(0,id),0),r1=texelFetch(movement,ivec2(1,id),0),r2=texelFetch(movement,ivec2(2,id),0),r3=texelFetch(movement,ivec2(3,id),0),r4=texelFetch(movement,ivec2(4,id),0),r5=texelFetch(movement,ivec2(5,id),0);
+ int op=int(round(r0.r*255.)),secondary=int(round(r0.g*255.)),restore=int(round(r0.b*255.)),stage=int(round(r0.a*255.));
+ float t=float(tick)/30.,pace=r1.r,strength=r1.g,angle=r1.b*6.28318,blend=r1.a,progress=r2.r,trust=r2.g,react=r2.b;
+ vec2 ax=vec2(cos(angle),sin(angle)),nx=perp(ax);
+ vec3 l=get(prev,p+ivec2(-1,0)).rgb,r=get(prev,p+ivec2(1,0)).rgb,u=get(prev,p+ivec2(0,1)).rgb,d=get(prev,p+ivec2(0,-1)).rgb;
+ vec2 grad=vec2(lum(r)-lum(l),lum(u)-lum(d));float edge=length(grad);
+ float scale=max(3.,float(min(dim.x,dim.y))*(.055+.13*r2.a));
+ float localTime=t*(.23+pace*.9)+float(id)*.71;
+ float spatial=smoothNoise(z/(scale*1.4)+vec2(localTime*.025),salt+7);
+ float envelope=stage==0?(.16+.84*smoothstep(0.,.55,progress)):stage==1?1.:stage==2?(1.-smoothstep(.05,.85,progress))*.8:0.;
+ float amplitude=(.32+strength*1.35)*envelope*(.6+.4*react);
+ // Two separately selected movement families combine, with coherent fractional offsets.
+ int mainLaw=op<32?op%16:16+op-32;
+ float confidence=r4.r,relay=r4.g,mismatch=r4.b,revision=r4.a;
+ vec2 delta=law(mainLaw,z,ax,grad,localTime,scale,salt)*amplitude;
+ delta+=law(secondary%24,z,nx,grad,localTime*.63,scale*.43,salt+211)*amplitude*blend;
+ if(op>=16&&op<32)delta+=law((op+5)%16,z,ax,grad,localTime*.39,scale*2.6,salt+31)*amplitude*.36;
+ // A received impulse spreads through the existing material as a delayed front.
+ float relayFront=1.-smoothstep(.08,.29,abs(tri(dot(z,ax)/(scale*2.)-localTime*.17)));
+ delta+=nx*relay*relayFront*envelope*.7;
+ // Confidence changes continuity rather than adding uncorrelated noise.
+ delta*=.72+.45*confidence;
+ vec4 fault=get(fractures,p);float seamForce=max(fault.a,max(get(fractures,p+ivec2(1,0)).a,get(fractures,p+ivec2(0,1)).a));
+ if(seamForce>.08&&stage!=3)delta+=nx*sign(tri(dot(z,ax)/scale-localTime*.11))*seamForce*envelope*1.5;
+ // Phase coherent rounding: whole local neighbourhoods move together rather than snow.
+ vec2 rndRound=vec2(fract(t*(.39+pace*.61)+spatial),fract(t*(.31+pace*.43)+spatial*.81));
+ ivec2 shift=ivec2(sign(delta)*floor(abs(delta)+rndRound));
+ ivec2 q=cp(p+clamp(shift,ivec2(-3),ivec2(3)));
+ bool crossOwner=int(round(get(field,q).r*255.))!=id;
+ float gate=stage==3?0.:smoothstep(.10,.38,spatial)*envelope;
+ float clock=fract(t*(.48+pace*1.2)+float(id)*.381);
+ vec3 val=old.rgb;
+ if(clock<gate&&(!crossOwner||react>.73||relay>.5&&relayFront>.45||seamForce>.3))val=get(prev,q).rgb;
+ // Compression and edge inheritance differ from ordinary displacement.
+ if(stage==1&&op%16==10&&clock<gate*.45)val=lum(val)<lum(old.rgb)?val:old.rgb;
+ if(stage==1&&op%16==5&&edge>.22&&clock<gate*.38)val=lum(val)>lum(old.rgb)?val:old.rgb;
+ if(mainLaw==18&&stage==1&&clock<gate*.48){vec3 ahead=get(prev,cp(p+ivec2(round(ax*2.)))).rgb;val=lum(ahead)<lum(val)?ahead:val;}
+ float a=dot(z,ax),b=dot(z,nx),period=max(4.,scale*(.42+.55*trust));
+ float front=fract(localTime*(.052+.045*pace)+float(id)*.271);
+ float x=fract(a/period-front),y=fract(b/(period*.83)+front*.71);
+ float mask=0.;vec3 target=home.rgb;
+ // Reconstruction operates as coherent moving fronts, independent of the motion vector.
+ if(restore==0)mask=step(x,.13);
+ else if(restore==1)mask=step(y,.13);
+ else if(restore==2)mask=step(fract(x+y),.14);
+ else if(restore==3)mask=step(fract(x+.22*tri(y*2.)),.13);
+ else if(restore==4){mask=step(fract(y+.24*floor(a/period)),.16);target=mem.rgb;}
+ else if(restore==5){mask=step(fract(x-.19*floor(b/period)),.13);target=lum(mem.rgb)<lum(home.rgb)?mem.rgb:home.rgb;}
+ else if(restore==6)mask=step(x,.34)*step(y,.34);
+ else if(restore==7)mask=step(fract(spatial+front),.11);
+ else if(restore==8){mask=step(fract(x+y*.45),.14);target=get(original,p+ivec2(round(nx*tri(y)*2.))).rgb;}
+ else if(restore==9){mask=step(y,.22)*smoothstep(.04,.28,edge);target=home.rgb;}
+ else if(restore==10){mask=step(fract(x*.7+y),.17);target=lum(home.rgb)>.5?home.rgb:mem.rgb;}
+ else if(restore==11){mask=step(fract(x+.30*tri(y)),.15);target=home.rgb;}
+ else if(restore==12){mask=step(fract(x+.27*floor(b/period)),.19);target=get(original,p+ivec2(round(ax*(1.+floor(mismatch*2.))))).rgb;}
+ else if(restore==13){mask=step(y,.20);vec3 echo=get(memoryTex,p+ivec2(round(nx*(1.+floor(mismatch*2.))))).rgb;target=lum(echo)<.5?echo:home.rgb;}
+ else if(restore==14){mask=step(fract(x+y*.8),.21);ivec2 snap=ivec2(round(nx*sign(tri(a/period))*2.));target=get(original,p+snap).rgb;}
+ else{mask=step(fract(x+tri(y)*.4),.22);target=lum(home.rgb)<lum(mem.rgb)?get(original,p+ivec2(round(ax))).rgb:mem.rgb;}
+ float repair=stage==3?.88:stage==2?.65:stage==0?.36:.22;
+ float phaseGate=fract(t*(.72+trust*.21)+float(id)*.117);
+ bool repairing=mask>.5&&phaseGate<repair;
+ if(repairing)val=target;
+ // Learned revisions create subtle, stepped misregistrations along existing edges.
+ float seam=abs(tri((a+.28*floor(b/period)*period)/(period*2.3)-front*.24));
+ if(revision>.08&&seam<.13&&edge>.10&&stage==2&&phaseGate<revision*.52){val=get(original,p+ivec2(round(nx*sign(tri(b/period))))).rgb;}
+ // A small regular repair probability prevents total loss of contrast.
+ if(noise(p,tick/2+salt+entropy)<.008+repair*.013)val=home.rgb;
+ float chroma=max(max(val.r,val.g),val.b)-min(min(val.r,val.g),val.b);
+ if(chroma>.025)val=mix(vec3(lum(val)),val,.982);
+ // Pigment is deposited into moving or reconstructing material, not drawn as a coloured rectangle.
+ vec4 cut=get(fractures,p);
+ if(cut.a>.05&&noise(p,tick+salt+17)<cut.a*fractureStrength*.018)val=cut.rgb;
+ outColor=vec4(val,envelope);
+}`)}const show=program(display),vao=gl.createVertexArray();gl.bindVertexArray(vao);
+const U=(p,n)=>gl.getUniformLocation(p,n);
+const su=Object.fromEntries(['prev','original','field','memoryTex','fractures','dim','tick','key','climate','accentID','study','entropy','fractureStrength','drift','imprint','flowMix','movement'].map(n=>[n,U(sim,n)])),du={tex:U(show,'tex'),view:U(show,'viewSize')};
+function texture(data){let a=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,a);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,data);return a}
+function bind(t,i,u){gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,t);gl.uniform1i(u,i)}
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let x=Math.imul(s^s>>>15,1|s);x=x+Math.imul(x^x>>>7,61|x)^x;return((x^x>>>14)>>>0)/4294967296}}
+const palettes=[
+ ['#101010','#f5f5f2','#101010','#313131','#a4a4a2','#e2e2e0'],
+ ['#f5f5f2','#101010','#f5f5f2','#d3d3d1','#545454','#838381'],
+ ['#050505','#ffffff','#ffffff','#181818','#868686','#d8d8d8'],
+ ['#f0f0ee','#090909','#090909','#c9c9c7','#666666','#dddddb'],
+ ['#111111','#f4f4f2','#fb351c','#d0d0ce','#7f7f7f','#a12619'],
+ ['#111111','#f4f4f2','#244dff','#cececc','#858585','#142b92'],
+ ['#111111','#f4f4f2','#c6ee00','#d4d4d2','#787878','#627300'],
+ ['#111111','#f4f4f2','#eb80d3','#d6d6d4','#858585','#992c89'],
+ ['#f5f5f2','#101010','#f15d15','#dededc','#757575','#b52c07']
+];
+const R=n=>Math.floor(rand()*n), pick=a=>a[R(a.length)];
+const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+function splitBox(box,ratio,vertical){
+ let {x,y,w,h}=box,n=vertical?w:h;
+ let k=Math.max(8,Math.min(n-8,Math.round(n*ratio)));
+ return vertical?[{x,y,w:k,h},{x:x+k,y,w:w-k,h}]:[{x,y,w,h:k},{x,y:y+k,w,h:h-k}];
+}
+function makeBox(rect,id){return {...rect,id,gene:R(32),speed:8+R(238),porosity:25+R(218),kind:R(52),bg:0,fg:1,accent:2,scale:1+R(8),phase:R(800),palette:paletteIndex}}
+function styleBox(b,initial=false){
+ let area=b.w*b.h/(W*H),dense=area<.006;
+ b.palette=paletteIndex<4?paletteIndex:0;
+ b.bg=rand()<.56?0:1;b.fg=1-b.bg;b.accent=pick([b.fg,b.fg,3,4,5]);
+ const sets=[
+  [0,1,2,4,6,9,10,14,18,18,19,20,22,23,24,28,29,30,30,31,32,33,34,35,36,39,41],
+  [5,7,8,10,11,13,15,17,18,18,21,25,26,27,32,34,35,36,37,37,38,38,40,40,41],
+  [5,6,9,10,14,18,19,20,24,29,30,31,32,33,35,36,39,39,40,41,41]
+ ];
+ b.kind=initial&&patternSequence.length?patternSequence[patternCursor++%patternSequence.length]:pick(sets[variant]);if(rand()<.055*profile.fracture)b.kind=42+R(10);
+ if(area>.10)b.kind=pick(variant===0?[18,18,30,31,32,34,36,39]:variant===1?[18,34,37,38,40,41]:[18,30,32,35,39,41]);
+ if(dense&&rand()<.30)b.kind=pick([0,1,2,5,7,10,13,20,25,27,33,36,52,53,54,56,58,60,62]);
+ if(rand()<.065)b.kind=18;if(b.kind===18&&area>.075)b.kind=pick([30,34,42,43,45,47,49]);
+ if(b.kind===18){b.speed=Math.min(b.speed,70);b.porosity=Math.min(b.porosity,85)}
+ b.scale=1+R(rand()<.7?4:10);b.phase=R(900);return b;
+}
+function paint(b,remember){
+ if(remember){genome(b);return;}
+ for(let y=H-b.y-b.h;y<H-b.y;y++)for(let x=b.x;x<b.x+b.w;x++){let i=(y*W+x)*4;fieldData[i]=b.id;fieldData[i+1]=b.gene;fieldData[i+2]=b.speed;fieldData[i+3]=b.porosity;}
+}
+function architecturalBirth(){
+ const mode=profile.design,ink=19,paper=242,grey=126;
+ const int=(a,b)=>Math.floor(a+rand()*(b-a+1));
+ const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+ const normX=x=>x/Math.max(1,W-1),normY=y=>y/Math.max(1,H-1);
+ const image=new Uint8Array(W*H*4);
+ function pix(x,y,v){x=Math.round(x);y=Math.round(y);if(x<0||x>=W||y<0||y>=H)return;let i=((H-1-y)*W+x)*4;image[i]=v;image[i+1]=v===paper?241:v;image[i+2]=v===paper?235:v;image[i+3]=255;}
+ function get(x,y){let i=((H-1-cl(y,0,H-1))*W+cl(x,0,W-1))*4;return image[i];}
+ function block(x,y,w,h,v){for(let j=Math.max(0,Math.floor(y));j<Math.min(H,Math.ceil(y+h));j++)for(let i=Math.max(0,Math.floor(x));i<Math.min(W,Math.ceil(x+w));i++)pix(i,j,v);}
+ function stroke(x0,y0,x1,y1,v,width=1){
+  let n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0),1);for(let t=0;t<=n;t++){let x=Math.round(x0+(x1-x0)*t/n),y=Math.round(y0+(y1-y0)*t/n);for(let k=0;k<width;k++)pix(x,y+k,v);}
+ }
+ // A connected orthogonal discontinuity, with long terraces and occasional short steps.
+ function boundary(n,m,base,slope,steps){
+  let a=new Int16Array(n),k=0,v=Math.round(base*m),pts=[];
+  while(k<n){let len=Math.max(1,int(Math.max(2,n/(steps*2.4)),Math.max(3,n/(steps*.65)))),end=Math.min(n,k+len);let old=v;
+   let aim=(base+slope*(k/n-.5))*m;
+   v=cl(Math.round(old*.48+aim*.52+int(-Math.max(2,m*.065),Math.max(2,m*.065))),Math.floor(m*.08),Math.ceil(m*.92));
+   for(let j=k;j<end;j++)a[j]=v;
+   if(pts.length)pts.push([k,old]);pts.push([k,v],[end-1,v]);k=end;
+  }return {a,pts};
+ }
+ let slope=(rand()<.5?-1:1)*(mode===1?.43:.75);
+ let h0=boundary(W,H,mode===1?.57:.49,slope,mode===2?17:11),v0=boundary(H,W,mode===1?.72:.51,(rand()<.5?-1:1)*.23,mode===2?11:7);
+ let h1=boundary(W,H,.73,-slope*.42,8);
+ let invert=rand()<.28;
+ // Broad interlocking plates: the graphic structure is not a collection of feedback tiles.
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+  let left=x<v0.a[y],above=y<h0.a[x],black=mode===1?(!above&&left||!left&&y<h1.a[x]):left!==above;
+  if(mode===2&&x>W*.12&&x<W*.92&&Math.abs(y-h1.a[x])<H*.07)black=!black;
+  pix(x,y,black!==invert?ink:paper);
+ }
+ architecturePaths=[h0.pts.map(([x,y])=>[normX(x),normY(y)]),v0.pts.map(([y,x])=>[normX(x),normY(y)]),h1.pts.map(([x,y])=>[normX(x),normY(y)])];
+ // Continuous terraces and recessed combs, derived from actual plate boundaries.
+ let segments=mode===1?9:mode===2?19:13;
+ for(let k=0;k<segments;k++){
+  let x=int(0,W-1),y=h0.a[x],len=int(Math.max(4,W*.08),Math.max(6,W*.32)),side=rand()<.5?-1:1;
+  let depth=int(3,Math.max(4,H*(mode===1?.085:.14))),pitch=int(2,Math.max(2,Math.round(H*.035))),origin=cl(x-Math.floor(len*.32),0,W-1);
+  let col=get(origin,cl(y+side*depth,0,H-1))>128?ink:paper;
+  if(k%4===0){let yy=y+side*depth;block(origin,yy,len,Math.max(2,depth*.42),col);stroke(origin,yy+side*depth*.65,origin+len*.82,yy+side*depth*.65,col);}
+  else if(k%4===1){for(let j=0;j<depth;j+=pitch){let yy=y+side*(j+1),end=origin+Math.max(2,Math.floor(len*(1-.72*j/depth)));stroke(origin,yy,end,yy,col,Math.max(1,pitch-1));}}
+  else if(k%4===2){for(let i=origin;i<Math.min(W,origin+len);i+=pitch){let yy=h0.a[i],l=Math.max(1,Math.floor(depth*(.3+.7*(i-origin)/len)));stroke(i,yy,i,yy+side*l,col);}}
+  else{for(let j=0;j<depth;j+=2)for(let i=0;i<len;i+=2){let yy=y+side*j;if(rand()<.66*(1-j/depth))pix(origin+i,yy,col);}}
+ }
+ // Secondary architectural ribs break the large planes without filling every surface.
+ let ribs=mode===1?5:mode===2?10:7;
+ for(let k=0;k<ribs;k++){
+  let y=int(0,H-1),x=v0.a[y],len=int(Math.max(4,H*.10),Math.max(6,H*.28)),side=rand()<.5?-1:1;
+  let yy=cl(y-Math.floor(len*.22),0,H-1),width=int(3,Math.max(4,W*(mode===1?.055:.09))),pitch=int(2,3);
+  let tone=get(cl(x+side*width,0,W-1),yy)>128?ink:paper;
+  if(k%3===0){for(let j=0;j<width;j+=pitch){let xx=x+side*j,l=Math.max(2,Math.floor(len*(1-j/width*.6)));stroke(xx,yy,xx,yy+l,tone);}}
+  else if(k%3===1){block(x+side*width,yy,Math.max(2,width*.5),len,tone);stroke(x,yy,x+side*width,yy,tone);}
+  else{for(let j=0;j<len;j+=pitch){let v=yy+j;if(v>=H)break;let xx=v0.a[v];stroke(xx,v,xx+side*Math.max(1,Math.floor(width*(.35+.65*j/len))),v,tone);}}
+ }
+ // Sparse stepped trace in a calm field, attached to a connected seam.
+ let trail=boundary(W,H,mode===1?.24:.19,-slope*.28,12);
+ for(let x=0;x<W;x++){let yy=trail.a[x];if(rand()<(mode===1?.16:.23)){let v=get(x,yy);pix(x,yy,v>128?ink:paper);if(rand()<.10)pix(x,yy+1,v>128?ink:paper);}}
+ architecturePaths.push(trail.pts.map(([x,y])=>[normX(x),normY(y)]));
+ // A long structural spine with missing joints and clean orthogonal connections.
+ let ySpine=cl(Math.round(H*(mode===1?.59:.48)),1,H-2);
+ for(let x=0;x<W;x++){
+  let base=get(x,ySpine),tone=base>128?ink:paper;
+  if(Math.floor(x/(W*.15+1))%4!==2)pix(x,ySpine,tone);
+  if(x%Math.max(4,Math.floor(W*.09))===0){let len=int(3,Math.max(5,H*.12));stroke(x,ySpine,x,ySpine+len,tone);}
+ }
+ // Break edges into square residue, concentrated at the fault, never uniform noise.
+ const radius=mode===1?Math.max(2,H*.025):Math.max(3,H*.045);
+ for(let x=0;x<W;x++){
+  let yy=h0.a[x];for(let j=-Math.ceil(radius);j<=radius;j++){let y=yy+j;if(y<0||y>=H)continue;let chance=(1-Math.abs(j)/(radius+1))*(mode===2?.58:.36);if(rand()<chance){let v=get(x,y);pix(x,y,v>128?ink:paper);}}
+ }
+ for(let y=0;y<H;y++){let xx=v0.a[y];if(rand()<.42){let x=cl(xx+int(-2,2),0,W-1),v=get(x,y);pix(x,y,v>128?ink:paper);}}
+ if(mode===2){for(let x=0;x<W;x+=2){let y=h1.a[x];for(let j=-2;j<=2;j++)if(rand()<.4)pix(x,y+j,get(x,y+j)>128?ink:paper);}}
+ baseData.set(image);memoryData.set(image);
+}
+function upload(tex,b,data){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);gl.texSubImage2D(gl.TEXTURE_2D,0,b.x,H-b.y-b.h,b.w,b.h,gl.RGBA,gl.UNSIGNED_BYTE,data)}
+function genome(b){let f=new Uint8Array(b.w*b.h*4);for(let i=0;i<f.length;i+=4){f[i]=b.id;f[i+1]=b.gene;f[i+2]=b.speed;f[i+3]=b.porosity}upload(regions,b,f);if(fieldData)for(let y=0;y<b.h;y++){let k=((H-b.y-b.h+y)*W+b.x)*4;fieldData.set(f.subarray(y*b.w*4,(y+1)*b.w*4),k)}}
+function initAtlas(){
+ boxes=[];let rects=[];patternCursor=0;
+ const families=[[0,5,8,14,25,52,55,57,59,61],[1,12,16,21,53,56,60],[2,7,10,13,17,20,27,36,54,58,62],[18,26,28,33,34,63]];
+ const seq=[];let groups=2+R(2);for(let i=0;i<groups;i++){let g=families[(i+R(families.length))%families.length],n=2+R(5);for(let j=0;j<n;j++)seq.push(pick(g));}patternSequence=seq;
+ const add=(x,y,w,h)=>{if(w>0&&h>0)rects.push({x,y,w,h})};
+ function divide(b,d){if(d<=0||b.w<Math.max(14,20/profile.density)||b.h<Math.max(14,20/profile.density)){rects.push(b);return}let vertical=b.w/b.h>1.65?true:b.h/b.w>1.65?false:rand()<.5;let k=.21+rand()*.58;for(const q of splitBox(b,k,vertical))divide(q,d-1-(rand()<.16?1:0))}
+ if(layout===0){let axis= W>H, parts=splitBox({x:0,y:0,w:W,h:H},.24+rand()*.36,axis);divide(parts[0],2+R(3));divide(parts[1],6+R(2))}
+ if(layout===1){let nx=7+R(3),ny=5+R(2);for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){let x=Math.floor(i*W/nx),y=Math.floor(j*H/ny);add(x,y,Math.floor((i+1)*W/nx)-x,Math.floor((j+1)*H/ny)-y)}}
+ if(layout===2){
+ let row=0;for(let y=0;y<H;){let u=rand(),h=Math.min(H-y,Math.max(5,Math.floor(H*(u<.18?.065+rand()*.08:u<.7?.012+rand()*.031:.006+rand()*.009))));
+ let n=profile.grammar===2?(row%7===0?1:row%5===0?5:2+R(5)):(rand()<.42?1:2+R(5));
+ let x=0;for(let i=0;i<n;i++){let remaining=n-i,w=i===n-1?W-x:Math.min(W-x-remaining+1,Math.max(1,Math.floor((W-x)/remaining*(.45+rand()*1.05))));add(x,y,w,h);x+=w;}y+=h;row++;}
+ }
+ if(layout===3){let b={x:0,y:0,w:W,h:H};let parts=splitBox(b,.38+rand()*.24,true);divide(parts[0],1+R(2));divide(parts[1],5+R(2))}
+ if(layout===4){let q=splitBox({x:0,y:0,w:W,h:H},.2+rand()*.15,false);divide(q[0],5+R(2));let z=splitBox(q[1],.4+rand()*.2,true);divide(z[0],2+R(2));divide(z[1],6+R(2))}
+ if(layout===5){let q=splitBox({x:0,y:0,w:W,h:H},.36+rand()*.22,false);divide(q[0],1+R(2));divide(q[1],7+R(2))}
+ if(layout===6){let q=splitBox({x:0,y:0,w:W,h:H},.3+rand()*.3,true);let a=splitBox(q[0],.2+rand()*.55,false);divide(a[0],1+R(2));divide(a[1],5+R(2));divide(q[1],4+R(4))}
+ if(rects.length>250){rects=[];divide({x:0,y:0,w:W,h:H},7)}
+ while(rects.length>250){rects=[];divide({x:0,y:0,w:W,h:H},6)}
+ rects.forEach((r,i)=>{let b=styleBox(makeBox(r,i+1),true);boxes.push(b);paint(b,false)});architecturalBirth();
+}
+function freeId(){let used=new Set(boxes.map(b=>b.id));for(let i=1;i<=250;i++)if(!used.has(i))return i;return 0}
+function adjacent(a,b){return (a.y===b.y&&a.h===b.h&&(a.x+a.w===b.x||b.x+b.w===a.x))||(a.x===b.x&&a.w===b.w&&(a.y+a.h===b.y||b.y+b.h===a.y))}
+function adjacentLoose(a,b){return ((a.x+a.w===b.x||b.x+b.w===a.x)&&Math.min(a.y+a.h,b.y+b.h)>Math.max(a.y,b.y))||((a.y+a.h===b.y||b.y+b.h===a.y)&&Math.min(a.x+a.w,b.x+b.w)>Math.max(a.x,b.x))}
+function mutateGene(b){b.gene=(b.gene+1+R(31))%32;b.speed=10+R(235);b.porosity=20+R(225);genome(b)}
+function evolve(){if(!boxes.length)return;let d=brainFor(pick(boxes));if(d.features&&!d.trial&&rand()<.45)trial(d,mutateProgram(d));events++;nextEvent=age+3+rand()*8;}
+function climateEvent(){
+ if(age>=nextWeather){weather=pick([0,0,0,1,1,2,3]);nextWeather=age+5+rand()*32;if(weather===2||weather===3)burst=2+R(7);if(rand()<.24)paletteIndex=R(4)}
+}
+function deepMemory(){
+ if(age<nextSnapshot)return;
+ nextSnapshot=age+(22+rand()*46)/profile.recall;
+ // A bounded history of actual GPU feedback, copied without CPU readback.
+ let tex=snapshots[archiveIndex];gl.bindFramebuffer(gl.FRAMEBUFFER,fb[read]);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);
+ gl.copyTexSubImage2D(gl.TEXTURE_2D,0,0,0,0,0,W,H);
+ archiveIndex=(archiveIndex+1)%snapshots.length;
+ if(++snapshotWrites<3)return; // All original snapshot slots have been refreshed.
+ let b=pick(boxes),older=snapshots[archiveIndex];let temp=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,temp);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,older,0);
+ gl.bindTexture(gl.TEXTURE_2D,archive);
+ let sx=clamp(b.x+Math.floor((rand()-.5)*W*.17),0,W-b.w),sy=clamp(H-b.y-b.h+Math.floor((rand()-.5)*H*.13),0,H-b.h);
+ gl.copyTexSubImage2D(gl.TEXTURE_2D,0,b.x,H-b.y-b.h,sx,sy,b.w,b.h);gl.deleteFramebuffer(temp);gl.bindFramebuffer(gl.FRAMEBUFFER,null);recallCount++;
+}
+function newFracture(){
+ if(!fractureCtx)return;
+ if(scarPaths.length<5){
+  let d=Array.from(cognition.values()).filter(d=>d.features&&d.features[1]>.035).sort((a,b)=>b.predictionError+b.novelty-a.predictionError-a.novelty);
+  let target=d.length?pick(d.slice(0,Math.min(8,d.length))):null;
+  // Start from an existing architectural path, then make an orthogonal extension.
+  let path=architecturePaths.length?pick(architecturePaths):[[.05,.5],[.95,.5]],idx=target?path.reduce((best,p,i)=>{let b=target.box,x=(b.x+b.w*.5)/W,y=(b.y+b.h*.5)/H;return Math.hypot(p[0]-x,p[1]-y)<Math.hypot(path[best][0]-x,path[best][1]-y)?i:best;},0):R(path.length);
+  let p=path[idx],pts=[p.slice()],x=p[0],y=p[1],dir=rand()<.5?-1:1;
+  for(let k=0;k<4+R(4);k++){if(k%2===0)x=clamp(x+dir*(.025+rand()*.11),0,1);else y=clamp(y+(rand()<.5?-1:1)*(.012+rand()*.065),0,1);pts.push([x,y]);}
+  scarPaths.push({pts,start:age,rise:4+rand()*6,hold:9+rand()*13,wear:11+rand()*18,ink:rand()<.5?'#131313':'#f2f1eb',width:.003+rand()*.006,branch:0});
+  if(target){target.relay=.8;target.lastRelay=age;}
+ }
+ fractureAge=age-2;fractureLife=9+rand()*13;nextFracture=age+fractureLife/profile.cut;
+}
+function refreshStrataScars(){
+ if(age<scarDrawNext||!fractureCtx)return;scarDrawNext=age+.48;let c=fractureCtx,S=Math.min(W,H);scarPaths=scarPaths.filter(q=>age<q.start+q.rise+q.hold+q.wear);c.clearRect(0,0,W,H);
+ for(const q of scarPaths){let t=age-q.start,progress=clamp(t/q.rise,0,1),fade=1-clamp((t-q.rise-q.hold)/q.wear,0,1);if(progress<=0)continue;c.save();c.strokeStyle=q.ink;c.lineJoin='miter';c.lineCap='butt';c.globalAlpha=fade;c.lineWidth=Math.max(1,q.width*S);
+  let p=q.pts,n=p.length-1,limit=progress*n,whole=Math.floor(limit);c.beginPath();c.moveTo(p[0][0]*W,p[0][1]*H);for(let i=1;i<=whole;i++)c.lineTo(p[i][0]*W,p[i][1]*H);if(whole<n){let a=p[whole],b=p[whole+1],f=limit-whole;c.lineTo((a[0]+(b[0]-a[0])*f)*W,(a[1]+(b[1]-a[1])*f)*H)}c.stroke();
+  if(q.branch>.5&&progress>.55){let a=p[3],b=p[4],f=clamp((progress-.55)/.45,0,1);c.lineWidth=Math.max(1,q.width*S*.36);c.beginPath();c.moveTo(a[0]*W,a[1]*H);c.lineTo((a[0]+(b[0]-a[0])*.6*f)*W,(a[1]+((b[1]-a[1])+.035)*f)*H);c.stroke()}
+  c.restore();
+ }
+ gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,fractureField);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,fractureCanvas);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+}
+// Each visual stratum executes a mutable sequence of original movement rules.
+// Genes are actually rewritten, tested against sampled live feedback, then retained or rolled back.
+const ruleGroups=[[0,7,13,16,22,30,32,40,43],[1,10,20,25,33,41,44],[3,8,11,14,19,23,28,34,42],[2,4,5,12,15,18,26,31,35,45],[6,9,17,21,24,27,29,32,34,36,37,38,39]];
+function newInstruction(group){
+ return [pick(ruleGroups[group]),Math.round(25+rand()*205),Math.round(35+rand()*195),4+Math.pow(rand(),1.5)*16,R(30),R(16),Math.round(45+rand()*150)];
+}
+// Track exact rule combinations for the lifetime of each region, plus a stricter recent-family memory.
+function ruleKey(a){return [a[0],a[4],a[5]].join('/')}
+function family(a){return a[0]<32?a[0]%16:16+a[0]-32}
+function rememberRule(d,a){
+ d.usedRules.add(ruleKey(a));d.recent.push([family(a),a[4],a[5]]);
+ if(d.recent.length>8)d.recent.shift();d.lastActiveChange=age;d.visualRepeats=0;
+ // Memory bounded by the finite instruction space, not by a short cycle.
+}
+function chooseNovel(d,preferred){
+ let prev=d.recent[d.recent.length-1],second=d.recent[d.recent.length-2];
+ const legal=a=>!d.usedRules.has(ruleKey(a))&&(!prev||family(a)!==prev[0]&&a[4]!==prev[1])&&(!second||family(a)!==second[0]);
+ if(preferred&&legal(preferred))return preferred.slice();
+ noveltyRejects++;
+ let pool=[];for(let k=0;k<42;k++){
+  let a=preferred&&k<12?preferred.slice():newInstruction(d.group);
+  a[0]=R(46);a[4]=R(30);a[5]=R(16);
+  if(!legal(a))continue;
+  let v=(d.reward[a[0]]||0)*.65+.12/Math.sqrt(1+(d.visits[a[0]]||0));
+  if(d.goal===0&&a[5]<8)v+=.12;if(d.goal===3&&a[4]>=16)v+=.10;
+  pool.push({a,v});
+ }
+ if(pool.length){pool.sort((a,b)=>b.v-a.v);return pick(pool.slice(0,Math.min(7,pool.length))).a;}
+ // Exhaustive fallback, so a region cannot re-enter its recent family cycle.
+ for(let op=0;op<46;op++)for(let sub=0;sub<30;sub++)for(let r=0;r<16;r++){
+  let a=newInstruction(d.group);a[0]=op;a[4]=sub;a[5]=r;if(legal(a))return a;
+ }
+ // Finite rule space may eventually be exhausted over a very long session.
+ d.usedRules.clear();return chooseNovel(d,null);
+}
+function setGoal(d){
+ let f=d.features;if(!f)return;let old=d.goal;
+ let mismatch=d.mismatch||0,edgeLoss=Math.max(0,(d.homeEdge??f[1])-f[1]);
+ d.stress=clamp(.68*(d.stress||0)+.32*(mismatch+edgeLoss*2+f[2]*.45),0,1);
+ d.goal=d.relay>.60?3:edgeLoss>.085||d.stress>.65?0:f[1]<.025&&f[0]<.09?2:1;
+ d.urgency=clamp(.25+d.stress*.7+(d.visualRepeats||0)*.12,0,1);
+ if(old!==d.goal)goalChanges++;
+}
+function initMovement(){
+ if(movementTex)gl.deleteTexture(movementTex);
+ movementTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,movementTex);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+ movementBytes.fill(0);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,6,256,0,gl.RGBA,gl.UNSIGNED_BYTE,movementBytes);
+ stageChanges=comboChanges=reconstructionTrials=reconstructionAccepted=0;motionNext=0;pigmentEvents=[];pigmentCount=relayCount=misrepairCount=curiosityCount=0;nextRelay=10;routeCount=faultCount=routeSerial=0;nextStructural=15;noveltyRejects=forcedChanges=goalChanges=materialEvents=coalitionCount=0;nextCoalition=12;
+ for(const b of boxes){let d=brainFor(b);d.active=d.code[0].slice();rememberRule(d,d.active);d.stage=R(3);d.stageStart=age;d.stageEnd=age+3+rand()*9;d.motionAngle=rand();d.motionScale=rand();d.confidence=.5;d.relay=0;d.mismatch=0;d.lastPigment=-100;d.lastRepair=-100;}
+ movementDirty=true;
+}
+function movementTick(){
+ if(age<motionNext)return;motionNext=age+.12;
+ for(const b of boxes){
+  let d=brainFor(b);
+  if(!d.active){d.active=chooseNovel(d,d.code[0]);rememberRule(d,d.active);d.stage=0;d.stageStart=age;d.stageEnd=age+2+rand()*4;d.motionAngle=rand();d.motionScale=rand();d.confidence=.5;d.relay=0;d.mismatch=0;d.lastPigment=-100;d.lastRepair=-100;}
+  if(!d.trial&&d.stage===1&&age-d.lastActiveChange>6&&(d.visualRepeats>=3||age-d.lastActiveChange>23)){d.active=chooseNovel(d,newInstruction(d.group));rememberRule(d,d.active);d.stage=0;d.stageStart=age;d.stageEnd=age+1.8;d.visualRepeats=0;forcedChanges++;comboChanges++;}
+  if(age>=d.stageEnd){
+   d.stage=(d.stage+1)%4;stageChanges++;d.stageStart=age;
+   const f=d.features||[.3,.2,.12,.5];
+   if(d.stage===0){
+    let next=d.code[d.pc%d.code.length];d.pc++;if(d.favourite&&rand()<.24+d.confidence*.25){next=d.favourite;curiosityCount++;}
+    d.active=chooseNovel(d,next);rememberRule(d,d.active);comboChanges++;
+    if(d.stagnation>3)d.motionAngle=(d.motionAngle+.17+rand()*.2)%1;
+    d.stageEnd=age+2+rand()*5;
+   }else if(d.stage===1)d.stageEnd=age+Math.max(4,d.active[3]*(.55+rand()*.65))*(f[0]<.10?.6:1);
+   else if(d.stage===2)d.stageEnd=age+3+rand()*7+f[2]*7;
+   else d.stageEnd=age+4+Math.pow(rand(),2)*20+(f[2]>.23?6:0);
+  }
+  // Perception regulates motion amplitude and recovery time. Stable regions
+  // explore, excessively active regions settle without a global reset.
+  setGoal(d);const f=d.features||[.30,.20,.12,.5],a=d.active,progress=clamp((age-d.stageStart)/Math.max(.01,d.stageEnd-d.stageStart),0,1);
+  let calm=clamp(1.15-f[2]*2.1,.28,1),drive=clamp(.38+d.novelty*.85+d.predictionError*.85+d.impulse*.16,.18,1);
+  if(f[1]<.035&&f[0]<.12)calm*=.50;
+  if(d.relay>.5)calm=Math.min(1,calm+.22);
+  d.relay=Math.max(0,(d.relay||0)-.008);
+  let i=b.id*24;
+  let e=pigmentEvents.find(x=>x.id===b.id&&age>=x.start&&age<x.start+x.hold+x.wear),tone=e?e.hue:[0,0,0],power=0;
+  if(e){let t=age-e.start,r=clamp(t/2.5,0,1),f=1-clamp((t-e.hold)/e.wear,0,1);power=r*r*(3-2*r)*f*f*(3-2*f)*(.6+.4*d.urgency);}
+  movementBytes.set([a[0],a[4]??0,a[5]??0,d.stage,Math.round(a[1]*calm),Math.round(a[2]*calm),Math.round(d.motionAngle*255),a[6]??85,Math.round(progress*255),Math.round(clamp(.45+d.quality*.45,0,1)*255),Math.round(drive*255),Math.round(d.motionScale*255),...tone,Math.round(power*255),Math.round(clamp(d.confidence??.5,0,1)*255),Math.round(clamp(d.relay||0,0,1)*255),Math.round(clamp(d.mismatch||0,0,1)*255),Math.round(clamp(d.legacy||0,0,1)*255),d.goal,Math.round(d.urgency*255),Math.round(d.stress*255),Math.round(profile.temper*127.5)],i);
+ }
+ movementDirty=true;
+}
+function flushMovement(){
+ if(!movementDirty)return;
+ gl.activeTexture(gl.TEXTURE0+5);gl.bindTexture(gl.TEXTURE_2D,movementTex);
+ gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,6,256,gl.RGBA,gl.UNSIGNED_BYTE,movementBytes);
+ movementDirty=false;
+}
+function copyProgram(p){return p.map(x=>x.slice())}
+function brainFor(b){
+ let d=cognition.get(b.id);
+ if(!d||d.box!==b){let parent=d||lineageBank.get(b.id),group=parent?parent.group:R(ruleGroups.length);d={box:b,group,code:parent?copyProgram(parent.code):Array.from({length:3+R(3)},()=>newInstruction(group)),pc:0,next:age+.4+rand()*2,trial:null,features:null,previous:null,forecast:null,predictionError:0,weights:[.6,.25,.15],history:[],reward:new Float32Array(46),visits:new Uint16Array(46),recent:[],usedRules:new Set(),policy:new Map(),goal:1,urgency:.4,stress:.25,visualRepeats:0,lastActiveChange:0,generation:parent?.generation||0,quality:parent?.quality??.5,rest:0,stagnation:0,impulse:0,lastSend:-100,tempo:.55+rand()*1.5,legacy:parent?.legacy||0,novelty:0,commitAt:-100};cognition.set(b.id,d)}
+ return d;
+}
+function initCognition(){
+ cognition=new Map();signalQueue=[];learnArchive=[];previousSense=null;senseNext=2;programNext=.5;learnCount=acceptCount=rejectCount=exchangeCount=recallCount=perceptionCount=0;
+ if(senseTex)gl.deleteTexture(senseTex);if(senseFB)gl.deleteFramebuffer(senseFB);
+ senseTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,senseTex);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,96,64,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+ senseFB=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,senseFB);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,senseTex,0);gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+ for(const b of boxes)brainFor(b);
+}
+function dist(a,b){return Math.sqrt(a.reduce((n,v,k)=>n+(v-b[k])**2,0)/a.length)}
+function score(d,f){
+ let baseEdge=d.homeEdge??.18,baseContrast=d.homeContrast??.30;
+ let target=[Math.max(.10,baseContrast*.88),Math.max(.035,baseEdge*.86),[.17,.09,.22,.30,.11][d.group],d.homeInk??.5],w=[.32,.33,.25,.48];
+ let fit=f.reduce((n,v,k)=>n+Math.max(0,1-Math.abs(v-target[k])/w[k]),0)/4;
+ let novelty=d.history.length?Math.min(...d.history.map(x=>dist(x,f))):.15;
+ return fit*.75+Math.min(1,novelty*5)*.25;
+}
+function observeStrata(){
+ if(age<senseNext||!senseFB)return;senseNext=age+2.0+rand()*1.4;
+ gl.bindFramebuffer(gl.READ_FRAMEBUFFER,fb[read]);gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,senseFB);
+ gl.blitFramebuffer(0,0,W,H,0,0,96,64,gl.COLOR_BUFFER_BIT,gl.LINEAR);
+ gl.bindFramebuffer(gl.READ_FRAMEBUFFER,senseFB);gl.readPixels(0,0,96,64,gl.RGBA,gl.UNSIGNED_BYTE,sensePixels);gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+ let active=new Set(boxes.map(b=>b.id));for(const id of cognition.keys())if(!active.has(id)){let d=cognition.get(id);lineageBank.set(id,{group:d.group,code:copyProgram(d.code),generation:d.generation,quality:d.quality,legacy:d.legacy});cognition.delete(id)}
+ const lum=(p,x,y)=>{let i=(Math.max(0,Math.min(63,y))*96+Math.max(0,Math.min(95,x)))*4;return (p[i]*.299+p[i+1]*.587+p[i+2]*.114)/255};
+ for(const b of boxes){
+  let d=brainFor(b),x0=clamp(Math.floor(b.x/W*96),0,95),x1=clamp(Math.ceil((b.x+b.w)/W*96),x0+1,96),y0=clamp(Math.floor((1-(b.y+b.h)/H)*64),0,63),y1=clamp(Math.ceil((1-b.y/H)*64),y0+1,64);
+  let n=0,mean=0,sq=0,edge=0,change=0,ink=0;
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){let v=lum(sensePixels,x,y);n++;mean+=v;sq+=v*v;edge+=(Math.abs(v-lum(sensePixels,x+1,y))+Math.abs(v-lum(sensePixels,x,y+1)))*.5;change+=previousSense?Math.abs(v-lum(previousSense,x,y)):.12;ink+=v<.5?1:0}
+  let f=[Math.sqrt(Math.max(0,sq/n-(mean/n)**2)),edge/n,change/n,ink/n];
+  if(d.homeEdge===undefined){d.homeEdge=f[1];d.homeContrast=f[0];d.homeInk=f[3];}
+  if(d.forecast!==null&&d.previous){let err=f[2]-d.forecast;d.predictionError=.64*d.predictionError+.36*Math.abs(err);for(let k=0;k<3;k++)d.weights[k]=clamp(d.weights[k]+.18*err*d.previous[k],-1,1.5);perceptionCount++}
+  d.mismatch=.78*(d.mismatch||0)+.22*clamp(d.predictionError*4+Math.abs(f[3]-.5)*.3,0,1);
+  d.previous=[f[2],f[1],1];d.forecast=clamp(d.previous.reduce((sum,v,k)=>sum+v*d.weights[k],0),0,1);
+  d.stagnation=d.features&&dist(d.features,f)<.035?d.stagnation+1:Math.max(0,d.stagnation-1);
+  // Compare a coarse spatial signature, not only aggregate texture statistics.
+  let signature=[];for(let j=0;j<4;j++)for(let i=0;i<4;i++)signature.push(lum(sensePixels,Math.min(x1-1,x0+Math.floor((i+.5)*(x1-x0)/4)),Math.min(y1-1,y0+Math.floor((j+.5)*(y1-y0)/4))));
+  let recentVisual=d.visualHistory||[],repeat=recentVisual.slice(-6).some(v=>dist(v,signature)<.075);
+  d.visualRepeats=d.stage===1&&f[1]>.035&&(repeat||f[2]<.013)?d.visualRepeats+1:Math.max(0,d.visualRepeats-1);
+  d.visualHistory=[...recentVisual.slice(-9),signature];
+  d.novelty=d.history.length?Math.min(...d.history.slice(0,-1).map(v=>dist(v,f)).concat([.3])):.15;d.features=f;
+  if(d.trial){d.trial.samples.push(f.slice());if((age>=d.trial.until||d.visualRepeats>=3)&&d.trial.samples.length>=2){
+   let measured=f.map((_,k)=>d.trial.samples.reduce((n,v)=>n+v[k],0)/d.trial.samples.length),value=score(d,measured),novel=dist(measured,d.trial.before),gain=value-d.trial.score;
+   for(const op of new Set([d.active[0]])){d.visits[op]++;d.reward[op]+=(gain-d.reward[op])*.25}
+   let key=ruleKey(d.active),stat=d.policy.get(key)||{value:0,n:0};stat.n++;stat.value+=(gain-stat.value)/stat.n;d.policy.set(key,stat);if(d.policy.size>192)d.policy.delete(d.policy.keys().next().value);
+   if(d.visualRepeats<3&&(gain>-.012||novel>.10&&value>.51)){d.generation++;d.quality=.75*d.quality+.25*value;acceptCount++;d.confidence=clamp((d.confidence??.5)*.85+.15*clamp(.6+gain*2,0,1),.1,.95);if(gain>.018){d.favourite=d.active.slice();d.lastSuccess=age;}if(d.trial.changed)reconstructionAccepted++;if(gain>.025&&novel>.055)d.legacy=Math.min(1,d.legacy+.055);if(novel>.07){learnArchive.push({code:copyProgram(d.code),features:measured.slice(),id:b.id});if(learnArchive.length>64)learnArchive.shift()}}
+   else{if(d.visualRepeats>=3){forcedChanges++;d.visualRepeats=0;}d.confidence=clamp((d.confidence??.5)*.78,.08,.95);d.lastFailure=age;d.code=d.trial.old;d.pc=0;d.active=chooseNovel(d,d.trial.oldActive||d.code[0]);rememberRule(d,d.active);d.stage=2;d.stageStart=age;d.stageEnd=age+3;rejectCount++}d.trial=null;
+  }}
+  d.history.push(f.slice());if(d.history.length>18)d.history.shift();
+  if(d.predictionError>.08&&age-d.lastSend>15&&rand()<.18*profile.exchange){let near=boxes.filter(q=>q!==b&&adjacentLoose(b,q));if(near.length&&signalQueue.length<80){signalQueue.push({at:age+6+rand()*25,from:b.id,to:pick(near).id,code:copyProgram(d.code),force:d.predictionError});d.lastSend=age}}
+ }
+ previousSense=sensePixels.slice();
+}
+function mutateProgram(d,donor){
+ let g=copyProgram(d.code),k=R(g.length),op=R(5);
+ if(op===0&&g.length<7)g.splice(k,0,newInstruction(d.group));
+ else if(op===1&&g.length>2)g.splice(k,1);
+ else if(op===2&&donor?.length)g[k]=pick(donor).slice();
+ else if(op===3){let j=R(g.length);[g[k],g[j]]=[g[j],g[k]]}
+ else{let n=newInstruction(d.group);if(rand()<.55){let choices=ruleGroups.flat().sort((a,b)=>(d.reward[b]+.09/Math.sqrt(1+d.visits[b]))-(d.reward[a]+.09/Math.sqrt(1+d.visits[a])));n[0]=pick(choices.slice(0,8))}g[k]=n}
+ if(rand()<.24)g[R(g.length)][0]=R(46);if(rand()<.65){let a=g[R(g.length)];a[4]=R(30);if(rand()<.7)a[5]=R(16);if(rand()<.35)a[6]=35+R(190);}if(d.legacy>.25&&rand()<d.legacy*.65){let k=R(g.length);g[k][2]=Math.round(clamp(g[k][2]+d.legacy*65,28,250));g[k][3]*=.75+d.legacy*.45;}
+ return g;
+}
+function trial(d,g){
+ if(!d.features||d.trial||(d.stage===3&&age<d.stageEnd-1))return false;
+ let changed=JSON.stringify(g.map(a=>a.slice(4)))!==JSON.stringify(d.code.map(a=>a.slice(4)));if(changed)reconstructionTrials++;d.trial={changed,old:copyProgram(d.code),oldActive:d.active?.slice(),before:d.features.slice(),score:score(d,d.features),until:age+6+rand()*7,samples:[]};let chosen=g.findIndex((a,i)=>JSON.stringify(a)!==JSON.stringify(d.code[i]));if(chosen<0)chosen=0;g[chosen]=chooseNovel(d,g[chosen]);d.code=g;d.pc=chosen+1;d.next=age;d.active=g[chosen].slice();rememberRule(d,d.active);d.stage=1;d.stageStart=age;d.stageEnd=d.trial.until+3;learnCount++;comboChanges++;return true;
+}
+function cognitionTick(){
+ observeStrata();if(age<programNext)return;programNext=age+.18;
+ let pending=[];
+ for(const e of signalQueue){if(e.at>age){pending.push(e);continue}let d=cognition.get(e.to);if(d){if(d.trial){if(age<(e.expires??(e.expires=age+20))){e.at=age+2;pending.push(e)}continue}if(trial(d,mutateProgram(d,e.code))){exchangeCount++;d.impulse=.8;d.relay=.95;d.lastRelay=age;relayCount++;d.rest=0;}}}
+ signalQueue=pending;
+ let candidates=boxes.map(brainFor).filter(d=>age>=d.next).sort((a,b)=>a.next-b.next).slice(0,6);
+ for(const d of candidates){
+  d.next=age+5+rand()*9;d.impulse*=.7;
+  if(d.features&&!d.trial&&(rand()<.16*profile.learn||d.visualRepeats>=3)){
+   let donor=learnArchive.length&&rand()<.22*profile.recall?pick(learnArchive):null;
+   if(trial(d,mutateProgram(d,donor?.code))&&donor)recallCount++;
+  }
+ }
+ if(query.has('debug'))el('err').textContent='trials '+learnCount+' accepted '+acceptCount+' rejected '+rejectCount+' prediction updates '+perceptionCount+' exchanges '+exchangeCount+' recalled programs '+recallCount+' permanent revisions '+historyCount+' motif reinterpretations '+motifCount+' touched cells '+historyCoverage.filter(v=>v>0).length+' phase transitions '+stageChanges+' new combinations '+comboChanges+' compound trials '+reconstructionTrials+' compound accepted '+reconstructionAccepted+' pigments '+pigmentCount+' relays '+relayCount+' misrepairs '+misrepairCount+' revisited rules '+curiosityCount+' colour routes '+routeCount+' retained faults '+faultCount+' novel-rule substitutions '+noveltyRejects+' stagnation escapes '+forcedChanges+' goal changes '+goalChanges+' material events '+materialEvents+' coordinated neighbours '+coalitionCount;
+}
+// Permanent reference changes: the original image is not kept in a separate recoverable texture.
+// Only bounded fragments of the current live image and its learned programs survive.
+function initHistory(){
+ snapshotWrites=0;historyNext=12+rand()*8;historyCount=historyPixels=motifCount=0;motifArchive=[];focusMotif=null;focusUntil=0;focusNext=0;historyCoverage.fill(0);lineageBank.clear();historyAge=0;
+}
+function readPatch(x,y,w,h){
+ let data=new Uint8Array(w*h*4);gl.bindFramebuffer(gl.FRAMEBUFFER,fb[read]);gl.readPixels(x,y,w,h,gl.RGBA,gl.UNSIGNED_BYTE,data);gl.bindFramebuffer(gl.FRAMEBUFFER,null);return data;
+}
+function regionPatch(d,scale=1){
+ // Stretch across strata, not along the hidden box edges. Bound CPU readback cost.
+ let w=Math.min(W,Math.max(8,Math.round(W*(.10+rand()*.18)*scale))),h=Math.min(H,Math.max(8,Math.round(H*(.09+rand()*.19)*scale)));
+ let k=Math.min(1,Math.sqrt(120000/(w*h)));w=Math.max(2,Math.floor(w*k));h=Math.max(2,Math.floor(h*k));
+ let cx=d.box.x+d.box.w*.5,cy=H-d.box.y-d.box.h*.5;
+ return {x:Math.round(clamp(cx-w*.5,0,W-w)),y:Math.round(clamp(cy-h*.5,0,H-h)),w,h};
+}
+function writeHistory(p,live,result){
+ // Replace both the present image and its repair target with the same new structure.
+ for(let y=0;y<p.h;y++){let k=((p.y+y)*W+p.x)*4;baseData.set(result.subarray(y*p.w*4,(y+1)*p.w*4),k);}
+ const box={x:p.x,y:H-p.y-p.h,w:p.w,h:p.h};
+ upload(base,box,result);upload(targets[read],box,result);
+ // Do not leave an exact copy of the original in the local archive.
+ upload(archive,box,result);
+ let x0=Math.floor(p.x/W*64),x1=Math.ceil((p.x+p.w)/W*64),y0=Math.floor(p.y/H*48),y1=Math.ceil((p.y+p.h)/H*48);
+ for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){if(historyCoverage[y*64+x]<255)historyCoverage[y*64+x]++;}
+ historyCount++;historyPixels+=p.w*p.h;
+}
+function commitFault(d){
+ let p=regionPatch(d),live=readPatch(p.x,p.y,p.w,p.h),out=live.slice(),angle=pick([-.56,-.23,.23,.59,1.17]),cs=Math.cos(angle),sn=Math.sin(angle),phase=rand()*6.28,shift=Math.max(2,Math.round(Math.min(p.w,p.h)*(.09+rand()*.13)*profile.damage));
+ for(let y=0;y<p.h;y++)for(let x=0;x<p.w;x++){
+  let u=(x+.5)/p.w-.5,v=(y+.5)/p.h-.5,edge=Math.min(.5-Math.abs(u),.5-Math.abs(v)),t=clamp(edge/.17,0,1);
+  let along=u*cs+v*sn,across=-u*sn+v*cs,fold=across-(Math.abs(((along*3.1+phase)%1+1)%1-.5)-.25)*.16;
+  // Connected, tapered displacement of the existing image, never a new shape or a moved panel.
+  let k=t*t*(3-2*t)*Math.max(0,1-Math.abs(fold)*2.5),sgn=fold<0?-1:1;
+  let sx=clamp(Math.round(x+cs*shift*k*sgn),0,p.w-1),sy=clamp(Math.round(y+sn*shift*k*sgn*.55),0,p.h-1);
+  let i=(y*p.w+x)*4,j=(sy*p.w+sx)*4;out[i]=live[j];out[i+1]=live[j+1];out[i+2]=live[j+2];out[i+3]=live[j+3];
+ }
+ writeHistory(p,live,out);d.commitAt=age;d.legacy=Math.min(1,d.legacy+.16);d.impulse=.8;
+ for(const q of boxes){if(q===d.box||adjacentLoose(d.box,q)){let n=brainFor(q);n.legacy=Math.min(1,n.legacy+.045);}}
+}
+function discoverMotif(d){
+ let p=regionPatch(d,.72),pixels=readPatch(p.x,p.y,p.w,p.h),w=Math.min(96,p.w),h=Math.min(72,p.h),data=new Uint8Array(w*h*4);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){let a=(Math.floor(y*p.h/h)*p.w+Math.floor(x*p.w/w))*4,i=(y*w+x)*4;data.set(pixels.subarray(a,a+4),i)}
+ let motif={data,w,h,code:copyProgram(d.code),features:d.features.slice(),owner:d.box.id,uses:0,time:age};
+ motifArchive.push(motif);if(motifArchive.length>8)motifArchive.shift();return motif;
+}
+function reinterpretMotif(d,m){
+ let p=regionPatch(d,.75+rand()*.65),live=readPatch(p.x,p.y,p.w,p.h),out=live.slice(),phase=rand()*6.28,flip=rand()<.35,polarity=rand()<.2,stretch=.65+rand()*.7;
+ for(let y=0;y<p.h;y++)for(let x=0;x<p.w;x++){
+  let u=(x+.5)/p.w,v=(y+.5)/p.h,edge=Math.min(u,1-u,v,1-v),envelope=clamp(edge/.2,0,1);
+  let offset=Math.sin(v*8+phase)*.065,xx=flip?1-u:u,sx=clamp(Math.floor((xx*stretch+offset)*m.w),0,m.w-1),sy=clamp(Math.floor((v+Math.sin(u*6+phase)*.045)*m.h),0,m.h-1);
+  let i=(y*p.w+x)*4,j=(sy*m.w+sx)*4,k=(sy*m.w+Math.min(m.w-1,sx+1))*4;
+  let detail=Math.abs(m.data[j]-m.data[k])/255;
+  // Transfer discovered edges into the existing ink, not an opaque rectangular copy.
+  if(envelope<.1||detail<.12||rand()>(.28+detail*.65)*envelope)continue;
+  for(let c=0;c<3;c++)out[i+c]=polarity?255-m.data[j+c]:m.data[j+c];
+ }
+ writeHistory(p,live,out);m.uses++;motifCount++;d.commitAt=age;d.legacy=Math.min(1,d.legacy+.10);
+ if(!d.trial)trial(d,mutateProgram(d,m.code));
+}
+function historyTick(){
+ if(age<historyNext)return;historyNext=age+(12+rand()*18)/profile.commitRate;
+ let pool=Array.from(cognition.values()).filter(d=>d.features&&d.features[1]>.035&&d.features[0]>.085&&age-d.commitAt>22);
+ if(!pool.length)return;
+ pool.sort((a,b)=>(b.mismatch+b.novelty+b.predictionError)-(a.mismatch+a.novelty+a.predictionError));
+ let candidate=pick(pool.slice(0,Math.min(9,pool.length)));
+ let repairs=pool.filter(d=>d.stage===2&&d.active?.[5]>=12&&d.mismatch>.1);
+ if(repairs.length&&assimilateMisrepair(pick(repairs)))return;
+ // The new geometry changes by retaining narrow, observed dislocations, not swapping panels.
+ let p=regionPatch(candidate,.72),live=readPatch(p.x,p.y,p.w,p.h),out=new Uint8Array(live.length),changed=0;
+ for(let y=0;y<p.h;y++)for(let x=0;x<p.w;x++){let i=(y*p.w+x)*4,k=((p.y+y)*W+p.x+x)*4;out.set(baseData.subarray(k,k+4),i);
+  let u=x/Math.max(1,p.w-1),v=y/Math.max(1,p.h-1),seam=.43+.065*Math.floor((u-.5)*5),dist=Math.abs(v-seam);
+  if(u>.10&&u<.91&&dist<.10&&Math.abs(live[i]-baseData[k])>65){out.set(live.subarray(i,i+3),i);out[i+3]=255;changed++;}
+ }
+ if(changed<3)return;
+ // Copy only changed seam samples to the live image; preserve calm plate interiors.
+ let updated=live.slice();
+ for(let y=0;y<p.h;y++){let k=((p.y+y)*W+p.x)*4;for(let x=0;x<p.w;x++){let i=(y*p.w+x)*4;if(out[i]!==baseData[k+x*4])updated.set(out.subarray(i,i+4),i);}baseData.set(out.subarray(y*p.w*4,(y+1)*p.w*4),k);}
+ let box={x:p.x,y:H-p.y-p.h,w:p.w,h:p.h};upload(base,box,out);upload(targets[read],box,updated);upload(archive,box,out);
+ historyCount++;faultCount++;for(let yy=Math.floor(p.y/H*48);yy<Math.ceil((p.y+p.h)/H*48);yy++)for(let xx=Math.floor(p.x/W*64);xx<Math.ceil((p.x+p.w)/W*64);xx++){let i=yy*64+xx;if(historyCoverage[i]<255)historyCoverage[i]++;}candidate.commitAt=age;candidate.legacy=Math.min(1,candidate.legacy+.14);candidate.relay=.9;
+ let y=1-(p.y+p.h*.5)/H,x0=p.x/W,x1=(p.x+p.w)/W;architecturePaths.push([[x0,y],[x0+(x1-x0)*.45,y],[x0+(x1-x0)*.45,y+.014],[x1,y+.014]]);
+ if(architecturePaths.length>18)architecturePaths.splice(3,1);
+}
+function spectralEvent(){
+ pigmentEvents=pigmentEvents.filter(e=>age<e.start+e.hold+e.wear);
+ if(age<nextColour||pigmentEvents.length>=2)return;
+ let pool=Array.from(cognition.values()).filter(d=>d.features&&d.features[1]>.028&&d.features[2]>.025&&age-(d.lastPigment??-100)>25&&!pigmentEvents.some(e=>e.id===d.box.id));
+ let options=[];
+ for(const d of pool){
+  let since=t=>age-(t??-100);
+  if(since(d.lastFailure)<10&&d.mismatch>.10)options.push({d,hue:[216,47,29],score:.4+d.mismatch});
+  if(since(d.lastSuccess)<10)options.push({d,hue:[228,146,25],score:.8+d.confidence*.2});
+  if(d.stage===2&&d.mismatch>.10)options.push({d,hue:[36,78,225],score:.5+d.features[1]});
+  if(since(d.lastRelay)<10)options.push({d,hue:[8,156,134],score:.7+d.relay*.2});
+ }
+ if(!options.length){nextColour=age+2;return}
+ options.sort((a,b)=>b.score-a.score);let q=pick(options.slice(0,Math.min(6,options.length))),d=q.d;
+ pigmentEvents.push({id:d.box.id,hue:q.hue,start:age,hold:5+rand()*7,wear:5+rand()*7});d.lastPigment=age;pigmentCount++;materialEvents++;
+ nextColour=age+(profile.temper===1?17:9)+rand()*14;
+}
+function coalitionTick(){
+ if(age<nextCoalition)return;nextCoalition=age+12+rand()*13;
+ let pool=Array.from(cognition.values()).filter(d=>d.features&&d.features[1]>.035&&d.stage===1&&d.predictionError>.055);
+ if(!pool.length)return;pool.sort((a,b)=>b.predictionError-a.predictionError);
+ let d=pick(pool.slice(0,Math.min(5,pool.length))),neighbours=boxes.filter(b=>b!==d.box&&adjacentLoose(d.box,b)).map(brainFor).filter(n=>!n.trial&&n.stage!==3&&n.features&&n.features[1]>.025);
+ for(let n of neighbours.slice(0,2)){n.relay=.9;n.lastRelay=age;n.motionAngle=(d.motionAngle+.25+(rand()-.5)*.12+1)%1;n.impulse=.8;if(d.active&&rand()<.65){let g=copyProgram(n.code);g[R(g.length)]=d.active.slice();trial(n,g);}coalitionCount++;}
+}
+function relayTick(){
+ if(age<nextRelay)return;nextRelay=age+9+rand()*13;
+ let donors=Array.from(cognition.values()).filter(d=>d.features&&d.stage===1&&(d.lastSuccess??-100)>age-35);
+ if(!donors.length)return;
+ let d=pick(donors),near=boxes.filter(b=>b!==d.box&&adjacentLoose(b,d.box)),candidate=near.map(brainFor).filter(n=>!n.trial&&n.stage!==3);
+ if(!candidate.length)return;
+ let n=pick(candidate);n.relay=.9;n.lastRelay=age;n.impulse=.8;relayCount++;
+ if(d.favourite&&rand()<.65){let g=copyProgram(n.code);g[R(g.length)]=d.favourite.slice();trial(n,g);}
+}
+function assimilateMisrepair(d){
+ const p=regionPatch(d,.6),live=readPatch(p.x,p.y,p.w,p.h),out=new Uint8Array(live.length);
+ let total=0,n=0,contrast=0,mean=0,sq=0;
+ const lum=(a,i)=>.299*a[i]+.587*a[i+1]+.114*a[i+2];
+ for(let y=0;y<p.h;y++)for(let x=0;x<p.w;x++){
+  let i=(y*p.w+x)*4,k=((p.y+y)*W+p.x+x)*4;out.set(baseData.subarray(k,k+4),i);
+  let u=(x+.5)/p.w,v=(y+.5)/p.h,dist=Math.abs(v-.5-.075*Math.floor((u-.5)*5)),diff=Math.abs(lum(live,i)-lum(baseData,k));
+  if(u>.12&&u<.88&&dist<.14&&diff>52){out.set(live.subarray(i,i+3),i);out[i+3]=255;n++;total+=diff}
+  let l=lum(out,i)/255;mean+=l;sq+=l*l;
+ }
+ contrast=Math.sqrt(Math.max(0,sq/(p.w*p.h)-(mean/(p.w*p.h))**2));
+ if(n<Math.max(3,p.w*p.h*.035)||contrast<.12)return false;
+ // Keep the feedback untouched outside the narrow reconstruction seam.
+ let updated=live.slice();for(let y=0;y<p.h;y++)for(let x=0;x<p.w;x++){let i=(y*p.w+x)*4,k=((p.y+y)*W+p.x+x)*4;if(Math.abs(lum(out,i)-lum(baseData,k))>12)updated.set(out.subarray(i,i+4),i);}
+ for(let y=0;y<p.h;y++){let k=((p.y+y)*W+p.x)*4;baseData.set(out.subarray(y*p.w*4,(y+1)*p.w*4),k);}
+ const box={x:p.x,y:H-p.y-p.h,w:p.w,h:p.h};upload(base,box,out);upload(targets[read],box,updated);upload(archive,box,out);
+ historyCount++;misrepairCount++;d.lastRepair=age;d.commitAt=age;d.legacy=Math.min(1,d.legacy+.12);return true;
+}
+function rebuild(change=false){
+ if(change||!seed)seed=(crypto.getRandomValues(new Uint32Array(1))[0]>>>0)||1;
+ rand=fresh;layout=profile.layout;paletteIndex=R(4);era=0;nextColour=4+rand()*12;colourID=0;colourEnd=0;nextWeather=5+rand()*10;weather=0;burst=0;nextSnapshot=25+rand()*30;archiveIndex=0;
+ let r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);
+ canvas.width=Math.max(2,Math.round(r.width*d));canvas.height=Math.max(2,Math.round(r.height*d));
+ [W,H]=resolutionFor(canvas.width,canvas.height,!preview||fullQuality);
+ [...targets,base,regions,archive,fractureField,...snapshots].filter(Boolean).forEach(t=>gl.deleteTexture(t));fb.forEach(t=>gl.deleteFramebuffer(t));
+ baseData=new Uint8Array(W*H*4);fieldData=new Uint8Array(W*H*4);memoryData=new Uint8Array(W*H*4);initAtlas();
+ base=texture(baseData);regions=texture(fieldData);archive=texture(memoryData);fractureField=texture(null);fractureCanvas=document.createElement('canvas');fractureCanvas.width=W;fractureCanvas.height=H;fractureCtx=fractureCanvas.getContext('2d',{willReadFrequently:true});snapshots.length=0;for(let i=0;i<3;i++)snapshots.push(texture(baseData));
+ let initial=baseData.slice();for(let i=3;i<initial.length;i+=4)initial[i]=0;
+ targets=[texture(initial),texture(initial)];fb=targets.map(t=>{let a=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,a);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Framebuffer incomplete');return a});
+ read=0;step=0;acc=0;last=0;age=0;epoch=0;events=0;nextEvent=.4+rand()*2;entropy=Math.floor(fresh()*100000000);nextEntropy=0;initCognition();initHistory();initMovement();scarPaths=[];scarDrawNext=0;newFracture();refreshStrataScars();draw();
+}
+function mutate(){
+ flushMovement();gl.useProgram(sim);gl.bindFramebuffer(gl.FRAMEBUFFER,fb[1-read]);gl.viewport(0,0,W,H);
+ bind(targets[read],0,su.prev);bind(base,1,su.original);bind(regions,2,su.field);bind(archive,3,su.memoryTex);bind(fractureField,4,su.fractures);bind(movementTex,5,su.movement);gl.uniform1i(su.entropy,entropy);gl.uniform1f(su.fractureStrength,profile.fracture);gl.uniform1f(su.drift,profile.drift);gl.uniform1f(su.imprint,1);gl.uniform1f(su.flowMix,profile.flow);
+ gl.uniform2i(su.dim,W,H);if(++step>=1000000){step=0;epoch++}gl.uniform1i(su.tick,step);gl.uniform1f(su.key,(seed+epoch*131)%997);gl.uniform1i(su.climate,weather);gl.uniform1i(su.accentID,colourID);gl.uniform1i(su.study,variant);
+ gl.drawArrays(gl.TRIANGLES,0,3);read=1-read;
+}
+function draw(){gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);gl.useProgram(show);bind(targets[read],0,du.tex);gl.uniform2f(du.view,canvas.width,canvas.height);gl.drawArrays(gl.TRIANGLES,0,3);}
+function frame(now){let dt=last?Math.min(now-last,100):0;last=now;if(!paused&&!document.hidden){age+=dt/1000;if(age>=nextEntropy){entropy=Math.floor(fresh()*100000000);nextEntropy=age+.6+fresh()*2.8;}if(age>=nextFracture)newFracture();refreshStrataScars();cognitionTick();movementTick();relayTick();coalitionTick();historyTick();if(age>=nextEvent)evolve();spectralEvent();climateEvent();deepMemory();acc=Math.min(acc+dt,100);let n=0;while(acc>=1000/((preview&&!fullQuality)?24:30)&&n<((preview&&!fullQuality)?1:2)){mutate();acc-=1000/((preview&&!fullQuality)?24:30);n++;}if(n)draw()}requestAnimationFrame(frame)}
+window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===parent&&e.data&&e.data.type==='study-visibility'){paused=!e.data.visible;last=0}});
+
+let fullQuality=false;
+function resolutionFor(w,h,high){
+ const coarse=matchMedia('(pointer:coarse)').matches;
+ // Keep gallery previews genuinely detailed; fullscreen uses a larger native simulation.
+ const pixels=high?(coarse?1600000:5500000):(coarse?620000:1550000);
+ const maxW=high?(coarse?2000:3200):(coarse?1200:1920);
+ const maxH=high?(coarse?1700:2000):(coarse?1000:1200);
+ const k=Math.min(1,maxW/w,maxH/h,Math.sqrt(pixels/(w*h)));
+ // Forty percent more logical samples than the previous study; native sharp display.
+ return [Math.max(2,Math.round(w*k*Math.sqrt(1.4)/6)),Math.max(2,Math.round(h*k*Math.sqrt(1.4)/6))];
+}
+function resampleBytes(src,ow,oh,nw,nh){
+ const dst=new Uint8Array(nw*nh*4),xmap=new Int32Array(nw);
+ for(let x=0;x<nw;x++)xmap[x]=Math.min(ow-1,Math.floor((x+.5)*ow/nw))*4;
+ for(let y=0;y<nh;y++){let sy=Math.min(oh-1,Math.floor((y+.5)*oh/nh))*ow*4;
+  for(let x=0;x<nw;x++){let a=sy+xmap[x],b=(y*nw+x)*4;dst[b]=src[a];dst[b+1]=src[a+1];dst[b+2]=src[a+2];dst[b+3]=src[a+3]}}
+ return dst;
+}
+function resizeSimulation(nw,nh){
+ if(!targets.length||nw===W&&nh===H)return;
+ const ow=W,oh=H,oldTargets=targets.slice(),oldFb=fb.slice(),oldBase=base,oldRegions=regions,oldArchive=archive,oldSnapshots=snapshots.slice();
+ const a=gl.createFramebuffer(),b=gl.createFramebuffer();
+ W=nw;H=nh;
+ function transfer(t){const dst=texture(null);
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER,a);gl.framebufferTexture2D(gl.READ_FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
+  gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,b);gl.framebufferTexture2D(gl.DRAW_FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,dst,0);
+  gl.blitFramebuffer(0,0,ow,oh,0,0,W,H,gl.COLOR_BUFFER_BIT,gl.NEAREST);return dst;
+ }
+ base=transfer(oldBase);regions=transfer(oldRegions);archive=transfer(oldArchive);targets=oldTargets.map(transfer);
+ snapshots.length=0;for(const t of oldSnapshots)snapshots.push(transfer(t));
+ const oldFracture=fractureField;fractureField=transfer(oldFracture);gl.deleteTexture(oldFracture);
+ const oldCanvas=fractureCanvas;fractureCanvas=document.createElement('canvas');fractureCanvas.width=W;fractureCanvas.height=H;fractureCtx=fractureCanvas.getContext('2d',{willReadFrequently:true});fractureCtx.imageSmoothingEnabled=false;fractureCtx.drawImage(oldCanvas,0,0,W,H);
+ gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.deleteFramebuffer(a);gl.deleteFramebuffer(b);
+ for(const t of [...oldTargets,oldBase,oldRegions,oldArchive,...oldSnapshots])gl.deleteTexture(t);
+ oldFb.forEach(f=>gl.deleteFramebuffer(f));
+ baseData=resampleBytes(baseData,ow,oh,W,H);memoryData=resampleBytes(memoryData,ow,oh,W,H);
+ fieldData=new Uint8Array(W*H*4);
+ // Shared rounded boundaries keep the existing atlas contiguous.
+ for(const box of boxes){let x=Math.round(box.x*W/ow),y=Math.round(box.y*H/oh),right=Math.round((box.x+box.w)*W/ow),bottom=Math.round((box.y+box.h)*H/oh);box.x=x;box.y=y;box.w=right-x;box.h=bottom-y}
+ boxes=boxes.filter(box=>box.w>0&&box.h>0);
+ // Regenerate full-resolution ownership and genes; do not replace the live feedback.
+ for(const box of boxes){genome(box);for(let y=H-box.y-box.h;y<H-box.y;y++)for(let x=box.x;x<box.x+box.w;x++){let i=(y*W+x)*4;fieldData[i]=box.id;fieldData[i+1]=box.gene;fieldData[i+2]=box.speed;fieldData[i+3]=box.porosity}}
+ fb=targets.map(t=>{let f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);return f});
+ 
+ // Future local rewrites now generate native-resolution details instead of enlarging pixels.
+ draw();
+}
+function fitArt(){
+ const r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);
+ const w=Math.max(2,Math.round(r.width*d)),h=Math.max(2,Math.round(r.height*d));
+ if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}
+ if(targets.length){const [nw,nh]=resolutionFor(w,h,!preview||fullQuality);resizeSimulation(nw,nh);draw()}
+}
+
+let timer;new ResizeObserver(()=>{clearTimeout(timer);timer=setTimeout(fitArt,120)}).observe(canvas);
+window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===parent&&e.data?.type==='study-quality'){fullQuality=!!e.data.fullscreen;clearTimeout(timer);timer=setTimeout(fitArt,100)}});
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();paused=true;el('err').textContent='Graphics context lost. Reload to restart.'});
+async function boot(){
+ const sources=[];
+ const pending=sources.map(o=>new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=o.src;}));
+ sourceImages=(await Promise.all(pending)).filter(Boolean);
+ try{rebuild(true);requestAnimationFrame(frame)}catch(e){el('err').textContent=e.message;throw e}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+</script></html>

@@ -1,0 +1,384 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>LifeAfterLogic / Living Organisms</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efeee8;overscroll-behavior:none}canvas{display:block;width:100%;height:100%;image-rendering:auto;pointer-events:none}</style></head><body><canvas aria-label="Autonomous living visual system"></canvas><script>(()=>{
+'use strict';
+const q=new URLSearchParams(location.search),study=q.get('study')||'misread',preview=q.has('preview');
+const titles={misread:'53 — Misread Matter',civilisation:'54 — Civilisation in Pieces',impossible:'55 — Impossible Syntax',extinction:'56 — Extinction Bloom'};
+document.title='lifeafterlogic / '+(titles[study]||titles.misread);
+const canvas=document.querySelector('canvas'),screen=canvas.getContext('2d',{alpha:false});
+const ink='#101010',paper='#efeee8',chalk='#faf9f3',pigments=['#e33b27','#c0df00','#2349d8','#e7358a','#f49a18','#00a58e','#7738a9'];
+const pool=new Uint32Array(2048);let pi=pool.length;
+function random(){if(pi>=pool.length){crypto.getRandomValues(pool);pi=0}return pool[pi++]/4294967296}
+const R=n=>Math.floor(random()*n),pick=a=>a[R(a.length)],between=(a,b)=>a+random()*(b-a),clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),TAU=Math.PI*2;
+let W=1,H=1,S=1,world,worldCtx,live,liveCtx,pigment,pigmentCtx,grain,grainCtx;
+let nodes=[],edges=[],clusters=[],fragments=[],scribes=[],events=[],activePigments=[],vortices=[],t=0,last=0,acc=0,paused=false,full=false,frameNo=0,nextEvent=1,nextPigment=4,nextVortex=7,nextBirth=2,nextFragment=1.5,nextMemory=11,memories=[],eventCount=0,topologyCount=0;
+const nodeById=new Map();let nodeID=0,edgeID=0;
+function layer(w=W,h=H){const c=document.createElement('canvas');c.width=w;c.height=h;return c}
+function context(c){return c.getContext('2d',{alpha:true})}
+function sizeFor(){
+ const rect=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2),pw=Math.max(2,Math.round(rect.width*d)),ph=Math.max(2,Math.round(rect.height*d));
+ const coarse=matchMedia('(pointer:coarse)').matches,high=full||!preview,limit=high?(coarse?1150000:3686400):430000,maxW=high?(coarse?1700:2560):1050,maxH=high?(coarse?1700:1440):690;
+ const k=Math.min(1,maxW/pw,maxH/ph,Math.sqrt(limit/(pw*ph)));
+ return [Math.max(32,Math.round(pw*k)),Math.max(32,Math.round(ph*k))];
+}
+function resize(){
+ const [nw,nh]=sizeFor();if(nw===W&&nh===H&&world)return;
+ const old=world,oldPigment=pigment,oldGrain=grain;W=nw;H=nh;S=Math.min(W,H);canvas.width=W;canvas.height=H;
+ world=layer();worldCtx=context(world);live=layer();liveCtx=context(live);pigment=layer();pigmentCtx=context(pigment);grain=layer();grainCtx=context(grain);
+ if(old){worldCtx.drawImage(old,0,0,W,H);pigmentCtx.drawImage(oldPigment,0,0,W,H);grainCtx.drawImage(oldGrain,0,0,W,H)}
+ else{worldCtx.fillStyle=paper;worldCtx.fillRect(0,0,W,H);makeGrain()}
+ present();
+}
+function makeGrain(){
+ const tile=layer(256,256),g=context(tile),im=g.createImageData(256,256);
+ for(let i=0;i<im.data.length;i+=4){const v=R(256);im.data[i]=v;im.data[i+1]=v;im.data[i+2]=v;im.data[i+3]=R(24)}
+ g.putImageData(im,0,0);grainCtx.globalAlpha=.2;for(let y=0;y<H;y+=256)for(let x=0;x<W;x+=256)grainCtx.drawImage(tile,x,y);grainCtx.globalAlpha=1;
+}
+function wrapAngle(a){while(a>Math.PI)a-=TAU;while(a<-Math.PI)a+=TAU;return a}
+function flow(x,y){
+ const X=x/W,Y=y/H,tt=t*.13;
+ let a=Math.sin(X*8.4+Math.sin(Y*4.1-tt)*1.7+tt*.7)+.58*Math.cos(Y*10.1-X*3.3-tt*.8)+.26*Math.sin(X*19+Y*13+tt*1.7);
+ let b=Math.cos(Y*7.7+Math.sin(X*5.3+tt*.8)*1.5-tt*.5)+.55*Math.sin(X*9.2+Y*4.7+tt)+.2*Math.cos(Y*22-X*16-tt*1.2);
+ let fx=b,fy=-a;
+ for(const v of vortices){const dx=x-v.x,dy=y-v.y,d=dx*dx+dy*dy+v.r*v.r;fx+=-dy/d*v.power*1800;fy+=dx/d*v.power*1800}
+ return Math.atan2(fy,fx);
+}
+function node(x,y,tribe=0,kind=0,cluster=-1){
+ const n={id:++nodeID,x:clamp(x,.015,.985),y:clamp(y,.015,.985),px:x,py:y,vx:between(-.00005,.00005),vy:between(-.00005,.00005),tribe,kind,cluster,phase:random()*TAU,age:0,life:between(180,900),mass:between(.6,1.6),energy:between(.5,1.5),alive:true};
+ nodes.push(n);nodeById.set(n.id,n);return n;
+}
+function edge(a,b,kind=0,tribe=a.tribe){
+ if(!a||!b||a===b)return null;
+ if(edges.some(e=>(e.a===a.id&&e.b===b.id)||(e.a===b.id&&e.b===a.id)))return null;
+ const dx=(b.x-a.x)*W,dy=(b.y-a.y)*H,d=Math.hypot(dx,dy);
+ const e={id:++edgeID,a:a.id,b:b.id,kind,tribe,width:between(.0007,.0027),bend:between(-.22,.22),rest:d,phase:random()*TAU,age:0,life:between(280,1500),strain:between(.5,1.5),pigment:null,scar:0};
+ edges.push(e);return e;
+}
+function get(id){return nodeById.get(id)}
+function connectLoop(list,kind=0){for(let i=0;i<list.length;i++)edge(list[i],list[(i+1)%list.length],kind)}
+function connectTree(root,depth,tribe,angle,span){
+ if(depth<=0||nodes.length>260)return;
+ const count=depth>2?2+R(2):1+R(2);
+ for(let i=0;i<count;i++){
+  const a=angle+between(-span,span),len=between(.035,.09)*(1+(3-depth)*.14);
+  const n=node(root.x+Math.cos(a)*len,root.y+Math.sin(a)*len,tribe,R(4),root.cluster);
+  edge(root,n,pick([0,1,2,3]));if(random()<.28)edge(n,root,pick([1,2]));
+  if(random()<.72)connectTree(n,depth-1,tribe,a,span*.76);
+ }
+}
+function hullPoints(cx,cy,rx,ry,n,phase=0,irregular=.2){
+ const out=[];for(let i=0;i<n;i++){const a=phase+i/n*TAU,rad=1+Math.sin(a*3+phase)*irregular+Math.cos(a*5-phase*.7)*irregular*.55+between(-irregular*.25,irregular*.25);out.push([cx+Math.cos(a)*rx*rad,cy+Math.sin(a)*ry*rad])}return out;
+}
+function seedCluster(cx,cy,rx,ry,tribe,shape,amount=22){
+ const id=clusters.length,pts=hullPoints(cx,cy,rx,ry,amount,random()*TAU,.25),hull=pts.map(p=>node(p[0],p[1],tribe,R(4),id));
+ const inner=[];
+ for(let i=0;i<Math.max(7,Math.floor(amount*.55));i++){const a=random()*TAU,rad=between(.15,.75),n=node(cx+Math.cos(a)*rx*rad,cy+Math.sin(a)*ry*rad,tribe,R(4),id);inner.push(n)}
+ connectLoop(hull,pick([0,1,2,3]));for(let i=0;i<hull.length;i++){const h=hull[i],n=inner[R(inner.length)];edge(h,n,R(4))}
+ for(let i=0;i<inner.length;i++){let n=inner[i],near=inner.filter(m=>m!==n).sort((a,b)=>Math.hypot(a.x-n.x,a.y-n.y)-Math.hypot(b.x-n.x,b.y-n.y));if(near[0]&&random()<.85)edge(n,near[0],R(4));if(near[1]&&random()<.35)edge(n,near[1],R(4))}
+ if(shape==='radial'){for(let i=0;i<hull.length;i+=2){const n=node(cx+between(-.025,.025),cy+between(-.025,.025),tribe,2,id);edge(n,hull[i],2);if(random()<.7)edge(n,hull[(i+3)%hull.length],1)}}
+ if(shape==='tree'){for(let i=0;i<8;i++)connectTree(pick(hull),2+R(3),tribe,random()*TAU,.85)}
+ if(shape==='fold'){for(let i=0;i<7;i++){const a=hull[i*3%hull.length],b=hull[(i*3+Math.floor(hull.length*.47))%hull.length];edge(a,b,2+R(2))}}
+ if(shape==='mesh'){for(let i=0;i<inner.length;i++){const n=inner[i],candidates=inner.filter(m=>m!==n).sort((a,b)=>Math.hypot(a.x-n.x,a.y-n.y)-Math.hypot(b.x-n.x,b.y-n.y));if(candidates[2]&&random()<.8)edge(n,candidates[2],R(4))}}
+ const c={id,cx,cy,rx,ry,tribe,shape,hull:hull.map(n=>n.id),inner:inner.map(n=>n.id),power:between(.7,1.3),phase:random()*TAU,age:0,alive:true};clusters.push(c);return c;
+}
+function initial(){
+ nodes=[];edges=[];clusters=[];fragments=[];scribes=[];events=[];activePigments=[];nodeById.clear();nodeID=0;edgeID=0;t=0;eventCount=0;topologyCount=0;
+ worldCtx.fillStyle=paper;worldCtx.fillRect(0,0,W,H);
+ if(study==='misread'){
+  const c=seedCluster(.50,.51,.235,.255,0,'fold',24);
+  seedCluster(.18,.23,.105,.13,1,'tree',15);seedCluster(.82,.26,.09,.12,2,'radial',14);seedCluster(.77,.79,.12,.10,3,'mesh',16);
+  for(let i=0;i<24;i++){const a=pick(c.hull.map(get)),b=pick(nodes.filter(n=>n.cluster!==c.id));edge(a,b,2+R(2))}
+  for(let i=0;i<20;i++)connectTree(pick(c.hull.map(get)),2+R(2),R(4),random()*TAU,1.2);
+ }else if(study==='civilisation'){
+  seedCluster(.19,.31,.17,.19,0,'tree',21);seedCluster(.78,.19,.14,.16,1,'radial',18);seedCluster(.68,.73,.18,.17,2,'mesh',22);seedCluster(.28,.82,.13,.14,3,'fold',17);
+  for(let i=0;i<12;i++){const a=pick(clusters[i%4].hull.map(get)),b=pick(clusters[(i+1)%4].hull.map(get));edge(a,b,2)}
+ }else if(study==='impossible'){
+  const c=seedCluster(.50,.50,.31,.30,0,'fold',34);
+  for(let k=0;k<5;k++){const rr=.07+k*.044,ring=[];for(let i=0;i<13;i++){const a=i/13*TAU+k*.18,n=node(.5+Math.cos(a)*rr,.5+Math.sin(a)*rr*.63,0,R(4),c.id);ring.push(n)}connectLoop(ring,k%4);for(let i=0;i<ring.length;i+=3)edge(ring[i],ring[(i+6)%ring.length],2)}
+  seedCluster(.17,.22,.07,.09,2,'radial',12);seedCluster(.82,.78,.08,.09,3,'tree',12);
+ }else{
+  seedCluster(.50,.50,.34,.31,0,'mesh',34);seedCluster(.18,.20,.09,.12,1,'tree',14);seedCluster(.82,.78,.10,.12,2,'radial',14);
+  for(let i=0;i<40;i++){const a=pick(nodes),b=pick(nodes);if(a.cluster!==b.cluster)edge(a,b,2)}
+ }
+ for(let i=0;i<9;i++)vortices.push({x:between(W*.08,W*.92),y:between(H*.08,H*.92),r:between(S*.04,S*.19),power:between(-.7,.7),vx:between(-.2,.2),vy:between(-.2,.2)});
+ seedFragments();seedScribes();for(const n of nodes){n.px=n.x;n.py=n.y}
+}
+function drawCurve(c,a,b,e,alpha=1){
+ const ax=a.x*W,ay=a.y*H,bx=b.x*W,by=b.y*H,dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy)||1,nx=-dy/d,ny=dx/d;
+ const bend=e.bend*S*(.45+Math.sin(t*.23+e.phase)*.18),cx=(ax+bx)*.5+nx*bend,cy=(ay+by)*.5+ny*bend;
+ c.globalAlpha=alpha;c.beginPath();c.moveTo(ax,ay);c.quadraticCurveTo(cx,cy,bx,by);
+ return {ax,ay,bx,by,cx,cy,dx,dy,d,nx,ny};
+}
+function curvePoint(p,u){const v=1-u;return [v*v*p.ax+2*v*u*p.cx+u*u*p.bx,v*v*p.ay+2*v*u*p.cy+u*u*p.by]}
+function drawEdge(c,e,ghost=false){
+ const a=get(e.a),b=get(e.b);if(!a||!b)return;
+ const tribe=e.tribe%4,base=tribe===0||tribe===2?ink:ink,alpha=ghost?.18:.82;
+ const p=drawCurve(c,a,b,e,alpha),w=Math.max(.7,e.width*S*(ghost?.6:1)*(1+.22*Math.sin(t*1.7+e.phase)));
+ c.strokeStyle=base;c.lineWidth=w;c.lineCap=e.kind===1?'square':'round';c.lineJoin='miter';c.stroke();
+ if(e.kind===0||e.kind===2){
+  c.beginPath();c.moveTo(p.ax+p.nx*w*.24,p.ay+p.ny*w*.24);c.quadraticCurveTo(p.cx+p.nx*w*.24,p.cy+p.ny*w*.24,p.bx+p.nx*w*.24,p.by+p.ny*w*.24);c.strokeStyle=paper;c.lineWidth=Math.max(.45,w*.17);c.stroke();
+ }
+ if(e.kind===1||e.kind===3){
+  const count=Math.max(2,Math.min(26,Math.floor(p.d/(S*.012))));
+  c.strokeStyle=base;c.lineWidth=Math.max(.65,w*.5);
+  for(let i=1;i<count;i++){const u=i/count,[x,y]=curvePoint(p,u),len=w*(e.kind===1?2.4:1.25);c.beginPath();c.moveTo(x-p.nx*len,y-p.ny*len);c.lineTo(x+p.nx*len,y+p.ny*len);c.stroke()}
+ }
+ if(!ghost&&e.kind===2&&p.d>S*.12){
+  c.strokeStyle=paper;c.lineWidth=Math.max(.7,w*.12);for(let i=0;i<4;i++){let u=.18+i*.19,[x,y]=curvePoint(p,u);c.beginPath();c.moveTo(x-p.nx*w*1.4,y-p.ny*w*1.4);c.lineTo(x+p.nx*w*1.4,y+p.ny*w*1.4);c.stroke()}
+ }
+ if(e.pigment&&t<e.pigment.end){
+  const u=clamp((t-e.pigment.start)/(e.pigment.end-e.pigment.start),0,1),a=Math.sin(Math.PI*u)*.9;
+  c.globalAlpha=a;c.strokeStyle=e.pigment.color;c.lineWidth=w*1.3;c.beginPath();c.moveTo(p.ax,p.ay);c.quadraticCurveTo(p.cx,p.cy,p.bx,p.by);c.stroke();c.globalAlpha=1;
+ }
+ c.globalAlpha=1;
+}
+function drawNode(c,n,ghost=false){
+ const x=n.x*W,y=n.y*H,s=S*(.0025+.0025*n.mass),a=n.phase+t*.08;
+ c.save();c.translate(x,y);c.rotate(a);c.globalAlpha=ghost?.14:.85;c.strokeStyle=n.kind%3===0?ink:ink;c.fillStyle=paper;c.lineWidth=Math.max(.7,s*.09);
+ if(n.kind===0){c.beginPath();c.moveTo(-s,-s);c.lineTo(-s,s);c.lineTo(s*.75,s);c.stroke();c.beginPath();c.moveTo(-s*.25,-s*.25);c.lineTo(s,-s*.25);c.stroke()}
+ else if(n.kind===1){c.beginPath();c.moveTo(0,-s);c.lineTo(s,0);c.lineTo(0,s);c.lineTo(-s,0);c.closePath();c.stroke()}
+ else if(n.kind===2){c.beginPath();c.arc(0,0,s*.8,.2,TAU*.84);c.stroke();c.fillRect(-s*.12,-s*.12,s*.24,s*.24)}
+ else{c.beginPath();c.moveTo(-s,0);c.lineTo(s,0);c.moveTo(0,-s);c.lineTo(0,s);c.stroke()}
+ c.restore();
+}
+function membrane(c,cl){
+ const list=cl.hull.map(get).filter(n=>n&&n.alive);if(list.length<4)return;
+ const cx=cl.cx*W,cy=cl.cy*H,ordered=list.slice().sort((a,b)=>Math.atan2(a.y-cl.cy,a.x-cl.cx)-Math.atan2(b.y-cl.cy,b.x-cl.cx));
+ const inner=cl.inner.map(get).filter(n=>n&&n.alive).sort((a,b)=>Math.atan2(a.y-cl.cy,a.x-cl.cx)-Math.atan2(b.y-cl.cy,b.x-cl.cx));
+ // The colony is no longer a filled tile: only its broken perimeter and selected internal seams remain.
+ c.save();c.globalAlpha=.7;c.strokeStyle=ink;c.lineWidth=Math.max(.8,S*.0012);c.lineJoin='miter';c.lineCap='square';
+ c.beginPath();for(let i=0;i<ordered.length;i++){const n=ordered[i];if(i===0)c.moveTo(n.x*W,n.y*H);else c.lineTo(n.x*W,n.y*H)}c.closePath();c.stroke();
+ for(let i=0;i<ordered.length;i+=3){const n=ordered[i],q=ordered[(i+1)%ordered.length];c.globalAlpha=.42+((n.phase+q.phase)%1)*.32;c.lineWidth=Math.max(1,S*(.0012+Math.abs(Math.sin(n.phase+q.phase))*.002));c.beginPath();c.moveTo(n.x*W,n.y*H);c.lineTo(q.x*W,q.y*H);c.stroke()}
+ if(inner.length>4){c.globalAlpha=.55;c.lineWidth=Math.max(.6,S*.0008);c.setLineDash([S*.009,S*.006]);c.beginPath();inner.forEach((n,i)=>i?c.lineTo(n.x*W,n.y*H):c.moveTo(n.x*W,n.y*H));c.closePath();c.stroke();c.setLineDash([])}
+ // Small hatch islands punctuate the territory without turning it into a solid panel.
+ c.save();c.translate(cx,cy);c.rotate(cl.phase+t*.02);c.strokeStyle=ink;c.globalAlpha=.48;c.lineWidth=Math.max(.6,S*.0008);
+ for(let j=0;j<3;j++){let x=Math.sin(cl.phase+j*2.1+t*.09)*cl.rx*W*.55,y=Math.cos(cl.phase+j*1.7+t*.075)*cl.ry*H*.55,w=S*(.018+j*.014);for(let k=0;k<8;k++){c.beginPath();c.moveTo(x-w*.5+k*w/8,y-w*.2);c.lineTo(x-w*.5+k*w/8+w*.3,y+w*.2);c.stroke()}}
+ c.restore();c.restore();
+}
+function smallGlyph(c,x,y,s,a,col,kind){
+ c.save();c.translate(x,y);c.rotate(a);c.strokeStyle=col;c.fillStyle=col;c.lineWidth=Math.max(.55,s*.065);c.lineCap='square';
+ if(kind===0){c.beginPath();c.moveTo(-s*.5,s*.45);c.lineTo(-s*.5,-s*.5);c.lineTo(s*.42,-s*.5);c.stroke()}
+ else if(kind===1){c.beginPath();c.moveTo(-s*.5,-s*.35);c.lineTo(s*.42,s*.4);c.lineTo(s*.42,-s*.42);c.stroke()}
+ else if(kind===2){c.beginPath();c.moveTo(-s*.5,0);c.lineTo(s*.5,0);c.moveTo(0,-s*.5);c.lineTo(0,s*.5);c.stroke()}
+ else{c.beginPath();c.arc(0,0,s*.38,.2,5.2);c.stroke();c.fillRect(s*.25,-s*.08,s*.2,s*.16)}
+ c.restore();
+}
+function makeFragment(cl,x,y,size,kind,fill){
+ const count=7+R(8),points=[];
+ for(let i=0;i<count;i++){const a=i/count*TAU+between(-.12,.12),rad=between(.48,.92);points.push([Math.cos(a)*rad,Math.sin(a)*rad*.72])}
+ const details=Array.from({length:22},()=>({x:between(-.48,.48),y:between(-.34,.34),w:between(.018,.16),h:between(.006,.045),a:between(-.8,.8),k:R(4)}));
+ const cuts=Array.from({length:1+R(4)},()=>({x:between(-.35,.35),y:between(-.25,.25),w:between(.06,.22),h:between(.025,.12),a:between(-1.2,1.2)}));
+ return {id:random(),cluster:cl.id,x,y,size,kind,fill,points,details,cuts,angle:between(-1.4,1.4),phase:random()*TAU,born:t,life:between(35,115),tribe:cl.tribe};
+}
+function seedFragments(){
+ for(const cl of clusters){
+  const count=12+R(9);
+  for(let i=0;i<count;i++){
+   const x=cl.cx+between(-cl.rx*.9,cl.rx*.9),y=cl.cy+between(-cl.ry*.9,cl.ry*.9);
+   const size=i<2?between(.11,.19):between(.035,.105),kind=cl.shape==='tree'?pick([1,3,5]):cl.shape==='radial'?pick([0,2,4]):cl.shape==='mesh'?pick([1,2,4,5]):R(6);
+   fragments.push(makeFragment(cl,x,y,size,kind,random()<.78?ink:paper));
+  }
+ }
+}
+function drawFragment(c,f){
+ const u=clamp((t-f.born)/f.life,0,1),alpha=Math.min(1,u*3,(1-u)*4);if(alpha<=0)return;
+ const x=(f.x+Math.sin(t*.21+f.phase)*.0018)*W,y=(f.y+Math.cos(t*.17+f.phase)*.0015)*H,s=f.size*S*(1+.035*Math.sin(t*.5+f.phase)),contrast=f.fill===ink?chalk:ink;
+ c.save();c.globalAlpha=alpha;c.translate(x,y);c.rotate(f.angle+Math.sin(t*.18+f.phase)*.018);c.scale(s,s);
+ c.beginPath();f.points.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();c.fillStyle=f.fill;c.fill();c.clip();
+ c.strokeStyle=contrast;c.fillStyle=contrast;c.lineWidth=Math.max(.006,1.15/s);
+ if(f.kind===0||f.kind===4){
+  for(let yy=-.52;yy<.52;yy+=.035+f.size*.015){let shift=Math.sin(yy*18+f.phase)*.08;c.beginPath();c.moveTo(-.56,yy);c.lineTo(.56,yy+shift);c.stroke()}
+  if(f.kind===4)for(let xx=-.5;xx<.5;xx+=.07){c.beginPath();c.moveTo(xx,-.5);c.lineTo(xx+.18,.5);c.stroke()}
+ }else if(f.kind===1||f.kind===5){
+  for(const d of f.details){if(d.k===0)c.fillRect(d.x,d.y,d.w,d.h);else if(d.k===1){c.beginPath();c.moveTo(d.x,d.y);c.lineTo(d.x+d.w,d.y+d.h);c.stroke()}else if(d.k===2){c.beginPath();c.moveTo(d.x,d.y);c.lineTo(d.x+d.w,d.y);c.lineTo(d.x+d.w,d.y+d.h);c.stroke()}else{c.beginPath();c.arc(d.x,d.y,d.w*.3,0,TAU);c.stroke()}}
+ }else if(f.kind===2){
+  for(let k=0;k<7;k++){let z=.12+k*.105;c.beginPath();c.moveTo(-z,-z*.55);c.lineTo(-z,z*.45);c.lineTo(z*.7,z*.45);c.lineTo(z*.7,-z);c.stroke()}
+ }else{
+  for(const d of f.details){c.save();c.translate(d.x,d.y);c.rotate(d.a);c.lineWidth=.018;c.beginPath();if(d.k===0){c.moveTo(-d.w*.5,d.h*.5);c.lineTo(-d.w*.5,-d.h);c.lineTo(d.w*.5,-d.h)}else if(d.k===1){c.moveTo(-d.w*.5,-d.h);c.lineTo(d.w*.5,d.h);c.lineTo(d.w*.5,-d.h)}else if(d.k===2){c.moveTo(-d.w*.5,0);c.lineTo(d.w*.5,0);c.moveTo(0,-d.h);c.lineTo(0,d.h)}else{c.arc(0,0,d.w*.3,0,5.2)}c.stroke();c.restore()}
+ }
+ for(const cut of f.cuts){c.save();c.translate(cut.x,cut.y);c.rotate(cut.a);c.fillStyle=f.fill===ink?paper:ink;c.beginPath();c.moveTo(-cut.w,-cut.h);c.lineTo(cut.w*.8,-cut.h*.7);c.lineTo(cut.w,cut.h*.6);c.lineTo(-cut.w*.5,cut.h);c.closePath();c.fill();c.restore()}
+ c.restore();
+ c.save();c.globalAlpha=alpha*.9;c.translate(x,y);c.rotate(f.angle);c.strokeStyle=contrast;c.lineWidth=Math.max(.7,S*.0008);c.beginPath();f.points.forEach((p,i)=>i?c.lineTo(p[0]*s,p[1]*s):c.moveTo(p[0]*s,p[1]*s));c.closePath();c.stroke();c.restore();
+}
+function spawnScribe(x,y,tribe,role){
+ return {x,y,px:x,py:y,a:random()*TAU,tribe,role,age:0,life:between(12,58),speed:between(.00016,.00042),weight:between(.0007,.0024),phase:random()*TAU,steps:0,alive:true};
+}
+function seedScribes(){
+ for(let i=0;i<36;i++){const cl=pick(clusters);scribes.push(spawnScribe(cl.cx+between(-cl.rx,cl.rx),cl.cy+between(-cl.ry,cl.ry),cl.tribe,R(5)))}
+}
+function updateScribes(dt){
+ for(const s of scribes){
+  if(!s.alive)continue;
+  const x=s.x*W,y=s.y*H,aim=flow(x,y),bias=study==='impossible'?Math.sin(t*.17+s.phase)*.65:study==='civilisation'?(s.tribe-1.5)*.12:0;
+  s.a=wrapAngle(s.a+wrapAngle(aim+bias-s.a)*.026+between(-.12,.12)*dt);
+  s.px=s.x;s.py=s.y;const step=s.speed*dt*60;s.x+=Math.cos(s.a)*step;s.y+=Math.sin(s.a)*step;
+  if(s.x<.01||s.x>.99||s.y<.01||s.y>.99){s.a+=Math.PI;s.x=clamp(s.x,.01,.99);s.y=clamp(s.y,.01,.99)}
+  s.age+=dt;s.steps++;
+  const c=worldCtx,col=s.role===1?paper:ink;
+  c.save();c.globalAlpha=s.role===1?.38:.12+Math.min(.28,s.age*.008);c.strokeStyle=col;c.lineWidth=Math.max(.65,s.weight*S*(.55+.45*Math.sin(s.steps*.12+s.phase)));c.lineCap=s.role===3?'square':'round';
+  if(s.role===1)c.globalCompositeOperation='destination-out';
+  c.beginPath();c.moveTo(s.px*W,s.py*H);c.lineTo(s.x*W,s.y*H);c.stroke();c.restore();
+  if(s.steps%7===0){const z=S*between(.004,.012);smallGlyph(worldCtx,s.x*W,s.y*H,z,s.a,s.role===1?paper:ink,R(4))}
+  if(s.steps%29===0&&random()<.7){
+   for(let i=0;i<3+R(7);i++){const a=s.a+between(-1.7,1.7),d=S*between(.003,.025);smallGlyph(worldCtx,s.x*W+Math.cos(a)*d,s.y*H+Math.sin(a)*d,S*between(.003,.009),a,ink,R(4))}
+   if(random()<.28){const n=pick(nodes.filter(n=>n.alive&&n.tribe===s.tribe));if(n){const m=nearest(n);if(m&&Math.hypot((m.x-n.x)*W,(m.y-n.y)*H)<S*.2)edge(n,m,R(4))}}
+  }
+  if(s.age>s.life)s.alive=false;
+ }
+ scribes=scribes.filter(s=>s.alive);
+ while(scribes.length<28){const n=pick(nodes.filter(n=>n.alive));if(n)scribes.push(spawnScribe(n.x,n.y,n.tribe,R(5)))}
+}
+function drawCurrent(){
+ liveCtx.clearRect(0,0,W,H);
+ for(const cl of clusters)if(cl.alive)membrane(liveCtx,cl);
+ for(const f of fragments)drawFragment(liveCtx,f);
+ for(const e of edges)if(e.alive!==false)drawEdge(liveCtx,e,false);
+ for(const n of nodes)if(n.alive)drawNode(liveCtx,n,false);
+ // Autonomous annotations emerge at joints, then drift away from their source.
+ for(const n of nodes){if(n.age<2&&random()<.035){const x=n.x*W,y=n.y*H,s=S*between(.006,.018);liveCtx.save();liveCtx.translate(x,y);liveCtx.rotate(n.phase);liveCtx.strokeStyle=ink;liveCtx.lineWidth=Math.max(.7,S*.0009);liveCtx.beginPath();liveCtx.moveTo(-s,-s*.6);liveCtx.lineTo(-s,s*.6);liveCtx.lineTo(s*.5,s*.6);liveCtx.stroke();liveCtx.restore()}}
+}
+function trail(){
+ worldCtx.save();worldCtx.globalAlpha=.028;worldCtx.fillStyle=paper;worldCtx.fillRect(0,0,W,H);worldCtx.restore();
+ // Only the changing geometry is deposited into memory; no full-frame replay.
+ worldCtx.save();worldCtx.globalAlpha=.16;
+ for(const e of edges){if(e.alive===false)continue;const a=get(e.a),b=get(e.b);if(!a||!b)continue;worldCtx.strokeStyle=ink;worldCtx.lineWidth=Math.max(.5,e.width*.55);worldCtx.beginPath();worldCtx.moveTo(a.px*W,a.py*H);worldCtx.lineTo(b.px*W,b.py*H);worldCtx.stroke()}
+ worldCtx.restore();
+}
+function present(){
+ if(!world)return;
+ screen.imageSmoothingEnabled=true;screen.fillStyle=paper;screen.fillRect(0,0,canvas.width,canvas.height);
+ screen.drawImage(world,0,0,canvas.width,canvas.height);screen.drawImage(live,0,0,canvas.width,canvas.height);
+ screen.drawImage(pigment,0,0,canvas.width,canvas.height);
+ screen.globalAlpha=.13;screen.drawImage(grain,0,0,canvas.width,canvas.height);screen.globalAlpha=1;
+}
+function nearest(n,tribe=null){
+ let best=null,dist=Infinity;for(const m of nodes){if(m===n||!m.alive||(tribe!==null&&m.tribe!==tribe))continue;const d=Math.hypot((m.x-n.x)*W,(m.y-n.y)*H);if(d<dist){dist=d;best=m}}return best;
+}
+function prune(){
+ if(nodes.length>290){const dead=nodes.filter(n=>!n.alive);for(const n of dead){nodeById.delete(n.id)}nodes=nodes.filter(n=>n.alive);edges=edges.filter(e=>e.alive!==false&&get(e.a)&&get(e.b))}
+ if(edges.length>560)edges.splice(0,edges.length-560);
+}
+function addOffshoot(parent,angle,tribe=parent.tribe){
+ const len=between(.025,.09),n=node(parent.x+Math.cos(angle)*len,parent.y+Math.sin(angle)*len,tribe,R(4),parent.cluster);n.vx=parent.vx+Math.cos(angle)*.0006;n.vy=parent.vy+Math.sin(angle)*.0006;edge(parent,n,R(4));if(random()<.55){const q=nearest(n,tribe);if(q&&Math.hypot((q.x-n.x)*W,(q.y-n.y)*H)<S*.18)edge(n,q,R(4))}return n;
+}
+function splitEdge(e){
+ const a=get(e.a),b=get(e.b);if(!a||!b)return;
+ const u=between(.22,.78),n=node(a.x+(b.x-a.x)*u+between(-.025,.025),a.y+(b.y-a.y)*u+between(-.025,.025),e.tribe,R(4),a.cluster);
+ e.alive=false;edge(a,n,R(4));edge(n,b,R(4));if(random()<.7)addOffshoot(n,Math.atan2(b.y-a.y,b.x-a.x)+between(-1.4,1.4),e.tribe);
+}
+function falseRepair(){
+ if(edges.length<4)return;const e=pick(edges.filter(e=>e.alive!==false));if(!e)return;
+ const a=get(e.a),b=get(e.b),c=nearest(a),d=nearest(b);if(!c||!d)return;
+ edge(c,d,pick([1,2,3]));if(random()<.6)splitEdge(e);topologyCount++;
+}
+function misreadEvent(){
+ const e=pick(edges.filter(e=>e.alive!==false));if(!e)return;
+ const a=get(e.a),b=get(e.b),midX=(a.x+b.x)*.5,midY=(a.y+b.y)*.5,angle=Math.atan2(b.y-a.y,b.x-a.x)+pick([-1.2,-.72,.72,1.2,Math.PI/2]);
+ const n=node(midX+Math.cos(angle)*between(.018,.07),midY+Math.sin(angle)*between(.018,.07),R(4),R(4),a.cluster);
+ edge(a,n,R(4));if(random()<.8)edge(n,b,R(4));if(random()<.4)edge(n,nearest(n),R(4));if(random()<.35)splitEdge(pick(edges.filter(x=>x.alive!==false)));
+ n.kind=pick([0,1,3]);eventCount++;
+}
+function civilisationEvent(){
+ const cl=pick(clusters),tribe=cl.tribe,front=pick(cl.hull.map(get).filter(n=>n&&n.alive));if(!front)return;
+ const angle=Math.atan2(front.y-cl.cy,front.x-cl.cx)+between(-.7,.7),n=addOffshoot(front,angle,tribe);
+ if(random()<.55){const enemy=nearest(n);if(enemy&&enemy.tribe!==tribe&&Math.hypot((enemy.x-n.x)*W,(enemy.y-n.y)*H)<S*.14){edge(n,enemy,2);if(random()<.3){n.tribe=enemy.tribe;cl.tribe=pick([tribe,enemy.tribe]);cl.phase+=between(-1,1)}}}
+ cl.power=clamp(cl.power+between(-.08,.12),.3,1.8);cl.age++;
+ if(random()<.18){const f=pick(nodes.filter(m=>m.tribe===tribe));if(f){f.tribe=R(4);f.kind=R(4)}}
+}
+function foldEvent(){
+ const cl=pick(clusters),ids=new Set(cl.hull.concat(cl.inner)),members=nodes.filter(n=>n.alive&&(n.cluster===cl.id||ids.has(n.id)));if(!members.length)return;
+ const cx=members.reduce((v,n)=>v+n.x,0)/members.length,cy=members.reduce((v,n)=>v+n.y,0)/members.length,angle=pick([-.9,-.55,.55,.9,Math.PI/2]),scale=between(.72,1.28),mirror=random()<.3?-1:1;
+ for(const n of members){let x=(n.x-cx)*mirror,y=n.y-cy,xx=x*Math.cos(angle)-y*Math.sin(angle),yy=x*Math.sin(angle)+y*Math.cos(angle);n.x=clamp(cx+xx*scale,.02,.98);n.y=clamp(cy+yy*scale,.02,.98);n.vx+=between(-.001,.001);n.vy+=between(-.001,.001)}
+ for(let i=0;i<5;i++){const a=pick(members),b=pick(members);edge(a,b,R(4))}
+ cl.phase+=between(-2,2);topologyCount++;
+}
+function collapseEvent(){
+ const cl=pick(clusters),cx=cl.cx+between(-cl.rx*.5,cl.rx*.5),cy=cl.cy+between(-cl.ry*.5,cl.ry*.5),rad=between(.055,.16);
+ const hit=nodes.filter(n=>n.alive&&Math.hypot(n.x-cx,n.y-cy)<rad);
+ for(const n of hit){if(random()<.55){n.alive=false;for(const e of edges)if(e.a===n.id||e.b===n.id)e.alive=false}}
+ const survivors=nodes.filter(n=>n.alive&&n.cluster===cl.id);if(survivors.length){const root=pick(survivors);for(let i=0;i<2+R(5);i++)addOffshoot(root,random()*TAU,root.tribe)}
+ // Pale scars interrupt the ink history, then slowly absorb their own edges.
+ worldCtx.save();worldCtx.globalAlpha=.7;worldCtx.fillStyle=paper;worldCtx.beginPath();worldCtx.ellipse(cx*W,cy*H,rad*S*1.3,rad*S*.8,random()*TAU,0,TAU);worldCtx.fill();worldCtx.restore();
+ eventCount++;
+}
+function scaleMigration(){
+ const cl=pick(clusters),members=nodes.filter(n=>n.alive&&n.cluster===cl.id);if(!members.length)return;
+ const cx=cl.cx,cy=cl.cy,scale=between(.65,1.75);
+ for(const n of members){n.x=clamp(cx+(n.x-cx)*scale,.01,.99);n.y=clamp(cy+(n.y-cy)*scale,.01,.99);n.kind=R(4)}
+ const root=pick(members);for(let i=0;i<3;i++)addOffshoot(root,random()*TAU,root.tribe);
+}
+function pigmentEvent(){
+ const e=pick(edges.filter(e=>e.alive!==false));if(!e)return;
+ const color=pick(pigments),start=t,end=t+between(5,22);e.pigment={color,start,end};
+ for(const other of edges){if(other===e||random()>.12)continue;if(other.tribe===e.tribe)other.pigment={color,start:t,end:t+between(3,11)}}
+ const a=get(e.a),b=get(e.b);if(a&&b){const mx=(a.x+b.x)*W*.5,my=(a.y+b.y)*H*.5;pigmentCtx.save();pigmentCtx.globalAlpha=.82;pigmentCtx.strokeStyle=color;pigmentCtx.lineWidth=between(2,8);pigmentCtx.beginPath();pigmentCtx.moveTo(a.x*W,a.y*H);pigmentCtx.lineTo(b.x*W,b.y*H);pigmentCtx.stroke();for(let i=0;i<24;i++){let an=random()*TAU,d=between(S*.004,S*.045),x=mx+Math.cos(an)*d,y=my+Math.sin(an)*d;pigmentCtx.lineWidth=between(.7,2.5);pigmentCtx.beginPath();pigmentCtx.moveTo(x,y);pigmentCtx.lineTo(x+Math.cos(an+between(-1,1))*between(2,10),y+Math.sin(an+between(-1,1))*between(2,10));pigmentCtx.stroke()}pigmentCtx.restore()}
+ activePigments.push({x:(get(e.a).x+get(e.b).x)*.5,y:(get(e.a).y+get(e.b).y)*.5,r:between(.04,.14),color,start,end});if(activePigments.length>8)activePigments.shift();
+}
+function rareEvent(){
+ const choices=study==='misread'?[misreadEvent,misreadEvent,falseRepair,foldEvent,scaleMigration]:study==='civilisation'?[civilisationEvent,civilisationEvent,misreadEvent,foldEvent,collapseEvent]:study==='impossible'?[foldEvent,foldEvent,scaleMigration,falseRepair,misreadEvent]:[collapseEvent,collapseEvent,scaleMigration,misreadEvent,foldEvent];
+ pick(choices)();eventCount++;
+}
+function updateNodes(dt){
+ const dt60=dt*60;
+ const adjacency=new Map();for(const e of edges){if(e.alive===false)continue;let a=get(e.a),b=get(e.b);if(!a||!b)continue;if(!adjacency.has(a.id))adjacency.set(a.id,[]);if(!adjacency.has(b.id))adjacency.set(b.id,[]);adjacency.get(a.id).push(b);adjacency.get(b.id).push(a)}
+ for(const n of nodes){if(!n.alive){n.age+=dt;continue}n.px=n.x;n.py=n.y;n.age+=dt;
+  const angle=flow(n.x*W,n.y*H),fx=Math.cos(angle),fy=Math.sin(angle),neighbours=adjacency.get(n.id)||[];let sx=0,sy=0;
+  for(const m of neighbours){sx+=(m.x-n.x);sy+=(m.y-n.y)}
+  if(neighbours.length){sx=sx/neighbours.length;sx-=0;sy=sy/neighbours.length}
+  const spring=.000014,drift=.000008;
+  n.vx=n.vx*.965+fx*drift+sx*spring+Math.sin(t*.4+n.phase)*.000018;
+  n.vy=n.vy*.965+fy*drift+sy*spring+Math.cos(t*.33+n.phase)*.000018;
+  n.x+=n.vx*dt60;n.y+=n.vy*dt60;
+  if(n.x<.025||n.x>.975)n.vx*=-.7;if(n.y<.025||n.y>.975)n.vy*=-.7;
+  n.x=clamp(n.x,.015,.985);n.y=clamp(n.y,.015,.985);
+ }
+ for(const v of vortices){v.x+=v.vx*dt60;v.y+=v.vy*dt60;if(v.x<0||v.x>W)v.vx*=-1;if(v.y<0||v.y>H)v.vy*=-1}
+}
+function grow(){
+ if(nodes.length>260)return;
+ if(study==='civilisation')civilisationEvent();
+ else if(study==='impossible'){if(random()<.55)scaleMigration();else foldEvent()}
+ else if(study==='extinction'){if(random()<.22)collapseEvent();else{const n=pick(nodes.filter(n=>n.alive));if(n)for(let i=0;i<3+R(4);i++)addOffshoot(n,random()*TAU,n.tribe)}}
+ else misreadEvent();
+}
+function update(dt){
+ t+=dt;frameNo++;updateNodes(dt);updateScribes(dt);
+ // The past remains as physical residue; the present keeps moving above it.
+ worldCtx.save();worldCtx.globalAlpha=.006;worldCtx.fillStyle=paper;worldCtx.fillRect(0,0,W,H);worldCtx.restore();
+ worldCtx.save();worldCtx.globalAlpha=.09;for(const e of edges){if(e.alive===false)continue;const a=get(e.a),b=get(e.b);if(!a||!b)continue;worldCtx.strokeStyle=ink;worldCtx.lineWidth=Math.max(.5,e.width*S*.35);worldCtx.beginPath();worldCtx.moveTo(a.px*W,a.py*H);worldCtx.lineTo(a.x*W,a.y*H);worldCtx.stroke()}worldCtx.restore();
+ if(t>=nextEvent){rareEvent();nextEvent=t+between(.65,3.8)}
+ if(t>=nextBirth){grow();nextBirth=t+between(.35,2.1)}
+ if(t>=nextFragment){const cl=pick(clusters);if(cl){fragments.push(makeFragment(cl,cl.cx+between(-cl.rx,cl.rx),cl.cy+between(-cl.ry,cl.ry),between(.025,.16),R(6),random()<.78?ink:paper));if(fragments.length>92)fragments.splice(0,fragments.length-92)}nextFragment=t+between(.8,4.5)}
+ if(t>=nextPigment){if(random()<.8)pigmentEvent();nextPigment=t+between(2.8,10)}
+ if(t>=nextVortex){const v=pick(vortices);v.x=between(W*.08,W*.92);v.y=between(H*.08,H*.92);v.r=between(S*.04,S*.2);v.power=between(-.9,.9);nextVortex=t+between(4,16)}
+ if(t>=nextMemory){memories.push({t,frame:frameNo});if(memories.length>6)memories.shift();nextMemory=t+between(15,35)}
+ for(const e of edges){if(e.pigment&&t>=e.pigment.end)e.pigment=null;if(e.alive!==false)e.age+=dt}
+ if(study==='extinction'&&t>8&&random()<dt*.035)collapseEvent();
+ if(study==='civilisation'&&t>12&&random()<dt*.15){const a=pick(clusters),b=pick(clusters.filter(c=>c!==a));if(a&&b){const x=pick(a.hull.map(get)),y=pick(b.hull.map(get));edge(x,y,2);a.power+=.05;b.power-=.03}}
+ nodes=nodes.filter(n=>n.alive||n.age<200);fragments=fragments.filter(f=>t-f.born<f.life);prune();
+ drawCurrent();
+ pigmentCtx.save();pigmentCtx.globalCompositeOperation='destination-out';pigmentCtx.fillStyle='rgba(0,0,0,.009)';pigmentCtx.fillRect(0,0,W,H);pigmentCtx.restore();
+ present();
+}
+function present(){
+ if(!world||!live)return;
+ screen.imageSmoothingEnabled=true;screen.fillStyle=paper;screen.fillRect(0,0,canvas.width,canvas.height);
+ screen.drawImage(world,0,0,canvas.width,canvas.height);screen.drawImage(live,0,0,canvas.width,canvas.height);screen.drawImage(pigment,0,0,canvas.width,canvas.height);
+ screen.globalAlpha=.1;screen.drawImage(grain,0,0,canvas.width,canvas.height);screen.globalAlpha=1;
+}
+function boot(){
+ resize();initial();drawCurrent();present();
+}
+let resizeTimer;
+new ResizeObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(resize,120)}).observe(canvas);
+window.addEventListener('message',e=>{
+ if(e.origin!==location.origin||e.source!==parent)return;
+ if(e.data?.type==='study-visibility'){paused=!e.data.visible;last=0;acc=0}
+ if(e.data?.type==='study-quality'){const v=!!e.data.fullscreen;if(v!==full){full=v;clearTimeout(resizeTimer);resizeTimer=setTimeout(resize,120)}}
+});
+document.addEventListener('visibilitychange',()=>{last=0});
+function loop(now){
+ const dt=last?Math.min(.06,(now-last)/1000):1/30;last=now;
+ if(!paused&&!document.hidden){acc+=dt;const interval=preview&&!full?1/22:1/30;if(acc>=interval){update(Math.min(.06,acc));acc=0}}
+ requestAnimationFrame(loop);
+}
+boot();requestAnimationFrame(loop);
+})();</script></body></html>

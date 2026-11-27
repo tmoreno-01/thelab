@@ -1,0 +1,209 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lifeafterlogic / topology</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111}canvas{display:block;width:100%;height:100%;image-rendering:pixelated;pointer-events:none}#error{position:absolute;left:8px;bottom:8px;color:#ddd;font:12px monospace;max-width:90vw}#error:empty{display:none}</style></head><body><canvas aria-label="Autonomous living artwork"></canvas><div id="error" role="status"></div><script>(function living(){
+'use strict';
+const profiles={
+paradox:{name:"34 — Paradox Redux",dark:.67,forms:12,detail:1.2,agents:40,ghost:.20,graffiti:.30,diagram:.55,space:.88,colour:.95},
+saints:{name:"35 — Tunnel Saints",dark:.76,forms:10,detail:1.1,agents:33,ghost:.85,graffiti:.15,diagram:.22,space:.82,colour:.65},
+graffiti:{name:"36 — Synthetic Graffiti",dark:.46,forms:13,detail:1.35,agents:47,ghost:.12,graffiti:.95,diagram:.18,space:.68,colour:1.25},
+diagram:{name:"37 — Diagram Collapse",dark:.38,forms:11,detail:1.3,agents:43,ghost:.10,graffiti:.23,diagram:.95,space:.90,colour:.8},
+afterlogic:{name:"38 — After Logic",dark:.60,forms:14,detail:1.5,agents:55,ghost:.42,graffiti:.66,diagram:.72,space:1,colour:1.2}
+};
+const q=new URLSearchParams(location.search),P=profiles[q.get('study')]||profiles.paradox,preview=q.has('preview');
+document.title='lifeafterlogic / '+P.name;
+const canvas=document.querySelector('canvas'),status=document.getElementById('error');
+const pool=new Uint32Array(2048);let poolAt=pool.length;
+function r(){if(poolAt===pool.length){crypto.getRandomValues(pool);poolAt=0}return pool[poolAt++]/4294967296}
+const R=n=>Math.floor(r()*n),pick=a=>a[R(a.length)],range=(a,b)=>a+(b-a)*r(),clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),TAU=Math.PI*2;
+const ink='#111110',paper='#f2f0e8',colors=['#e53d22','#bce900','#2548dd','#ed3998','#f4b719','#24a6a0','#8b42d0'];
+const gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false});
+if(!gl){status.textContent='WebGL2 is required for this artwork.';return}
+const vs=`#version 300 es
+void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.-1.,0.,1.);}`;
+const fs=`#version 300 es
+precision highp float;precision highp int;
+uniform sampler2D previous,marks,sedimentA,sedimentB;
+uniform vec2 size;uniform float clock;uniform uint entropy;
+uniform vec4 zones[6],routes[6];
+uniform float fever,space,history;
+out vec4 result;
+uint hash(uint x){x^=x>>16u;x*=0x7feb352du;x^=x>>15u;x*=0x846ca68bu;return x^(x>>16u);}
+float randAt(ivec2 p,uint salt){return float(hash(uint(p.x)*1597334677u^uint(p.y)*3812015801u^salt)&65535u)/65535.;}
+vec2 wrapP(vec2 p){return clamp(p,vec2(.5),size-vec2(.5));}
+vec4 readP(sampler2D t,vec2 p){return texelFetch(t,ivec2(wrapP(p)),0);}
+float lum(vec3 c){return dot(c,vec3(.299,.587,.114));}
+mat2 rot(float a){float c=cos(a),s=sin(a);return mat2(c,s,-s,c);}
+void main(){
+ vec2 p=gl_FragCoord.xy;ivec2 ip=ivec2(p);vec2 uv=p/size;
+ float n=randAt(ip,entropy),cluster=randAt(ip/ivec2(7,11),entropy/313u);
+ vec4 old=readP(previous,p),m=readP(marks,p);
+ float activity=max(0.,old.a-.008);
+ vec2 stepV=vec2(sin(p.y*.039+sin(p.x*.016+clock*.09)*2.),cos(p.x*.026+sin(p.y*.021-clock*.07)*2.));
+ vec2 source=p;float force=0.;float echo=0.;bool reverse=false;
+ // Moving irregular fields, never a rectangular atlas. Each has a changing portal or fold.
+ for(int i=0;i<6;i++){
+  vec4 z=zones[i],rt=routes[i];vec2 center=z.xy*size;vec2 d=p-center;
+  float scale=max(8.,z.z*min(size.x,size.y));
+  float angle=atan(d.y,d.x);float boundary=scale*(.83+.16*sin(angle*3.+float(i)*2.+clock*.035)+.08*cos(angle*7.-clock*.03));
+  float w=(1.-smoothstep(boundary*.30,boundary,length(d)))*z.w;
+  if(w>.012){
+   int mode=int(rt.z+.5);vec2 target=p;
+   if(mode==0){vec2 axis=vec2(cos(rt.w),sin(rt.w));target=p-2.*dot(d,axis)*axis;}
+   if(mode==1){target=rt.xy*size+rot(rt.w)*d*.82;}
+   if(mode==2){target=center+rot(rt.w)*d*.66;echo=max(echo,w);}
+   if(mode==3){target=center-d;reverse=reverse||w>.4;}
+   if(mode==4){target=p+vec2(sin(d.y*.035+rt.w)*scale*.14,cos(d.x*.018+rt.w)*scale*.08);}
+   if(mode==5){vec2 e=rot(rt.w)*d;target=center+rot(-rt.w)*vec2(abs(e.x)-scale*.23,e.y*.82);}
+   if(w>force){source=target;force=w;}
+  }
+ }
+ vec3 v=old.rgb;
+ // Feedback is persistent; movement is selective, and coherent fields can move marks across the image.
+ if(n<.15+fever*.18&&cluster>.32){
+  vec2 delta=round(stepV*(1.+fever*3.));v=readP(previous,p+delta).rgb;
+ }
+ if(force>.01&&n<force*space*(.09+fever*.16)&&cluster>.30){
+  vec2 delta=source-p;float lengthD=length(delta);
+  // Most transitions move gradually; isolated gates move entire fragments through linked space.
+  vec2 from=lengthD>4.&&cluster>.67?source:p+clamp(delta,vec2(-3.),vec2(3.));
+  v=readP(previous,from).rgb;
+  if(reverse&&cluster>.72&&n<.018*force)v=vec3(1.)-v;
+  activity=max(activity,force*.6);
+ }
+ if(echo>.05&&n<echo*.025){v=readP(sedimentA,source).rgb;}
+ float edge=abs(lum(readP(previous,p+vec2(1,0)).rgb)-lum(readP(previous,p-vec2(1,0)).rgb))
+           +abs(lum(readP(previous,p+vec2(0,1)).rgb)-lum(readP(previous,p-vec2(0,1)).rgb));
+ // Sediment leaks along old seams and active edges rather than replaying a whole image.
+ if(n<(.004+history*.012)*max(force,activity)&&cluster>.51){
+   vec3 a=readP(sedimentA,p+round(stepV*5.)).rgb,b=readP(sedimentB,source).rgb;
+   v=cluster>.76?b:a;
+ }
+ if(edge>.65&&n<.028+fever*.03&&cluster>.66){v=readP(previous,p+round(stepV*2.)).rgb;}
+ // Invisible agents deposit material; their bodies are never rendered.
+ if(m.a>.02&&n<m.a){v=m.rgb;activity=max(activity,m.a*.65);}
+ float chrom=max(max(v.r,v.g),v.b)-min(min(v.r,v.g),v.b);
+ if(chrom>.045&&m.a<.02&&n<.055){float g=lum(v);v=mix(v,vec3(g),.045);}
+ result=vec4(v,activity);
+}`;
+const display=`#version 300 es
+precision highp float;uniform sampler2D image;uniform vec2 view;out vec4 result;
+void main(){result=vec4(texture(image,gl_FragCoord.xy/view).rgb,1.);}`;
+function program(f){let p=gl.createProgram();for(let [kind,src] of [[gl.VERTEX_SHADER,vs],[gl.FRAGMENT_SHADER,f]]){let sh=gl.createShader(kind);gl.shaderSource(sh,src);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh));gl.attachShader(p,sh);gl.deleteShader(sh)}gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p}
+let sim,show;
+try{sim=program(fs);show=program(display)}catch(e){status.textContent=e.message;return}
+gl.bindVertexArray(gl.createVertexArray());
+const uniforms=(p,n)=>Object.fromEntries(n.map(k=>[k,gl.getUniformLocation(p,k)]));
+const u=uniforms(sim,['previous','marks','sedimentA','sedimentB','size','clock','entropy','zones[0]','routes[0]','fever','space','history']),d=uniforms(show,['image','view']);
+let W,H,S,initial,paint,ctx,markTex,states=[],buffers=[],mem=[],read=0,memIndex=0,age=0,prevTime=0,acc=0,paused=false,frameNo=0,nextMemory=17,nextWeather=9,nextBloom=4,nextBirth=0,nextComposition=4,fever=0,feverTarget=0,history=.4,anchors=[],agents=[],fields=[],bloom=null;
+const zoneData=new Float32Array(24),routeData=new Float32Array(24);
+function tex(data=null){let t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,data);return t}
+function bind(t,unit,loc){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,t);gl.uniform1i(loc,unit)}
+function upload(t,c){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,c);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false)}
+function makeCanvas(){let c=document.createElement('canvas');c.width=W;c.height=H;return c}
+function rough(c,x,y,w,h){c.beginPath();for(let i=0;i<=10;i++){let xx=x+w*i/10,yy=y+range(-.1,.1)*Math.min(w,h);i?c.lineTo(xx,yy):c.moveTo(xx,yy)}for(let i=0;i<=10;i++)c.lineTo(x+w+range(-.08,.08)*Math.min(w,h),y+h*i/10);for(let i=0;i<=10;i++)c.lineTo(x+w*(1-i/10),y+h+range(-.1,.1)*Math.min(w,h));for(let i=0;i<=10;i++)c.lineTo(x+range(-.08,.08)*Math.min(w,h),y+h*(1-i/10));c.closePath();c.fill()}
+function glyph(c,x,y,z,code,angle=0){c.save();c.translate(x,y);c.rotate(angle);let t=Math.max(.75,z*(.08+((code%7)*.009)));c.lineWidth=t;c.lineCap='square';c.lineJoin='miter';
+ for(let k=0;k<9;k++)if((code>>k)&1){let a=((k*3+code)%7)/7*z-z*.5,b=((k*5+(code>>3))%7)/7*z-z*.5,l=z*(.18+((code>>((k+1)%7))%5)*.10);c.beginPath();c.moveTo(a,b);if(k%3===0)c.lineTo(a+l,b);else if(k%3===1)c.lineTo(a,b+l);else c.lineTo(a+l,b-l*.7);c.stroke()}
+ if(code%5===0){c.beginPath();c.arc(0,0,z*.33,.3,4.6);c.stroke()}
+ if(code%7===0)c.fillRect(-z*.15,-z*.12,t,t);c.restore()}
+function withInk(c,col,alpha=1){c.fillStyle=c.strokeStyle=col;c.globalAlpha=alpha}
+function hatch(c,x,y,w,h,col,spacing){c.save();withInk(c,col);c.translate(x,y);c.rotate(range(-.13,.13));for(let i=0;i<h;i+=spacing){let x=range(-w*.08,w*.2),len=w*range(.30,1);c.fillRect(x,i,len,Math.max(.7,spacing*range(.16,.5)));if(r()<.22)c.fillRect(x+len+spacing,i,spacing*range(1,3),1)}c.restore()}
+function dust(c,x,y,rad,col,count){c.save();withInk(c,col);for(let j=0;j<count;j++){let a=r()*TAU,rr=Math.sqrt(r())*rad,z=range(.55,2.4)*S/500;if(r()<.08)z*=3;c.fillRect(x+Math.cos(a)*rr,y+Math.sin(a)*rr,z*range(.8,2.4),z)}c.restore()}
+function monument(c,x,y,z,col){c.save();withInk(c,col);c.translate(x,y);c.rotate(range(-.45,.45));let t=z*range(.06,.18),kind=R(5);
+ if(kind===0){c.fillRect(-z*.5,-z*.5,t,z);c.fillRect(-z*.5,-z*.5,z,t);c.fillRect(z*.27,-z*.2,t,z*.6);c.fillRect(-z*.2,z*.23,z*.5,t)}
+ if(kind===1){c.beginPath();c.moveTo(-z*.55,z*.55);c.lineTo(z*.13,-z*.62);c.lineTo(z*.13+t,-z*.62);c.lineTo(-z*.55+t,z*.55);c.closePath();c.fill();c.fillRect(-z*.3,z*.06,z*.55,t)}
+ if(kind===2){rough(c,-z*.4,-z*.6,z*.8,z*.14);rough(c,-z*.10,-z*.42,t,z*.85);rough(c,-z*.40,z*.32,z*.72,t)}
+ if(kind===3){glyph(c,0,0,z,1+R(510));glyph(c,z*.2,-z*.15,z*.5,1+R(510))}
+ if(kind===4){c.lineWidth=t;c.beginPath();c.arc(0,0,z*.40,range(-1,1),range(3.5,5.9));c.stroke();c.fillRect(-t/2,-z*.55,t,z*.7)}
+ c.restore()}
+function ghost(c,x,y,z,col){c.save();withInk(c,col);c.translate(x,y);c.rotate(range(-.20,.20));let w=z*range(.19,.32),h=z*.32;
+ // Procedural ambiguous icon: incomplete silhouette and broken anatomical suggestions, not a source image.
+ c.beginPath();c.ellipse(0,-z*.19,w*.65,h*.52,range(-.2,.2),0,TAU);c.fill();
+ c.beginPath();c.moveTo(-w*.35,-z*.05);c.bezierCurveTo(-w*1.7,z*.12,-w*1.5,z*.43,-w*.8,z*.51);c.lineTo(w*.85,z*.48);c.bezierCurveTo(w*1.9,z*.20,w*1.35,z*.01,w*.33,-z*.05);c.closePath();c.fill();
+ c.lineWidth=Math.max(1,z*.012);c.beginPath();c.arc(0,-z*.17,z*.27,range(-2,-.5),range(2,4.8));c.stroke();
+ let neg=col===ink?paper:ink;withInk(c,neg);for(let j=0;j<10;j++)rough(c,range(-w,w),range(-z*.35,z*.45),z*range(.025,.14),z*range(.009,.04));withInk(c,col);glyph(c,-w*.4,-z*.22,z*.07,1+R(510));c.restore()}
+function diagram(c,x,y,z,col){c.save();withInk(c,col);c.lineWidth=Math.max(.6,S/800);let xx=x,yy=y;
+ for(let i=0;i<4+R(9);i++){let dx=range(-1,1)*z*.32,dy=range(-1,1)*z*.28;c.beginPath();c.moveTo(xx,yy);xx+=dx;c.lineTo(xx,yy);yy+=dy;c.lineTo(xx,yy);c.stroke();if(r()<.65){c.strokeRect(xx-3,yy-3,z*.07,z*.05);glyph(c,xx+z*.06,yy-z*.02,Math.max(4,z*.055),1+R(510))}}
+ c.restore()}
+function textMarks(c,x,y,z,col,code,angle){c.save();withInk(c,col);c.translate(x,y);c.rotate(angle);let n=3+R(8);for(let j=0;j<n;j++)glyph(c,j*z*range(.65,1.05),range(-.24,.24)*z,z*range(.70,1.3),code^(1<<R(9)),range(-.22,.22));if(r()<.25){c.lineWidth=Math.max(.75,z*.06);c.beginPath();c.moveTo(0,z*.25);c.lineTo(n*z*.72,-z*.12);c.stroke()}c.restore()}
+function nearAnchor(){if(r()<.18)return [r()*W,r()*H];let a=pick(anchors);return [a[0]+range(-.19,.19)*W,a[1]+range(-.19,.19)*H]}
+function compose(c){
+ let bg=r()<P.dark?ink:paper,fg=bg===ink?paper:ink;withInk(c,bg);c.fillRect(0,0,W,H);
+ for(let j=0;j<6;j++)anchors.push([range(.03,.97)*W,range(.03,.97)*H]);
+ for(let j=0;j<P.forms;j++){let [x,y]=nearAnchor(),z=S*range(.30,1.03),col=j<3?fg:pick([fg,fg,bg]);if(r()<P.ghost*.53)ghost(c,x,y,z,col);else monument(c,x,y,z,col)}
+ for(let j=0;j<38*P.detail;j++){let [x,y]=nearAnchor(),z=S*range(.035,.28),col=pick([ink,paper]);if(r()<P.diagram*.58)diagram(c,x,y,z,col);else if(r()<P.graffiti*.65)textMarks(c,x,y,z*.21,col,1+R(510),range(-.5,.5));else hatch(c,x,y,z*range(.6,1.8),z,col,Math.max(2,S*range(.003,.012)))}
+ for(let j=0;j<24*P.detail;j++){let [x,y]=nearAnchor();dust(c,x,y,S*range(.018,.13),pick([ink,paper]),Math.round(100+P.detail*190*r()))}
+}
+const roles=['scribe','vandal','restorer','collector','infector','archivist','saboteur'];
+function spawn(){let [x,y]=nearAnchor(),role=pick(roles);if(r()<P.graffiti*.38)role='scribe';else if(r()<P.diagram*.30)role=pick(['restorer','collector']);agents.push({x:clamp(x,0,W),y:clamp(y,0,H),a:r()*TAU,pace:range(.008,.055)*S,turn:range(-.7,.7),life:range(12,110),age:0,next:range(0,1),role,col:pick([ink,paper]),code:1+R(510),size:S*range(.014,.065),phase:r()*TAU})}
+function fieldNew(){return{x:range(.08,.92),y:range(.08,.92),rad:range(.12,.38),strength:0,goal:range(.3,.88),tx:range(.08,.92),ty:range(.08,.92),mode:R(6),angle:range(-2.4,2.4),until:age+range(13,80),vx:range(-.005,.005),vy:range(-.005,.005),retiring:false}}
+function updateFields(dt){
+ for(let i=0;i<fields.length;i++){let f=fields[i];if(age>f.until)f.retiring=true;if(f.retiring){f.goal=0;if(f.strength<.012){f=fields[i]=fieldNew()}}
+ f.strength+=(f.goal-f.strength)*Math.min(1,dt*.55);f.x=clamp(f.x+f.vx*dt,.05,.95);f.y=clamp(f.y+f.vy*dt,.05,.95);f.angle+=dt*.014*Math.sin(i+f.x);
+ let k=i*4;zoneData.set([f.x,1-f.y,f.rad,f.strength],k);routeData.set([f.tx,1-f.ty,f.mode,f.angle],k)}
+}
+function trace(a,x,y){
+ let c=ctx,z=a.size,col=a.col;if(bloom&&a.role==='infector')col=bloom.col;
+ c.save();withInk(c,col,range(.65,1));c.lineWidth=Math.max(.7,S*.0014);c.beginPath();c.moveTo(x,y);c.lineTo(a.x,a.y);c.stroke();
+ if(a.role==='scribe'){if(r()<.8)textMarks(c,a.x,a.y,z,col,a.code,a.a*.22);a.code^=1<<R(9)}
+ if(a.role==='vandal'){c.lineWidth=Math.max(1,z*.09);c.beginPath();c.moveTo(a.x-z,a.y-z*.45);c.lineTo(a.x+z,a.y+z*.45);c.moveTo(a.x-z*.7,a.y+z*.5);c.lineTo(a.x+z*.4,a.y-z*.5);c.stroke();dust(c,a.x,a.y,z,col,20)}
+ if(a.role==='restorer'){diagram(c,a.x,a.y,z*3,col);if(r()<.2)glyph(c,a.x,a.y,z*1.5,a.code)}
+ if(a.role==='collector'){hatch(c,a.x,a.y,z*2.1,z*.8,col,Math.max(2,z*.12))}
+ if(a.role==='infector'){dust(c,a.x,a.y,z*1.25,col,45+R(75));if(r()<.2)glyph(c,a.x,a.y,z*.9,a.code)}
+ if(a.role==='archivist'){if(r()<.5)glyph(c,a.x,a.y,z,a.code);else diagram(c,a.x,a.y,z*2,col)}
+ if(a.role==='saboteur'){rough(c,a.x-z*.4,a.y-z*.2,z*range(.35,2.4),z*range(.10,.6));dust(c,a.x,a.y,z,col,25)}
+ c.restore();
+}
+function advance(dt){
+ age+=dt;ctx.clearRect(0,0,W,H);updateFields(dt);
+ if(age>=nextWeather){feverTarget=r()<.56?range(.45,1):range(0,.16);history=range(.1,1);nextWeather=age+range(9,42)}
+ fever+=(feverTarget-fever)*dt*.40;
+ if(age>=nextBloom){bloom={x:range(.1,.9)*W,y:range(.1,.9)*H,col:pick(colors),col2:pick(colors),start:age,end:age+range(4,18)};nextBloom=bloom.end+range(5,45)/P.colour;for(let j=0;j<5;j++){spawn();let a=agents[agents.length-1];a.x=bloom.x;a.y=bloom.y;a.role='infector'}}
+ if(bloom&&age>bloom.end)bloom=null;
+ if(bloom){let u=clamp((age-bloom.start)/(bloom.end-bloom.start),0,1),rad=S*(.012+u*.15),x=bloom.x+Math.sin(u*2)*rad,y=bloom.y+Math.cos(u*3)*rad*.4;
+ if(r()<.75)dust(ctx,x,y,rad,r()<.2?bloom.col2:bloom.col,Math.round(8+P.colour*22*Math.sin(u*Math.PI)));
+ }
+ for(let i=agents.length-1;i>=0;i--){
+  let a=agents[i];a.age+=dt;if(a.age>a.life){agents.splice(i,1);continue}
+  let x=a.x,y=a.y,fx=Math.sin(a.y/S*13+a.phase+age*.032),fy=Math.cos(a.x/S*11-a.phase+age*.027);
+  a.a+=dt*(a.turn+fx*.8+fy*.4);
+  // Agents encounter each other's territories and occasionally inherit their grammar.
+  if(r()<dt*.4&&agents.length>1){let b=pick(agents);if(b!==a&&Math.hypot(b.x-a.x,b.y-a.y)<S*.13){a.code^=b.code&511;if(r()<.3)a.col=b.col;a.a+=range(-1.5,1.5)}}
+  a.x+=Math.cos(a.a)*a.pace*dt*(1+fever);a.y+=Math.sin(a.a)*a.pace*dt*(1+fever);
+  if(a.x<0||a.x>W){a.a=Math.PI-a.a;a.x=clamp(a.x,0,W)}if(a.y<0||a.y>H){a.a=-a.a;a.y=clamp(a.y,0,H)}
+  if(age>=a.next){trace(a,x,y);a.next=age+range(.15,1.7)/(1+fever*.8)}
+ }
+ if(agents.length<P.agents&&age>=nextBirth){spawn();nextBirth=age+range(.12,.9)}
+ if(age>=nextComposition){
+  let [x,y]=nearAnchor(),z=S*range(.10,.56),col=pick([ink,paper]),a=r();
+  if(a<P.ghost*.55)ghost(ctx,x,y,z,col);else if(a<.35+P.ghost*.25)monument(ctx,x,y,z,col);else if(a<.45+P.diagram*.35)diagram(ctx,x,y,z,col);else if(a<.65+P.graffiti*.25)textMarks(ctx,x,y,z*.16,col,1+R(510),range(-.5,.5));else hatch(ctx,x,y,z,z*.5,col,Math.max(2,S*.006));
+  if(r()<.18)anchors[R(anchors.length)]=[r()*W,r()*H];
+  nextComposition=age+range(1.4,6.5)/(1+fever*.7);
+ }
+ upload(markTex,paint);
+ gl.useProgram(sim);gl.bindFramebuffer(gl.FRAMEBUFFER,buffers[1-read]);gl.viewport(0,0,W,H);
+ bind(states[read],0,u.previous);bind(markTex,1,u.marks);bind(mem[(memIndex+2)%3],2,u.sedimentA);bind(mem[memIndex],3,u.sedimentB);
+ gl.uniform2f(u.size,W,H);gl.uniform1f(u.clock,age%8192);gl.uniform1ui(u.entropy,(r()*4294967296)>>>0);gl.uniform4fv(u['zones[0]'],zoneData);gl.uniform4fv(u['routes[0]'],routeData);gl.uniform1f(u.fever,fever);gl.uniform1f(u.space,P.space);gl.uniform1f(u.history,history);gl.drawArrays(gl.TRIANGLES,0,3);read=1-read;
+ if(age>=nextMemory){gl.bindFramebuffer(gl.FRAMEBUFFER,buffers[read]);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,mem[memIndex]);gl.copyTexSubImage2D(gl.TEXTURE_2D,0,0,0,0,0,W,H);memIndex=(memIndex+1)%3;nextMemory=age+range(21,67)}
+}
+function draw(){gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);gl.useProgram(show);bind(states[read],0,d.image);gl.uniform2f(d.view,canvas.width,canvas.height);gl.drawArrays(gl.TRIANGLES,0,3)}
+function resize(){let a=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);let w=Math.max(2,Math.round(a.width*dpr)),h=Math.max(2,Math.round(a.height*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}if(states.length){let [nw,nh]=desiredSize();resizeWorld(nw,nh);draw()}}
+let fullQuality=false;
+function desiredSize(){let high=!preview||fullQuality,coarse=matchMedia('(pointer:coarse)').matches,maxPixels=high?(coarse?1250000:3686400):220000,maxW=high?(coarse?1800:2560):1500,maxH=high?(coarse?1800:1440):1080;let scale=Math.min(1,Math.sqrt(maxPixels/(canvas.width*canvas.height)),maxW/canvas.width,maxH/canvas.height);return [Math.max(16,Math.round(canvas.width*scale)),Math.max(16,Math.round(canvas.height*scale))]}
+function resizeWorld(nw,nh){
+ if(nw===W&&nh===H)return;let ow=W,oh=H,os=S,oldStates=states,oldMem=mem,oldBuffers=buffers;W=nw;H=nh;S=Math.min(W,H);
+ const a=gl.createFramebuffer(),b=gl.createFramebuffer();
+ function transfer(t){let dst=tex();gl.bindFramebuffer(gl.READ_FRAMEBUFFER,a);gl.framebufferTexture2D(gl.READ_FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,b);gl.framebufferTexture2D(gl.DRAW_FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,dst,0);gl.blitFramebuffer(0,0,ow,oh,0,0,W,H,gl.COLOR_BUFFER_BIT,gl.NEAREST);return dst}
+ states=oldStates.map(transfer);mem=oldMem.map(transfer);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.deleteFramebuffer(a);gl.deleteFramebuffer(b);for(let t of [...oldStates,...oldMem,markTex])gl.deleteTexture(t);oldBuffers.forEach(t=>gl.deleteFramebuffer(t));
+ markTex=tex();paint=makeCanvas();ctx=paint.getContext('2d');
+ buffers=states.map(t=>{let f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);return f});
+ for(let a of anchors){a[0]*=W/ow;a[1]*=H/oh}for(let a of agents){a.x*=W/ow;a.y*=H/oh;a.pace*=S/os;a.size*=S/os}if(bloom){bloom.x*=W/ow;bloom.y*=H/oh}
+}
+window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===parent&&e.data?.type==='study-quality'){fullQuality=!!e.data.fullscreen;resize()}});
+function init(){resize();[W,H]=desiredSize();S=Math.min(W,H);initial=makeCanvas();compose(initial.getContext('2d',{alpha:false}));paint=makeCanvas();ctx=paint.getContext('2d');markTex=tex();states=[tex(),tex()];mem=[tex(),tex(),tex()];for(let t of [...states,...mem])upload(t,initial);
+ buffers=states.map(t=>{let f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Framebuffer incomplete');return f});
+ for(let i=0;i<P.agents;i++)spawn();for(let i=0;i<6;i++)fields.push(fieldNew());draw();
+}
+function loop(now){let dt=prevTime?Math.min(.15,(now-prevTime)/1000):0;prevTime=now;if(!paused&&!document.hidden){acc=Math.min(.12,acc+dt);let interval=preview&&!fullQuality?1/20:1/30;if(acc>=interval){advance(Math.min(.1,acc));acc=0;draw()}}requestAnimationFrame(loop)}
+window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===parent&&e.data?.type==='study-visibility'){paused=!e.data.visible;prevTime=0;acc=0}});
+new ResizeObserver(resize).observe(canvas);
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();paused=true;status.textContent='Graphics context lost. Reload to restart.'});
+try{init();requestAnimationFrame(loop)}catch(e){status.textContent=e.message;console.error(e)}
+})();</script></body></html>

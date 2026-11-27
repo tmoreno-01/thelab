@@ -1,0 +1,179 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lifeafterlogic / living systems</title><style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#111}canvas{width:100%;height:100%;display:block;image-rendering:pixelated;pointer-events:none}</style></head><body><canvas aria-label="Autonomous evolving artwork"></canvas><script>(function run(){
+"use strict";
+const params=new URLSearchParams(location.search),mode=params.get('study')||'misunderstanding',preview=params.has('preview');
+const names={misunderstanding:'49 — Misunderstanding',civilisation:'50 — Civilisation',impossible:'51 — Impossible Language',extinction:'52 — Extinction'};
+document.title='lifeafterlogic / '+names[mode];
+const cv=document.querySelector('canvas'),display=cv.getContext('2d',{alpha:false}),pool=new Uint32Array(2048);let pi=pool.length;
+function r(){if(pi>=pool.length){crypto.getRandomValues(pool);pi=0}return pool[pi++]/4294967296}
+const R=n=>Math.floor(r()*n),pick=a=>a[R(a.length)],range=(a,b)=>a+r()*(b-a),clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),TAU=Math.PI*2;
+const ink='#111110',paper='#f3f2ed',tones=['#e13222','#b9df00','#2044e1','#e42b85','#f29d11','#00a6a0','#8235bd'];
+let W=1,H=1,S=1,full=false,paused=false,age=0,last=0,acc=0,world,ctx,history=[],mask,mc,overlay,oc,marks=[],edges=[],families=[],colonies=[],pigments=[],events=[],nextAction=0,nextLarge=0,nextPigment=3,nextMemory=8,nextIncident=3,memIndex=0,extinction=null,dominant=0;
+const surface=(w,h)=>{let c=document.createElement('canvas');c.width=w;c.height=h;return c};
+function size(){
+ let box=cv.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2),w=Math.max(2,Math.round(box.width*d)),h=Math.max(2,Math.round(box.height*d)),high=full||!preview,coarse=matchMedia('(pointer:coarse)').matches,cap=high?(coarse?1250000:3686400):245000;
+ let k=Math.min(1,Math.sqrt(cap/(w*h)),(high?2560:800)/w,(high?1440:600)/h);
+ cv.width=w;cv.height=h;return [Math.max(16,Math.round(w*k)),Math.max(16,Math.round(h*k))];
+}
+function resize(){
+ let [w,h]=size();if(w===W&&h===H&&world){present();return}
+ let old=world,oldHist=history;W=w;H=h;S=Math.min(W,H);world=surface(W,H);ctx=world.getContext('2d',{alpha:false});ctx.imageSmoothingEnabled=false;
+ if(old)ctx.drawImage(old,0,0,W,H);else{ctx.fillStyle=paper;ctx.fillRect(0,0,W,H)}
+ history=Array.from({length:3},(_,i)=>{let c=surface(W,H),g=c.getContext('2d',{alpha:false});g.imageSmoothingEnabled=false;g.drawImage(oldHist[i]||world,0,0,W,H);return c});
+ mask=surface(W,H);mc=mask.getContext('2d');overlay=surface(W,H);oc=overlay.getContext('2d');present();
+}
+function family(i){return {id:i,code:1+R(511),angle:pick([0,0,-.72,.72,Math.PI/2]),weight:range(.055,.16),spacing:range(.7,1.3),kind:i%5,fitness:range(.7,1.3),generation:0}}
+function mutateFamily(f){f.code=(f.code^(1<<R(9)))||1;f.angle=clamp(f.angle+range(-.17,.17),-1.6,1.6);f.weight=clamp(f.weight+range(-.018,.018),.035,.22);f.spacing=clamp(f.spacing+range(-.12,.12),.6,1.6);f.generation++}
+function path(c,pts){c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath()}
+function poly(c,pts){path(c,pts);c.fill()}
+function brush(c,color){c.fillStyle=c.strokeStyle=color}
+function opposite(color){return color===ink?paper:ink}
+function glyph(c,x,y,s,f,code=f.code,angle=f.angle){
+ c.save();c.translate(x,y);c.rotate(angle);c.lineWidth=Math.max(.8,s*f.weight);c.lineCap='square';c.lineJoin='miter';
+ let a=s*.45,b=s*.36;
+ // A corner grammar derived from asymmetric cuts; no existing typeface or images.
+ if(code&1){c.beginPath();c.moveTo(-a,b);c.lineTo(-a,-b);c.lineTo(a*.65,-b);c.stroke()}
+ if(code&2){c.beginPath();c.moveTo(-a*.75,b*.65);c.lineTo(a*.65,-b);c.lineTo(a,b*.65);c.stroke()}
+ if(code&4){c.beginPath();c.moveTo(-a*.2,-b);c.lineTo(-a*.2,b);c.lineTo(a,b);c.stroke()}
+ if(code&8)c.fillRect(-a,-s*.06,s*.55,s*.1);
+ if(code&16){c.beginPath();c.moveTo(a*.7,-b);c.lineTo(a*.7,b*.5);c.stroke()}
+ if(code&32){c.beginPath();c.moveTo(-a*.65,-b*.15);c.lineTo(a*.75,b*.8);c.stroke()}
+ if(code&64)c.fillRect(a*.45,-b*.3,s*.13,s*.13);
+ if(code&128){c.beginPath();c.arc(0,0,s*.28,.3,3.7);c.stroke()}
+ if(code&256){c.beginPath();c.moveTo(-a*.3,b*.4);c.lineTo(a*.1,-b*.4);c.lineTo(a*.8,-b*.4);c.stroke()}
+ c.restore();
+}
+function shard(c,x,y,s,a,col,code){
+ c.save();c.translate(x,y);c.rotate(a);brush(c,col);
+ const z=s*.5,t=s*(.08+(code%7)*.025);
+ poly(c,[[-z,-z],[z*.65,-z],[z*.65,-z+t],[-z+t,-z+t],[-z+t,z],[-z,z]]);
+ if(code&1)poly(c,[[-z*.55,z*.8],[z*.3,-z*.85],[z*.3+t,-z*.85],[-z*.55+t,z*.8]]);
+ if(code&2)c.fillRect(-z*.25,z*.55,z*1.1,t);
+ if(code&4)c.fillRect(z*.6,-z*.25,t,z*1.05);
+ if(code&8){c.beginPath();c.lineWidth=t*.5;c.arc(0,0,z*.78,.5,4.6);c.stroke()}
+ c.restore();
+}
+function sprinkle(c,x,y,rad,col,n){
+ brush(c,col);for(let i=0;i<n;i++){let a=r()*TAU,d=Math.sqrt(r())*rad,z=Math.max(1,range(.0009,.0038)*S);if(r()<.08)z*=3;c.fillRect(x+Math.cos(a)*d,y+Math.sin(a)*d,z*range(.8,3),z*range(.55,1.5))}
+}
+function texture(c,m,col){
+ let x=m.x*W,y=m.y*H,s=m.s*S,f=families[m.f],a=m.a;
+ c.save();c.translate(x,y);c.rotate(a);brush(c,col);
+ // Irregular stencil, with microstructure obeying the geometry of the mark.
+ const pts=[[-s*.52,-s*.26],[-s*.18,-s*.51],[s*.38,-s*.45],[s*.5,-s*.03],[s*.24,s*.49],[-s*.43,s*.34]];
+ path(c,pts);c.clip();let pitch=Math.max(3,s*range(.026,.09));
+ for(let yy=-s*.55;yy<s*.55;yy+=pitch){let x0=-s*.55+range(0,pitch),end=s*.53;
+  for(let xx=x0;xx<end;xx+=pitch*range(1,2.2)){if(r()<.27)continue;
+   if(f.kind===0||f.kind===2)c.fillRect(xx,yy,pitch*range(.3,2.1),Math.max(1,pitch*range(.12,.42)));
+   else if(f.kind===1||f.kind===3)glyph(c,xx,yy,pitch*.85,f,m.code^(1<<R(9)),f.angle*.2);
+   else{c.fillRect(xx,yy,Math.max(1,pitch*.2),pitch*.8);c.fillRect(xx,yy,pitch*.7,Math.max(1,pitch*.2))}
+  }
+ }c.restore();
+}
+function drawMark(m,kind='normal'){
+ const f=families[m.f],x=m.x*W,y=m.y*H,s=m.s*S,col=m.col;
+ ctx.save();brush(ctx,col);
+ if(kind==='erase'){
+  ctx.translate(x,y);ctx.rotate(m.a);poly(ctx,[[-s*.51,-s*.24],[s*.2,-s*.48],[s*.55,s*.12],[s*.25,s*.46],[-s*.49,s*.28]]);ctx.restore();return;
+ }
+ if(m.type===0){glyph(ctx,x,y,s,f,m.code,m.a);if(s>S*.12)texture(ctx,m,opposite(col))}
+ if(m.type===1){shard(ctx,x,y,s,m.a,col,m.code);if(s>S*.09)texture(ctx,m,opposite(col))}
+ if(m.type===2){texture(ctx,m,col);if(r()<.7){brush(ctx,col);glyph(ctx,x,y,s*.48,f,m.code,m.a)}}
+ if(m.type===3){ctx.translate(x,y);ctx.rotate(m.a);let g=Math.max(4,s*.13);for(let j=0;j<3+R(8);j++)glyph(ctx,(j-3)*g*.83,range(-.2,.2)*g,g,f,m.code^(1<<R(9)),range(-.15,.15));ctx.restore();return}
+ if(m.type===4){ctx.lineWidth=Math.max(1,s*.017);ctx.beginPath();ctx.moveTo(x-s*.4,y+s*.3);ctx.lineTo(x-s*.12,y-s*.35);ctx.lineTo(x+s*.35,y-s*.17);ctx.lineTo(x+s*.48,y+s*.35);ctx.stroke();glyph(ctx,x,y,s*.32,f,m.code,m.a)}
+ ctx.restore();
+ if(m.s>.045&&r()<.85)sprinkle(ctx,x,y,s*.45,opposite(col),Math.floor(25+160*m.s));
+}
+function spawn(x,y,f,s,type,code,col){
+ const fam=families[f];let m={id:Math.floor(r()*4294967296),x:clamp(x,-.03,1.03),y:clamp(y,-.03,1.03),f,s:clamp(s,.007,.72),type:type??R(5),code:code??fam.code,col:col??(r()<.65?ink:paper),a:fam.angle+range(-.24,.24),born:age,life:range(25,180),generation:0};
+ marks.push(m);if(marks.length>850)marks.shift();drawMark(m);return m;
+}
+function near(m,dist=.17){let list=marks.filter(n=>n!==m&&Math.hypot((n.x-m.x)*W/H,n.y-m.y)<dist);return list.length?pick(list):null}
+function connection(a,b,col,wrong=false){
+ let x=a.x*W,y=a.y*H,xx=b.x*W,yy=b.y*H;brush(ctx,col);ctx.lineWidth=Math.max(1,S*(wrong?.0028:.0012));ctx.beginPath();ctx.moveTo(x,y);if(wrong){ctx.lineTo(x+(xx-x)*.8,y+(yy-y)*.12);ctx.lineTo(x+(xx-x)*.15,y+(yy-y)*.8)}else{ctx.lineTo(xx,y)}ctx.lineTo(xx,yy);ctx.stroke();
+ if(r()<.6){glyph(ctx,xx,yy,Math.max(4,S*.012),families[a.f],a.code,a.a);ctx.fillRect(x-2,y-2,4,4)}edges.push({a:a.id,b:b.id,at:age});if(edges.length>350)edges.shift()
+}
+function base(){
+ let dark=mode==='impossible'||mode==='extinction'?r()<.65:r()<.4,bg=dark?ink:paper,fg=opposite(bg);brush(ctx,bg);ctx.fillRect(0,0,W,H);
+ families=Array.from({length:7},(_,i)=>family(i));colonies=Array.from({length:5},(_,i)=>({x:range(.1,.9),y:range(.1,.9),f:i,power:range(.6,1.3),dir:r()*TAU}));
+ // A few large asymmetric forms and clustered high-frequency detail; no rectangular atlas.
+ let anchors=Array.from({length:7},()=>[range(.06,.94),range(.06,.94)]);
+ for(let i=0;i<8;i++){let [x,y]=pick(anchors);spawn(x,y,R(7),range(.18,.58),pick([0,1,2]),null,i<5?fg:bg)}
+ for(let i=0;i<100;i++){let [x,y]=pick(anchors);spawn(x+range(-.16,.16),y+range(-.16,.16),R(7),range(.018,.115),pick([2,3,4,0]),null,r()<.66?fg:bg)}
+ for(let i=0;i<14;i++){let [x,y]=pick(anchors);sprinkle(ctx,x*W,y*H,S*range(.04,.18),pick([fg,bg]),200+R(400))}
+ history.forEach(c=>c.getContext('2d').drawImage(world,0,0));
+}
+function copySediment(m,angle=.15){
+ let old=history[(memIndex+R(3))%3],x=m.x*W,y=m.y*H,z=m.s*S*range(.5,1.6);
+ ctx.save();ctx.translate(x,y);ctx.rotate(angle);path(ctx,[[-z*.6,-z*.18],[-z*.12,-z*.47],[z*.48,-z*.38],[z*.6,z*.13],[z*.25,z*.45],[-z*.45,z*.29]]);ctx.clip();ctx.drawImage(old,range(-.12,.12)*W-x,range(-.08,.08)*H-y,W,H);ctx.restore();
+}
+function misread(){
+ let m=pick(marks),n=near(m),f=families[m.f],role=R(5);
+ if(role===0){let a=m.a+pick([-.8,.8,Math.PI/2]),s=m.s*range(.4,.85);let child=spawn(m.x+Math.cos(a)*s*S/W,m.y+Math.sin(a)*s*S/H,(m.f+1+R(3))%7,s,0,m.code^(1<<R(9)),m.col);child.generation=m.generation+1;if(r()<.6)connection(m,child,m.col,true)}
+ else if(role===1&&n){connection(m,n,pick([ink,paper]),true);spawn((m.x+n.x)*.5,(m.y+n.y)*.5,R(7),range(.018,.065),4,m.code^n.code,m.col)}
+ else if(role===2){let z={...m,s:m.s*range(.3,.75),col:opposite(m.col),a:m.a+.7};drawMark(z,'erase');spawn(m.x,m.y,(m.f+3)%7,m.s*.42,3,m.code^(1<<R(9)),m.col)}
+ else if(role===3){copySediment(m,range(-.7,.7));mutateFamily(f)}
+ else{let n=spawn(m.x+range(-.06,.06),m.y+range(-.06,.06),m.f,m.s*range(.35,1.3),R(5),m.code^(1<<R(9)),m.col);if(n.generation>4)mutateFamily(f)}
+}
+function civilise(){
+ let c=pick(colonies),f=families[c.f];c.dir+=range(-.25,.25);c.x=clamp(c.x+Math.cos(c.dir)*.018,.04,.96);c.y=clamp(c.y+Math.sin(c.dir)*.018,.04,.96);
+ let nearby=marks.filter(m=>Math.hypot(m.x-c.x,m.y-c.y)<.14),enemy=nearby.filter(m=>m.f!==c.f),ally=nearby.filter(m=>m.f===c.f);
+ if(enemy.length&&r()<.55){let m=pick(enemy),win=f.fitness*c.power>families[m.f].fitness*range(.65,1.4);if(win){drawMark({...m,col:opposite(m.col),s:m.s*.8},'erase');m.f=c.f;m.code=f.code^(m.code&63);m.type=R(5);drawMark(m);c.power=clamp(c.power+.025,.3,2)}else{c.power-=.035;c.dir+=1.4;if(r()<.17){f.code=(f.code^m.code)||1;mutateFamily(f)}}}
+ else{let s=range(.018,.095),m=spawn(c.x+range(-.10,.10),c.y+range(-.10,.10),c.f,s,f.kind,f.code,pick([ink,ink,paper]));if(ally.length&&r()<.5)connection(m,pick(ally),m.col)}
+ if(c.power<.25||r()<.006){c.f=R(7);c.x=r();c.y=r();c.power=1;mutateFamily(families[c.f])}
+}
+function impossible(){
+ let m=pick(marks),f=families[m.f];
+ if(r()<.36&&m.s<.48){let n={...m,s:Math.min(.67,m.s*range(1.12,1.85)),a:m.a+pick([-.18,0,.18,.55]),type:pick([0,1,4]),born:age};marks.push(n);if(marks.length>850)marks.shift();drawMark(n);if(r()<.5)connection(m,n,n.col)}
+ else if(r()<.5){let a=m.a+pick([-.78,.78,1.57]),s=m.s*range(.22,.7),n=spawn(m.x+Math.cos(a)*s*S/W,m.y+Math.sin(a)*s*S/H,m.f,s,1,m.code^(1<<R(9)),m.col);connection(m,n,n.col,true)}
+ else{let n=near(m,.24);if(n)connection(m,n,m.col,true);if(r()<.3)copySediment(m,-m.a*.5)}
+ if(r()<.06)mutateFamily(f);
+}
+function extirpate(){
+ if(!extinction&&age>=nextLarge){extinction={x:range(.12,.88),y:range(.12,.88),start:age,end:age+range(9,24),rad:range(.14,.4),col:pick([ink,paper]),survivors:[]};nextLarge=extinction.end+range(16,60)}
+ if(extinction){let e=extinction,u=clamp((age-e.start)/(e.end-e.start),0,1),rad=e.rad*(.05+.95*u);let hit=marks.filter(m=>Math.hypot(m.x-e.x,m.y-e.y)<rad&&m.born<e.start);
+  if(hit.length&&r()<.83){let m=pick(hit);drawMark({...m,col:e.col,s:m.s*range(.65,1.25)},'erase');marks.splice(marks.indexOf(m),1);if(r()<.15)e.survivors.push(m)}
+  if(r()<.18)sprinkle(ctx,e.x*W,e.y*H,rad*S,e.col,65);
+  if(u>=1){let survivors=e.survivors.slice(0,12);for(let m of survivors){mutateFamily(families[m.f]);spawn(m.x,m.y,m.f,m.s*.45,0,m.code^(1<<R(9)),opposite(e.col))}extinction=null}
+ }else{let m=marks.length?pick(marks):null;if(m){let a=r()*TAU,z=range(.014,.12);spawn(m.x+Math.cos(a)*z,m.y+Math.sin(a)*z,m.f,z,R(5),m.code^(1<<R(9)),m.col);if(r()<.16)copySediment(m)}else spawn(r(),r(),R(7),.2,1)}
+}
+function incident(){
+ let m=pick(marks);if(!m)return;
+ let kind=R(5),s=m.s*S,x=m.x*W,y=m.y*H;
+ if(kind===0)copySediment({...m,s:range(.07,.3)},range(-1,1));
+ if(kind===1){let n=pick(marks);if(n)connection(m,n,opposite(m.col),true)}
+ if(kind===2){let z=range(.045,.16)*S;sprinkle(ctx,x,y,z,m.col,160+R(350));}
+ if(kind===3){let n=spawn(m.x,m.y,m.f,range(.16,.45),1,m.code^(1<<R(9)),m.col);n.a+=.7}
+ if(kind===4){let f=families[m.f];mutateFamily(f);for(let i=0;i<5;i++)spawn(m.x+range(-.12,.12),m.y+range(-.12,.12),m.f,range(.015,.055),3,f.code,m.col)}
+}
+function colorEvent(){
+ let m=pick(marks);if(!m)return;let z={x:m.x,y:m.y,s:range(.045,.17),f:m.f,code:m.code,a:m.a,col:pick(tones),start:age,end:age+range(7,23),type:R(3),offset:range(-.03,.03)};pigments.push(z);if(pigments.length>5)pigments.shift();
+}
+function present(){
+ if(!world)return;
+ display.imageSmoothingEnabled=false;display.drawImage(world,0,0,cv.width,cv.height);
+ // Pigment is a transient registration layer on the existing marks, with a smooth decay.
+ display.save();display.scale(cv.width/W,cv.height/H);
+ for(let p of pigments){let u=clamp((age-p.start)/(p.end-p.start),0,1),a=Math.sin(Math.PI*u);if(a<=0)continue;display.globalAlpha=a*.9;brush(display,p.col);let x=p.x*W,y=p.y*H,s=p.s*S*(.8+u*.5),f=families[p.f];
+ if(p.type===0)glyph(display,x,y,s,f,p.code,p.a);
+ if(p.type===1){glyph(display,x,y,s,f,p.code,p.a);glyph(display,x+s*.24,y-s*.14,s*.4,f,p.code^16,p.a+.45)}
+ if(p.type===2){for(let i=0;i<9;i++){let a=i*2.39996,rr=s*.1*Math.sqrt(i);glyph(display,x+Math.cos(a)*rr,y+Math.sin(a)*rr,s*.18,f,p.code^(1<<(i%9)),p.a)}}
+ }display.restore();
+}
+function step(dt){
+ age+=dt;
+ if(age>=nextAction){for(let i=0;i<(mode==='civilisation'?4:3);i++){if(mode==='misunderstanding')misread();else if(mode==='civilisation')civilise();else if(mode==='impossible')impossible();else extirpate()}nextAction=age+range(.11,.65)}
+ if(age>=nextIncident&&marks.length){incident();nextIncident=age+range(1.8,12)}
+ if(age>=nextPigment){colorEvent();nextPigment=age+range(5,28)}
+ pigments=pigments.filter(p=>age<p.end);
+ if(age>=nextMemory){let c=history[memIndex];c.getContext('2d').drawImage(world,0,0);memIndex=(memIndex+1)%3;nextMemory=age+range(10,31)}
+ // Slow generation turnover; image remains persistent.
+ if(mode!=='extinction'&&marks.length>50&&r()<dt*.3){let m=pick(marks);if(age-m.born>m.life){drawMark({...m,s:m.s*.55,col:opposite(m.col)},'erase');marks.splice(marks.indexOf(m),1)}}
+ if(mode!=='extinction'&&marks.length<25)spawn(r(),r(),R(7),range(.05,.22),R(5));
+ present();
+}
+resize();base();nextLarge=age+range(8,19);present();
+let timer;new ResizeObserver(()=>{clearTimeout(timer);timer=setTimeout(resize,120)}).observe(cv);
+window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==parent)return;if(e.data?.type==='study-visibility'){paused=!e.data.visible;last=0;acc=0}if(e.data?.type==='study-quality'){let q=!!e.data.fullscreen;if(q!==full){full=q;clearTimeout(timer);timer=setTimeout(resize,100)}}});
+function loop(now){let dt=last?Math.min(.1,(now-last)/1000):0;last=now;if(!paused&&!document.hidden){acc+=dt;let interval=preview&&!full?1/22:1/30;if(acc>=interval){step(Math.min(.1,acc));acc=0}}requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+})();</script></body></html>

@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>LifeAfterLogic / Broken Logic</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;overscroll-behavior:none}
+canvas{display:block;width:100%;height:100%;image-rendering:auto;pointer-events:none}
+#err{position:fixed;left:12px;bottom:12px;color:#ccc;font:12px monospace;max-width:90vw}
+#err:empty{display:none}
+</style>
+<canvas id="art" aria-label="Residue, an autonomous evolving digital artwork"></canvas><div id="err" role="status"></div>
+
+<script src="./physical-memory.js" defer></script>
+<script>
+'use strict';
+const canvas=document.getElementById('art'), el=id=>document.getElementById(id);
+const profiles=[{"id":"antigrammar","name":"22 / Antigrammar","variant":2,"layout":5,"density":1.1,"fracture":0.92,"drift":0.75,"pigment":1.2,"chaos":0.72,"signature":0},{"id":"blackbox","name":"23 / Black Box","variant":2,"layout":5,"density":1.25,"fracture":0.85,"drift":0.62,"pigment":0.85,"chaos":0.8,"signature":1},{"id":"falsememory","name":"24 / False Memory","variant":2,"layout":6,"density":1.35,"fracture":0.92,"drift":0.84,"pigment":1.15,"chaos":0.85,"signature":2},{"id":"crossed","name":"25 / Crossed Wires","variant":2,"layout":0,"density":1.4,"fracture":0.9,"drift":0.95,"pigment":1.25,"chaos":0.95,"signature":3},{"id":"deadcode","name":"26 / Dead Code","variant":2,"layout":5,"density":1.5,"fracture":0.78,"drift":0.9,"pigment":1.05,"chaos":0.85,"signature":4},{"id":"afterprint","name":"27 / Afterprint","variant":1,"layout":2,"density":1.25,"fracture":0.85,"drift":0.75,"pigment":1.15,"chaos":0.7,"signature":5},{"id":"paradox","name":"28 / Paradox","variant":2,"layout":6,"density":1.4,"fracture":1,"drift":0.9,"pigment":1.3,"chaos":1,"signature":6},{"id":"signal","name":"29 / Signal Bloom","variant":2,"layout":4,"density":1.25,"fracture":0.77,"drift":0.95,"pigment":1.55,"chaos":0.85,"signature":7},{"id":"palimpsest","name":"30 / Palimpsest","variant":1,"layout":5,"density":1.1,"fracture":1,"drift":0.65,"pigment":0.95,"chaos":0.68,"signature":8},{"id":"fugue","name":"31 / Fugue","variant":2,"layout":2,"density":1.5,"fracture":0.8,"drift":0.9,"pigment":1.25,"chaos":0.95,"signature":9},{"id":"syntax","name":"32 / Syntax Fever","variant":2,"layout":5,"density":1.6,"fracture":0.96,"drift":1,"pigment":1.4,"chaos":1,"signature":10},{"id":"unknown","name":"33 / Unknown System","variant":2,"layout":6,"density":1.5,"fracture":0.93,"drift":1,"pigment":1.45,"chaos":1,"signature":11}];
+const query=new URLSearchParams(location.search),profile=profiles.find(p=>p.id===query.get('study'))||profiles[0],variant=profile.variant,preview=query.has('preview');
+document.title='lifeafterlogic / '+profile.name;
+let sourceImages=[],nextColour=8,colourEnd=0,colourID=0,nextWeather=12,weather=0,burst=0,nextSnapshot=45,archiveIndex=0;
+const snapshots=[];let anomaly=[0,0,0,0],anomalyInk=[1,0,0],anomalyStart=0,anomalyEnd=0,nextAnomaly=0,anomalyKind=0,nextRewrite=0;const pigments=new Map();let pigmentTex,pigmentData=new Uint8Array(1024),nextPigment=0,nextSpread=0,chaosStart=0,chaosEnd=0,nextChaos=0,chaosLevel=0,chaosPeak=0,stormHue=0;let entropy=1,nextEntropy=0,nextFracture=0,fractureField,fractureCanvas,fractureCtx,fractureAge=0,fractureLife=24;const randomPool=new Uint32Array(1024);let poolIndex=randomPool.length;function fresh(){if(poolIndex>=randomPool.length){crypto.getRandomValues(randomPool);poolIndex=0}return randomPool[poolIndex++]/4294967296}
+const gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,preserveDrawingBuffer:false});
+if(!gl){el('err').textContent='WebGL2 unavailable in this browser.';throw Error('WebGL2 unavailable')}
+let W,H,seed=0,step=0,paused=false,targets=[],fb=[],base,regions,archive,read=0,last=0,acc=0,epoch=0,age=0,nextEvent=0,boxes=[],rand,baseData,fieldData,memoryData,events=0,quality=1,layout=0,paletteIndex=0,era=0,nextEra=90;
+const vs=`#version 300 es
+void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.-1.,0.,1.);}`;
+const fs=`#version 300 es
+precision highp float;precision highp int;
+uniform sampler2D prev,original,field,memoryTex,fractures;
+uniform int entropy;uniform float fractureStrength;uniform float drift;uniform float imprint;
+uniform sampler2D pigmentsTex;uniform float chaos;uniform float chromatic;uniform int signature;uniform vec4 phenomenon;uniform vec3 phenomenonInk;
+uniform ivec2 dim;uniform int tick;uniform float key;uniform int climate;uniform int accentID;uniform int study;
+out vec4 outColor;
+uint mixbits(uint x){x^=x>>16u;x*=0x7feb352du;x^=x>>15u;x*=0x846ca68bu;x^=x>>16u;return x;}
+float noise(ivec2 p,int salt){uint n=mixbits(uint(p.x)*1597334677u^uint(p.y)*3812015801u^uint(salt)*2891336453u);return float(n&65535u)/65535.;}
+ivec2 cp(ivec2 p){return clamp(p,ivec2(0),dim-1);}
+vec4 get(sampler2D tex,ivec2 p){return texelFetch(tex,cp(p),0);}
+int owner(ivec2 p){return int(round(get(field,p).r*255.));}
+bool inside(ivec2 p){return all(greaterThanEqual(p,ivec2(0)))&&all(lessThan(p,dim));}
+void main(){
+ ivec2 p=ivec2(gl_FragCoord.xy);vec2 z=vec2(p);
+ vec4 m=get(field,p);int id=int(round(m.r*255.));int gene=int(round(m.g*255.));float speed=m.b,porosity=m.a;
+ int salt=id*223+int(key)*19;float t=float(tick);
+ int beat=tick/(4+int((1.-speed)*19.));
+ int period=240+int(noise(ivec2(id,93),salt)*2900.);
+ int season=tick/period;
+ int mode=(gene+int(noise(ivec2(id,season),salt+5)*4.))%40;
+ float pulse=noise(ivec2(id,tick/(95+int(speed*180.))),salt+16);
+ float phase=noise(ivec2(id,season),salt+31);
+ float row=noise(ivec2(p.y/(1+int(speed*7.)),id),salt);
+ float col=noise(ivec2(p.x/(1+int(speed*5.)),id),salt+15);
+ int dx=row>.5?1:-1,dy=col>.5?1:-1;
+ int pace=1+int(speed*5.);ivec2 q=p;float gate=0.;
+ float l=5.+speed*23.;
+ if(mode==0){q+=ivec2(dx*pace,0);gate=step(.44,fract(z.y/(9.+speed*30.)+phase));}
+ if(mode==1){q+=ivec2(0,dy*pace);gate=step(.42,fract(z.x/(7.+speed*30.)+phase));}
+ if(mode==2){float a=noise(p/ivec2(3+int(speed*15.)),salt);q+=a>.5?ivec2(dx,0):ivec2(0,dy);gate=step(.23,a);}
+ if(mode==3){float a=sin(z.x*.047+sin(z.y*.029+t*.008)*3.+float(id))+sin(z.y*.062-t*.009);q+=abs(a)>.7?ivec2(dx*2,0):ivec2(0,dy);gate=step(-.2,a);}
+ if(mode==4){int a=(p.x/8+p.y/8+beat)%2;q+=a==0?ivec2(dx*3,0):ivec2(0,dy*2);gate=step(.26,noise(p/8,salt));}
+ if(mode==5){float a=noise(ivec2(p.y/2,beat),salt);q+=ivec2(int(floor(a*17.))-8,0);gate=step(.55,row);}
+ if(mode==6){q+=ivec2(dx,dy);gate=step(.44,noise(p/3,salt));}
+ if(mode==7){q+=ivec2(dx*pace*2,0);gate=step(.32,fract(z.y/l+phase));}
+ if(mode==8){int stripe=int(floor((z.x+z.y)/l));q+=ivec2(stripe%2==0?pace:-pace,stripe%2==0?-1:1);gate=step(.3,fract((z.x-z.y)/l));}
+ if(mode==9){int size=4+int(speed*18.);ivec2 cell=p/size;ivec2 c=p-cell*size;int dir=(int(noise(cell,salt)*4.)+season)%4;ivec2 shift=dir==0?ivec2(1,0):dir==1?ivec2(0,1):dir==2?ivec2(-1,0):ivec2(0,-1);q=cell*size+ivec2((c.x+shift.x+size)%size,(c.y+shift.y+size)%size);gate=step(.25,noise(cell,salt+3));}
+ if(mode==10){q+=ivec2(0,int(floor(noise(ivec2(p.x/3,beat),salt)*13.))-6);gate=step(.52,col);}
+ if(mode==11){float a=fract((z.x+sin(z.y*.021+phase*6.28)*23.)/l-t*.008);q+=ivec2(a>.5?pace:-pace,dy);gate=step(.45,a);}
+ if(mode==12){int g=3+int(speed*12.);ivec2 c=p/g;float a=noise(c,salt+season);q+=a>.5?ivec2(dx*g,0):ivec2(0,dy*g);gate=step(.62,a);}
+ if(mode==13){int band=(p.y/3+beat/4)%7;q+=ivec2(band<4?pace:-pace,band==0?dy*2:0);gate=step(.4,fract(z.y/l+phase));}
+ if(mode==14){q+=ivec2(dx,dy*2);gate=step(.3,fract((z.x*.63+z.y)/l+phase));}
+ if(mode==15){float a=noise(p/ivec2(6,13),salt+beat/8);q+=a>.48?ivec2(dx,0):ivec2(0,dy);gate=step(.37,a);}
+ if(mode==16){int band=p.y/(3+int(speed*12.));int d=(band+season)%3==0?-1:1;q+=ivec2(d*pace,0);gate=step(.27,fract((z.x+float(band)*17.)/(40.+speed*90.)-t*.004));}
+ if(mode==17){int g=7+int(speed*24.);ivec2 cell=p/g;ivec2 c=p-cell*g;int edge=min(min(c.x,c.y),min(g-1-c.x,g-1-c.y));ivec2 v=c.y==edge?ivec2(1,0):c.x==g-1-edge?ivec2(0,1):c.y==g-1-edge?ivec2(-1,0):ivec2(0,-1);q+=v;gate=step(.23,noise(cell,salt));}
+ if(mode==18){int k=4+int(speed*11.);ivec2 cell=p/k;float f=noise(cell+ivec2(beat/6,0),salt);q+=ivec2(f>.5?dx*k:0,f>.5?0:dy*k);gate=step(.64,f);}
+ if(mode==19){float f=fract((z.x*.23+z.y)/(9.+speed*28.)-t*.005);q+=ivec2(f>.5?dx*pace:0,f>.5?0:dy);gate=step(.42,f);}
+ if(mode==20){int k=3+int(speed*9.);int j=(p.y/k+beat/5)%9;q+=ivec2(j<3?dx*pace:0,j>=3?dy:0);gate=step(.55,noise(ivec2(p.x/k,j),salt));}
+ if(mode==21){int k=8+int(speed*30.);ivec2 cell=p/k;ivec2 c=p-cell*k;int d=(int(noise(cell,salt)*3.99)+season)%4;q=cell*k+(d==0?ivec2(c.y,k-1-c.x):d==1?ivec2(k-1-c.y,c.x):d==2?ivec2(k-1-c.x,c.y):ivec2(c.x,k-1-c.y));gate=step(.82,noise(cell,salt+beat/7));}
+ if(mode==22){int k=5+int(speed*14.);float f=noise(ivec2(p.y/k,p.x/(k*4)),salt);q+=ivec2(dx*pace*(f>.76?3:1),f<.21?dy:0);gate=step(.2,fract(z.y/float(k)+phase));}
+ if(mode==23){float f=sin(z.x*.008+float(id))+cos(z.y*.009+t*.002);q+=abs(f)>.8?ivec2(dx*2,dy):ivec2(0,dy);gate=step(.2,fract((z.x+z.y)/(15.+speed*20.)+phase));}
+ if(mode==24){int k=2+int(speed*8.);ivec2 c=p/k;int band=(c.x+c.y+beat/5)%13;q+=ivec2(band<5?dx*k:0,band>=5?dy:0);gate=step(.44,noise(c,salt));}
+ if(mode==25){int k=5+int(speed*13.);ivec2 c=p/k;float f=noise(ivec2(c.x/5,c.y),salt+season);q+=ivec2(f>.5?dx*pace:0,f>.5?0:dy*2);gate=step(.35,fract(z.x/float(k)+phase));}
+ if(mode==26){int k=4+int(speed*13.);ivec2 c=p/k;float f=noise(c,salt);q+=ivec2(f>.5?dx*2:0,f>.5?0:dy*2);gate=step(.49,noise(ivec2(c.x,c.y/3),salt+beat/11));}
+ if(mode==27){int k=9+int(speed*21.);ivec2 c=p/k;ivec2 o=p-c*k;int ring=min(min(o.x,o.y),min(k-o.x-1,k-o.y-1));q+=ring%2==0?ivec2(dx,0):ivec2(0,dy);gate=step(.38,noise(c,salt));}
+ if(mode==28){float f=sin(z.x*.023+phase*6.28)+sin(z.y*.021-t*.003);q+=ivec2(f>.1?dx*pace:0,f<=.1?dy:0);gate=step(.53,fract((z.x+z.y)/(7.+speed*22.)));}
+ if(mode==29){int k=3+int(speed*11.);ivec2 c=p/k;int f=(c.x^c.y^season)%7;q+=ivec2(f<3?dx*k:0,f>=3?dy:0);gate=step(.62,noise(c,salt));}
+ if(mode==30){float f=fract(z.y/(12.+speed*42.)+phase);q+=ivec2(dx*(f>.86?pace*3:1),0);gate=step(.37,f);}
+ if(mode==31){int k=6+int(speed*18.);ivec2 c=p/k;float f=noise(c,salt+beat/12);q+=ivec2(f>.66?dx*k:dx,f<.23?dy*k:dy);gate=step(.52,f);}
+ // Eight new motion operators: folding, stitching, branching and local phase reversal.
+ if(mode==32){int k=4+int(speed*17.);ivec2 c=p/k;float f=noise(c,salt);q+=ivec2((c.y%2==0?1:-1)*pace,(c.x%3==0?dy:0));gate=step(.4,f);}
+ if(mode==33){float f=sin(z.x*.016+sin(z.y*.05+phase*6.28)*2.);q+=ivec2(f>.2?dx*pace:0,f<=.2?dy*pace:0);gate=step(.35,fract(z.y/(5.+speed*19.)));}
+ if(mode==34){int k=4+int(speed*19.);ivec2 c=p/k;ivec2 o=p-c*k;q=c*k+ivec2(o.y,o.x);gate=step(.81,noise(c,salt+beat/9));}
+ if(mode==35){int k=3+int(speed*11.);float f=noise(ivec2(p.x/k,p.y/(k*5)),salt+season);q+=ivec2(f>.7?dx*k:dx,dy);gate=step(.5,fract(z.x/float(k)+phase));}
+ if(mode==36){int k=6+int(speed*20.);ivec2 c=p/k;int v=(c.x^c.y)%5;q+=v==0?ivec2(dx*k,0):ivec2(0,dy*(1+v%3));gate=step(.43,noise(c,salt));}
+ if(mode==37){float f=sin((z.x+z.y)*.024-t*.003);q+=ivec2(f>.3?dx*pace:-dx,dy);gate=step(.3,fract((z.x-z.y)/(6.+speed*18.)));}
+ if(mode==38){int k=5+int(speed*19.);ivec2 c=p/k;ivec2 o=p-c*k;int v=(c.x+c.y+season)%3;q=c*k+(v==0?ivec2(k-1-o.x,o.y):v==1?ivec2(o.x,k-1-o.y):o);gate=step(.76,noise(c,salt+beat/10));}
+ if(mode==39){float f=noise(p/ivec2(3,17),salt+beat/17);q+=ivec2(f>.5?dx*pace:0,f<.5?dy*pace:0);gate=step(.42,f);}
+ vec4 old=get(prev,p),home=get(original,p),left=get(prev,p+ivec2(-1,0)),right=get(prev,p+ivec2(1,0)),up=get(prev,p+ivec2(0,1)),down=get(prev,p+ivec2(0,-1));
+ float infection=max(max(left.a,right.a),max(up.a,down.a));
+ float r=noise(p,tick+salt+entropy),local=noise(p/ivec2(13,9),tick/44+salt);
+ // A bounded travelling state: infection is carried by neighbours, decays, and occasionally germinates.
+ float live=max(0.,old.a-.025);
+ if(infection>.11&&r<.21+porosity*.32)live=max(live,infection-.035);
+ if(pulse>.91&&local>.94&&r<.026*drift)live=1.;
+ if(noise(p/ivec2(31,23),entropy)>.98&&r<.009)live=.85;
+ if(pulse<.16&&old.a<.3)gate=0.; if(speed<.36&&tick%(2+int((.36-speed)*12.))!=0&&live<.3)gate=0.;
+ if(climate==1&&live<.4&&speed<.7&&tick%4!=0)gate=0.;
+ if(climate==2&&local>.53&&pulse>.35){q=p+ivec2(dx*(1+int(speed*6.)),dy);gate=1.;}
+ if(climate==3&&local>.75&&pulse>.5){q=p+ivec2(0,dy*(1+int(speed*9.)));gate=1.;}
+ if(live>.35&&r<live*.48){q=p+ivec2(dx*(1+int(live*5.)),dy*(1+int(live*2.)));gate=1.;}
+ // Local coherent disturbances travel across the geometry, not an all-screen random flash.
+ float front=sin(z.x*.013+sin(z.y*.019+t*.008)*2.4-t*.009)+cos(z.y*.009+t*.006);
+ float disorder=smoothstep(.65,1.6,front)*chaos;
+ vec2 uv=z/vec2(dim);vec2 rel=(uv-phenomenon.xy)*vec2(float(dim.x)/float(dim.y),1.);
+ float ang=atan(rel.y,rel.x);float distanceField=length(rel);
+ float radius=max(.001,phenomenon.z);float eventPower=phenomenon.w;
+ float shell=1.-smoothstep(.012,.08,abs(distanceField-radius*(.76+.18*sin(ang*5.+phase*6.28))));
+ float island=(1.-smoothstep(radius*.45,radius*1.25,distanceField))*eventPower;
+ float pulseField=eventPower*shell;
+ if(signature==1||signature==8)island*=.65;
+ if(signature==3||signature==6||signature==10||signature==11){
+  if(pulseField>.22){q=p+ivec2(round(normalize(rel+vec2(.00001))*float(1+int(pulseField*12.))));gate=1.;}
+ }
+ if(signature==4||signature==7){if(island>.4&&local>.4){q=p+ivec2(dx*pace*2,0);gate=1.;}}
+ if(signature==9){if(island>.35){q=p+ivec2(0,dy*pace*2);gate=1.;}}
+ if(disorder>.28&&local>.30){int jump=1+int(disorder*9.);q=p+ivec2(dx*jump,dy*int(disorder*4.));gate=1.;}
+ vec3 v=old.rgb;
+ if(gate>.5&&inside(q)&&(owner(q)==id||(live>.32&&r<porosity*.27)||(disorder>.28&&r<disorder*.45)||(pulseField>.2&&r<pulseField*.55)))v=get(prev,q).rgb;
+ // Pixel sorting: compare nearby colour values rather than generating noise.
+ if(mode==12&&gate>.5&&inside(q)&&owner(q)==id){vec3 other=get(prev,q).rgb;float x=dot(old.rgb,vec3(.3,.59,.11)),y=dot(other,vec3(.3,.59,.11));v=((dx>0&&x<y)||(dx<0&&x>y))?other:old.rgb;}
+ float sweep=fract((mode==1?z.x:z.y)/(38.+speed*135.)-t*(.001+speed*.002)+phase);
+ // Repair fronts retain the graphic composition while the feedback is free to develop.
+ float repair=(.006+speed*.022)*(1.-live*.72)*(1.-disorder*.52);if(climate==1)repair*=1.6;if(climate==2)repair*=.75;if(study==1)repair*=1.15;
+ if(r<repair||(sweep<.035&&r<.25))v=home.rgb;
+ // Coherent strips of old compositions can return, then mutate as part of the current state.
+ if(pulse>.86&&fract((z.y+z.x*.14)/(14.+speed*45.)+phase)<.09&&r<.19)v=get(memoryTex,p).rgb;
+ // Occasional coherent reconstruction in narrow travelling ribbons.
+ if(pulse>.92&&fract((mode%2==0?z.x:z.y)/(65.+speed*120.)-t*.003+phase)<.014&&r<.65)v=home.rgb;
+ // Colour exists as a temporary local event rather than a global theme.
+ vec4 pigment=texelFetch(pigmentsTex,ivec2(id,0),0);
+ float chroma=max(max(v.r,v.g),v.b)-min(min(v.r,v.g),v.b);
+ if(pigment.a<.05&&chroma>.025){float grey=dot(v,vec3(.299,.587,.114));v=mix(vec3(grey),v,.965);}
+ // Ink catches on contrasting marks and spreads as part of feedback, rather than tinting the whole screen.
+ if(pigment.a>.05){
+  float lum=dot(v,vec3(.299,.587,.114));
+  float stain=noise(p/ivec2(6,9),salt+int(t/95.));
+  if(r<(.012+live*.065+disorder*.06)*pigment.a&&stain>.37&&lum>.23&&lum<.97)
+   v=mix(v,pigment.rgb,.66+.25*stain);
+  if(chroma>.035&&r<.003)v=mix(v,pigment.rgb,.35);
+ }
+ // Irregular, composition-spanning fracture masks inject ink into the persistent state.
+ vec4 cut=get(fractures,p);
+ float n=noise(p/ivec2(4,5),salt+entropy);
+ if(cut.a>.05&&r<cut.a*fractureStrength*imprint*(.028+.087*live+.023*n+.025*disorder)){
+  v=cut.rgb;
+  live=max(live,cut.a*.35);
+ }
+ // A local propagating scar can cross any cell edge, but never wipes the whole frame.
+ float scar=noise(p/ivec2(21,17),salt+entropy/7);
+ if(live>.48&&scar>.82&&r<.055*drift){
+  ivec2 qp=p+ivec2(dx*(2+int(live*7.)),dy*(1+int(live*4.)));
+  if(inside(qp))v=get(prev,qp).rgb;
+ }
+ // Chromatic scars migrate over boundaries from the existing, neighbouring coloured ink.
+ if(chromatic>.01&&disorder>.12&&live>.32&&r<.014*chromatic){vec3 ncol=get(prev,p+ivec2(dx*3,dy*2)).rgb;float chrom=max(max(ncol.r,ncol.g),ncol.b)-min(min(ncol.r,ncol.g),ncol.b);if(chrom>.15)v=ncol;}
+ // Short-lived spatial events deposit colour in existing marks, not full-frame strobing.
+ float bright=dot(v,vec3(.299,.587,.114));
+ if(eventPower>.03&&r<(.012*island+.034*pulseField)*chromatic&&bright>.24){
+  float detail=noise(p/ivec2(3,5),salt+entropy/9);
+  if(detail>.32)v=mix(v,phenomenonInk,.83);
+ }
+ if(signature==2||signature==5||signature==8){
+  if(island>.18&&r<island*.035&&local>.55)v=get(memoryTex,p+ivec2(dx*2,dy)).rgb;
+ }
+ if(signature==0||signature==4||signature==10){
+  float border=abs(dot(left.rgb-right.rgb,vec3(.299,.587,.114)))+abs(dot(up.rgb-down.rgb,vec3(.299,.587,.114)));
+  if(pulseField>.18&&border>.55&&r<.08*pulseField)v=mix(v,home.rgb,.85);
+ }
+ outColor=vec4(v,live);
+}`;
+const display=`#version 300 es
+precision highp float;uniform sampler2D tex;uniform vec2 viewSize;out vec4 outColor;void main(){outColor=texture(tex,gl_FragCoord.xy/viewSize);}`;
+function program(f){function sh(type,src){let s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}let p=gl.createProgram();let a=sh(gl.VERTEX_SHADER,vs),b=sh(gl.FRAGMENT_SHADER,f);gl.attachShader(p,a);gl.attachShader(p,b);gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));gl.deleteShader(a);gl.deleteShader(b);return p}
+const sim=program(fs),show=program(display),vao=gl.createVertexArray();gl.bindVertexArray(vao);
+const U=(p,n)=>gl.getUniformLocation(p,n);
+const su=Object.fromEntries(['prev','original','field','memoryTex','fractures','dim','tick','key','climate','accentID','study','entropy','fractureStrength','drift','imprint','pigmentsTex','chaos','chromatic','signature','phenomenon','phenomenonInk'].map(n=>[n,U(sim,n)])),du={tex:U(show,'tex'),view:U(show,'viewSize')};
+function texture(data){let a=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,a);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,data);return a}
+function bind(t,i,u){gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,t);gl.uniform1i(u,i)}
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let x=Math.imul(s^s>>>15,1|s);x=x+Math.imul(x^x>>>7,61|x)^x;return((x^x>>>14)>>>0)/4294967296}}
+const palettes=[
+ ['#101010','#f5f5f2','#101010','#313131','#a4a4a2','#e2e2e0'],
+ ['#f5f5f2','#101010','#f5f5f2','#d3d3d1','#545454','#838381'],
+ ['#050505','#ffffff','#ffffff','#181818','#868686','#d8d8d8'],
+ ['#f0f0ee','#090909','#090909','#c9c9c7','#666666','#dddddb'],
+ ['#111111','#f4f4f2','#fb351c','#d0d0ce','#7f7f7f','#a12619'],
+ ['#111111','#f4f4f2','#244dff','#cececc','#858585','#142b92'],
+ ['#111111','#f4f4f2','#c6ee00','#d4d4d2','#787878','#627300'],
+ ['#111111','#f4f4f2','#eb80d3','#d6d6d4','#858585','#992c89'],
+ ['#f5f5f2','#101010','#f15d15','#dededc','#757575','#b52c07'],
+ ['#111111','#f4f4f2','#ff3d81','#e3e0d9','#7a7775','#8e235b'],
+ ['#151515','#f7f2e5','#edb300','#d4d4ce','#777777','#8e6500'],
+ ['#111111','#f4f4f2','#50b8c8','#d6d6d6','#737373','#1a6c84'],
+ ['#111111','#f4f4f2','#9438d4','#dedede','#797979','#5a267e'],
+ ['#161616','#f3f0e7','#ef694d','#d8d5ce','#777777','#a83031']
+];
+const R=n=>Math.floor(rand()*n), pick=a=>a[R(a.length)];
+function splitBox(box,ratio,vertical){
+ let {x,y,w,h}=box,n=vertical?w:h;
+ let k=Math.max(8,Math.min(n-8,Math.round(n*ratio)));
+ return vertical?[{x,y,w:k,h},{x:x+k,y,w:w-k,h}]:[{x,y,w,h:k},{x,y:y+k,w,h:h-k}];
+}
+function makeBox(rect,id){return {...rect,id,gene:R(40),speed:8+R(238),porosity:25+R(218),kind:R(64),bg:0,fg:1,accent:2,scale:1+R(8),phase:R(800),palette:paletteIndex}}
+function styleBox(b,initial=false){
+ let area=b.w*b.h/(W*H),dense=area<.006;
+ b.palette=paletteIndex<4?paletteIndex:0;
+ b.bg=rand()<.56?0:1;b.fg=1-b.bg;b.accent=pick([b.fg,b.fg,3,4,5]);
+ const sets=[
+  [0,1,2,4,6,9,10,14,18,18,19,20,22,23,24,28,29,30,30,31,32,33,34,35,36,39,41],
+  [5,7,8,10,11,13,15,17,18,18,21,25,26,27,32,34,35,36,37,37,38,38,40,40,41],
+  [5,6,9,10,14,18,19,20,24,29,30,31,32,33,35,36,39,39,40,41,41]
+ ];
+ b.kind=pick(sets[variant]);if(rand()<.44*profile.fracture)b.kind=42+R(22);
+ if(area>.10)b.kind=pick(variant===0?[18,18,30,31,32,34,36,39]:variant===1?[18,34,37,38,40,41]:[18,30,32,35,39,41]);
+ if(dense)b.kind=pick(variant===2?[5,10,20,24,31,33,35,39,41]:[0,1,2,5,7,10,13,20,22,24,25,27,33,35,36]);
+ if(rand()<.035)b.kind=18;if(b.kind===18&&area>.075)b.kind=pick([30,34,42,43,45,47,49]);
+ // Separate art direction for each study, biased towards v6 Broken Syntax.
+ const families=[[31,35,39,41,46,52,55,60],[18,30,39,42,43,51,53,59],[32,34,37,38,40,49,54,58],[10,24,34,44,48,55,56,61],[31,33,35,41,46,52,57,60],[5,26,37,38,40,48,54,62],[30,32,39,42,43,47,53,63],[15,19,26,28,44,48,56,62],[31,34,37,38,40,49,54,58],[5,14,33,35,41,44,57,61],[31,35,39,41,46,52,55,60,63],[30,32,34,39,41,43,49,52,56,63]];
+ if(rand()<.69)b.kind=pick(families[profile.signature]);
+ if(b.kind===18){b.speed=Math.min(b.speed,70);b.porosity=Math.min(b.porosity,85)}
+ b.scale=1+R(10);b.phase=R(900);return b;
+}
+function rgba(hex){return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)]}
+function glyph(ctx,rect,x,y,g,ink,code){
+ // Original stroke grammar; derived from corner cuts, orthogonal fragments and missing joints.
+ let t=Math.max(1,Math.round(g/8)),n=5,unit=Math.max(1,Math.floor(g/n));
+ for(let k=0;k<7;k++){if((code>>k)&1){let a=(k*3+code)%n,b=(k*2+(code>>3))%n;let len=1+((code>>((k+2)%8))%4);if(k%2)rect(x+a*unit,y+b*unit,t,Math.min(n-b,len)*unit,ink);else rect(x+a*unit,y+b*unit,Math.min(n-a,len)*unit,t,ink)}}
+ if(code%5===0){rect(x,y,g,t,ink);rect(x,y,t,g,ink)}
+ if(code%7===0){rect(x+g-t,y,t,g,ink);rect(x,y+g-t,g,t,ink)}
+}
+function imageMemory(ctx,w,h,kind,fg,bg,hex){
+ if(!sourceImages.length)return false;
+ let img=pick(sourceImages),iw=img.naturalWidth,ih=img.naturalHeight;if(!iw||!ih)return false;
+ let zoom=.18+rand()*.62,sw=Math.max(1,Math.min(iw,iw*zoom)),sh=Math.max(1,Math.min(ih,sw*h/Math.max(1,w)));if(sh===ih)sw=Math.min(iw,sh*w/Math.max(1,h));
+ let sx=rand()*(iw-sw),sy=rand()*(ih-sh);
+ let c=document.createElement('canvas'),density=kind===38?2:1;c.width=Math.max(1,Math.ceil(w/density));c.height=Math.max(1,Math.ceil(h/density));
+ let d=c.getContext('2d',{willReadFrequently:true});d.drawImage(img,sx,sy,sw,sh,0,0,c.width,c.height);let im=d.getImageData(0,0,c.width,c.height),px=im.data;
+ let a=rgba(hex(fg)),b=rgba(hex(bg)),threshold=85+R(100),bayer=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+ for(let i=0;i<px.length;i+=4){let k=i/4,x=k%c.width,y=Math.floor(k/c.width),v=px[i]*.299+px[i+1]*.587+px[i+2]*.114,cut=threshold+(bayer[(y%4)*4+x%4]-7.5)*(kind===40?12:5);let col=v>cut?a:b;px[i]=col[0];px[i+1]=col[1];px[i+2]=col[2];px[i+3]=255}
+ d.putImageData(im,0,0);ctx.imageSmoothingEnabled=false;ctx.drawImage(c,0,0,w,h);return true;
+}
+function paint(b,remember){
+ const {x,y,w,h,id,gene,speed,porosity,kind,bg,fg,accent,scale,phase,palette}=b;
+ const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d',{alpha:false});
+ const hex=k=>palettes[palette][k%6];
+ const rect=(x,y,w,h,k)=>{if(w<=0||h<=0)return;ctx.fillStyle=hex(k);ctx.fillRect(Math.floor(x),Math.floor(y),Math.ceil(w),Math.ceil(h));};
+ rect(0,0,w,h,bg);
+ let pitch=scale+2+R(9),line=1+R(Math.max(1,scale)),n=4+R(14);
+ if(kind===0||kind===1){for(let j=0;j<(kind===0?h:w);j+=pitch)kind===0?rect(0,j,w,line,fg):rect(j,0,line,h,fg)}
+ if(kind===2){for(let j=0;j<h;j+=pitch)for(let i=0;i<w;i+=pitch)if((i/pitch+j/pitch)%2===0)rect(i,j,line,line,fg)}
+ if(kind===3||kind===4){for(let i=0;i<n;i++){let xx=R(w),yy=R(h);rect(xx,yy,Math.max(1,R(w-xx+1)),Math.max(1,R(h-yy+1)),rand()<.8?fg:accent)}}
+ if(kind===5){for(let j=0;j<h;j+=3+R(4)){for(let i=0;i<w;){let len=2+R(24);rect(i,j,len,1+R(2),rand()<.8?fg:accent);i+=len+2+R(12)}}}
+ if(kind===6){let lim=Math.min(w,h)/2;for(let i=0;i<lim;i+=pitch){rect(i,i,w-i*2,line,fg);rect(i,h-i-line,w-i*2,line,fg);rect(i,i,line,h-2*i,fg);rect(w-i-line,i,line,h-2*i,fg)}}
+ if(kind===7){for(let j=0;j<h;j+=5)for(let i=0;i<w;i+=5)if(rand()<.6)rect(i,j,1+R(4),1+R(4),rand()<.8?fg:accent)}
+ if(kind===8){for(let j=0;j<h;j+=pitch){let q=Math.floor(w*(.15+rand()*.85));rect(rand()<.5?0:w-q,j,q,line,fg)}}
+ if(kind===9){let v=2+R(7);rect(v,v,w-2*v,h-2*v,fg);rect(v*2,v*2,w-4*v,h-4*v,bg)}
+ if(kind===10){let g=3+R(6);for(let j=0;j<h;j+=g)for(let i=0;i<w;i+=g){if(rand()<.5)rect(i,j,g,1,fg);else rect(i,j,1,g,fg);if(rand()<.08)rect(i,j,2,2,accent)}}
+ if(kind===11){for(let j=0;j<h;j+=pitch)for(let i=0;i<w;i+=pitch){let v=Math.max(1,Math.floor((.5+.5*Math.sin(i*.028+j*.053+phase))*pitch));rect(i,j,v,1+Math.floor(v/3),fg)}}
+ if(kind===12){let bw=Math.max(2,Math.floor(w/(3+R(13))));for(let i=0;i<w;i+=bw){let hh=Math.floor(h*(.12+rand()*.88));rect(i,rand()<.5?0:h-hh,Math.max(1,bw-1),hh,rand()<.8?fg:accent)}}
+ if(kind===13){let g=3+R(5);for(let j=0;j<h;j+=g)for(let i=0;i<w;i+=g){let v=(Math.floor(i/g)^Math.floor(j/g)^phase)%11;if(v<4)rect(i,j,g-1,g-1,fg)}}
+ if(kind===14){let g=2+R(6);for(let j=0;j<h;j+=g){let i=(j+phase)%(g*7);for(;i<w;i+=g*7)rect(i,j,g*3,1,fg)}}
+ if(kind===15){let g=3+R(9);for(let j=0;j<h;j+=g){let q=Math.floor(w*(.5+.43*Math.sin(j*.023+phase)));rect(0,j,q,line,fg);rect(q,j,Math.max(1,g),g,accent)}}
+ if(kind===16){let g=3+R(9);for(let i=0;i<w;i+=g){let q=Math.floor(h*(.5+.42*Math.sin(i*.021+phase)));rect(i,0,line,q,fg);if(rand()<.2)rect(i,q,g,h-q,accent)}}
+ if(kind===17){let g=3+R(8);for(let j=0;j<h;j+=g)for(let i=0;i<w;i+=g){let v=Math.sin(i*.014+phase)+Math.sin(j*.018)+Math.sin((i+j)*.043);if(v>.5)rect(i,j,g-1,g-1,fg);else if(v< -1.6)rect(i,j,1,g,accent)}}
+ // 12 additional graphic structures, from nearly empty fields to microscopic woven systems.
+ if(kind===18){let v=rand()<.5?1:2;let edge=rand()<.5;for(let j=0;j<1+R(4);j++){let yy=R(h),xx=R(w);if(edge)rect(0,yy,w*(.04+rand()*.19),v,fg);else rect(xx,0,v,h*(.05+rand()*.2),accent)}}
+ if(kind===19){let n=3+R(7);for(let j=0;j<n;j++){let u=(j+1)/(n+1);let xx=Math.floor(w*u),yy=Math.floor(h*(.16+.65*rand()));rect(xx,0,1+R(4),yy,fg);rect(xx,yy,Math.max(1,w/(n*2)),1+R(3),accent)}}
+ if(kind===20){let g=3+R(6);for(let j=0;j<h;j+=g)for(let i=0;i<w;i+=g){let k=(Math.floor(i/g)+Math.floor(j/g)*3+phase)%7;if(k<5)rect(i,j,k%2?g-1:1,k%2?1:g-1,fg);if(k===6)rect(i,j,1,1,accent)}}
+ if(kind===21){let g=4+R(10);for(let j=0;j<h;j+=g){let f=Math.floor((.5+.5*Math.sin(j*.14+phase))*g);for(let i=0;i<w;i+=g)rect(i+f%g,j,1+R(2),g-1,fg)}}
+ if(kind===22){let g=3+R(7);for(let j=0;j<h;j+=g)for(let i=0;i<w;i+=g){let u=(i+j+phase)%(g*5);if(u<g*2){rect(i,j,g-1,1,fg);rect(i,j,1,g-1,fg)}else if(u<g*3)rect(i,j,2,2,accent)}}
+ if(kind===23){let g=4+R(7);let cx=w*(.28+rand()*.44),cy=h*(.25+rand()*.5);for(let j=0;j<h;j+=g)for(let i=0;i<w;i+=g){let d=Math.max(Math.abs(i-cx)/Math.max(1,w),Math.abs(j-cy)/Math.max(1,h));if(Math.floor(d*17)%3===0)rect(i,j,g-1,g-1,fg);else if(Math.floor(d*29)%11===0)rect(i,j,g-1,1,accent)}}
+ if(kind===24){let g=4+R(7);for(let j=0;j<h;j+=g)for(let i=0;i<w;i+=g){let k=(Math.floor(i/g)^Math.floor(j/g)^phase)%8;if(k<4){rect(i,j,g,1,fg);rect(i+(k%2)*(g-1),j,1,g,fg)}else if(k===7)rect(i,j,1,1,accent)}}
+ if(kind===25){let g=2+R(5);for(let j=0;j<h;j+=g){let x0=R(Math.max(1,g*3));for(let i=x0;i<w;i+=g*3){rect(i,j,Math.max(1,g-1),1,fg);if(rand()<.3)rect(i+g,j,1,g,accent)}}}
+ if(kind===26){let g=2+R(5),n=2+R(4);for(let k=0;k<n;k++){let x=Math.floor(w*(.12+rand()*.7)),y=Math.floor(h*(.12+rand()*.7));let ww=Math.max(1,Math.floor(w*(.1+rand()*.3))),hh=Math.max(1,Math.floor(h*(.1+rand()*.3)));for(let j=0;j<hh;j+=g)rect(x,y+j,ww,1,k%2?fg:accent)}}
+ if(kind===27){let g=3+R(5);for(let j=0;j<h;j+=g)for(let i=0;i<w;i+=g){let k=(Math.floor(i/g)*7+Math.floor(j/g)*11+phase)%19;if(k<11)rect(i,j,1+k%Math.max(1,g-1),1,fg);else if(k===17)rect(i,j,1,g,accent)}}
+ if(kind===28){let g=4+R(9),cut=w*(.2+rand()*.6);for(let j=0;j<h;j+=g){let bend=Math.floor(cut+Math.sin(j*.011+phase)*w*.15);rect(0,j,Math.max(1,bend),1+R(2),fg);if(j%(g*4)===0)rect(bend,j,Math.max(1,w-bend),1,accent)}}
+ if(kind===29){let n=4+R(8);for(let j=0;j<n;j++){let x=R(w),y=R(h),ww=Math.max(1,R(Math.max(2,w/2))),hh=Math.max(1,R(Math.max(2,h/2)));rect(x,y,ww,1,fg);rect(x,y,1,hh,fg);rect(x+ww-1,y+hh-1,1,1,accent)}}
+ // Oversized broken symbols, nonuniform line systems, physical fragments, and asemic writing.
+ if(kind===30){let g=Math.max(8,Math.floor(Math.min(w,h)*(.32+rand()*.57))),t=Math.max(1,Math.round(g*(.07+rand()*.08))),x=Math.floor((w-g)*rand()),y=Math.floor((h-g)*rand());for(let k=0;k<2+R(4);k++){let a=x+R(Math.max(1,g/3)),b=y+R(Math.max(1,g/3)),len=Math.max(2,g-R(Math.max(1,g/2)));rect(a,b,len,t,fg);rect(a,b,t,len,fg);if(rand()<.7)rect(a+len-t,b+Math.floor(len*.4),t,len*.6,fg)}if(rand()<.55)rect(x+g*.45,y+g*.45,t*2,t*2,accent)}
+ if(kind===31){let g=7+R(17),code=1+R(254);for(let j=0;j<h;j+=g+R(3))for(let i=0;i<w;i+=g+R(4))if(rand()<.84)glyph(ctx,rect,i,j,g,fg,rand()<.18?R(255):code^(1<<R(8)))}
+ if(kind===32){let g=Math.max(7,Math.floor(Math.min(w,h)*(.1+rand()*.32)));for(let k=0;k<3+R(8);k++)glyph(ctx,rect,R(w)-Math.floor(g/3),R(h)-Math.floor(g/3),g,fg,1+R(254));if(rand()<.6){let l=R(w);rect(l,0,1,h,accent)}}
+ if(kind===33){let g=3+R(5);for(let j=0;j<h;j+=g){let row=R(3),xx=R(4);while(xx<w){let l=1+R(8);if(row!==0)rect(xx,j,l,1,fg);else rect(xx,j,1,l,fg);xx+=l+1+R(8)}}}
+ if(kind===34){let n=4+R(11),xx=R(w),yy=R(h);for(let k=0;k<n;k++){let len=Math.max(1,R(Math.max(2,w/2))),v=Math.max(1,R(Math.max(2,h/2)));rect(xx,yy,len,1,fg);rect(xx,yy,1,v,fg);xx=(xx+len)%w;yy=(yy+v)%h}for(let k=0;k<12;k++)rect(R(w),R(h),1+R(3),1,accent)}
+ if(kind===35){let g=5+R(7),c=R(255);for(let j=0;j<h;j+=g+2){let i=R(4);while(i<w){if(rand()<.8)glyph(ctx,rect,i,j,g,fg,c^(1<<R(8)));i+=g+1+R(4);if(rand()<.08)i+=g}}}
+ if(kind===36){let g=Math.max(2,2+R(7)),m=R(23);for(let j=0;j<h;j+=g)for(let i=0;i<w;i+=g){let q=(Math.floor(i/g)*3^Math.floor(j/g)*5^m)%17;if(q<8)rect(i,j,g-1,q%2?1:g-1,fg);if(q===11)rect(i,j,1,g,accent)}}
+ if(kind===37||kind===38||kind===40){
+  if(!imageMemory(ctx,w,h,kind,fg,bg,hex)){let g=2+R(4);for(let j=0;j<h;j+=g){let q=Math.floor(w*(.5+.4*Math.sin(j*.032+phase)));rect(0,j,q,1,fg)}}
+  if(rand()<.45){for(let k=0;k<3+R(8);k++)rect(R(w),R(h),Math.max(1,R(Math.max(2,w/4))),1+R(3),bg)}
+ }
+ if(kind===39){let g=Math.max(6,Math.round(Math.min(w,h)*(.2+rand()*.5))),code=1+R(254);glyph(ctx,rect,Math.floor((w-g)*.5),Math.floor((h-g)*.5),g,fg,code);let m=Math.max(4,Math.floor(g/5));for(let j=0;j<h;j+=m+3)if(rand()<.6)glyph(ctx,rect,R(w),j,m,accent,code^(1<<R(8)))}
+ if(kind===41){let g=5+R(10),code=R(255);for(let j=0;j<h;j+=g+R(4)){let end=Math.floor(w*(.22+rand()*.78));for(let i=0;i<end;i+=g+1){if(rand()<.75)glyph(ctx,rect,i,j,g,fg,code^(1<<R(8)))}if(rand()<.16)rect(0,j+Math.floor(g/2),end,1,accent)}}
+ // Broken logic: fragmented monumental marks and dense, eroded technical textures.
+ if(kind>=42&&kind<52){
+ const S=Math.min(w,h),tone=hex(fg),back=hex(bg),a=Math.max(2,Math.floor(S*(.035+rand()*.09)));
+ ctx.fillStyle=tone;ctx.strokeStyle=tone;
+ const poly=pts=>{ctx.beginPath();pts.forEach(([u,v],i)=>i?ctx.lineTo(u,v):ctx.moveTo(u,v));ctx.closePath();ctx.fill()};
+ if(kind===42||kind===43||kind===47){
+  for(let j=0;j<2+R(4);j++){let size=Math.max(8,S*(.48+rand()*.78)),x=rand()*w,y=rand()*h;
+   ctx.save();ctx.translate(x,y);ctx.rotate((rand()-.5)*.7);let t=Math.max(2,size*(.09+rand()*.12));
+   ctx.fillRect(-size*.6,-size*.6,t,size);ctx.fillRect(-size*.6,-size*.6,size,t);
+   ctx.fillRect(size*.15,-size*.12,t,size*.52);ctx.fillRect(-size*.18,size*.28,size*.5,t);
+   if(kind===43){poly([[-size*.4,size*.4],[size*.1,-size*.7],[size*.1+t,-size*.7],[-size*.4+t,size*.4]])}
+   ctx.restore();
+  }
+ }
+ if(kind===44||kind===48){for(let j=0;j<12+R(16);j++){let x=R(w),y=R(h),len=Math.max(2,R(Math.max(3,w*.6)));rect(x,y,len,1+R(Math.max(2,a)),fg);rect(x,y,1+R(3),Math.max(2,R(Math.max(3,h*.4))),fg)}}
+ if(kind===45||kind===49){for(let j=0;j<3+R(6);j++){let x=R(w),y=R(h),ww=Math.max(3,R(Math.max(4,w*.6))),hh=Math.max(3,R(Math.max(4,h*.65)));ctx.beginPath();for(let k=0;k<24;k++){let t=k/24*6.283,rr=.6+rand()*.4,xx=x+Math.cos(t)*ww*rr,yy=y+Math.sin(t)*hh*rr;k?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy)}ctx.closePath();kind===49?ctx.stroke():ctx.fill()}}
+ if(kind===46||kind===50){let g=3+R(11),code=R(255);for(let y=0;y<h;y+=g+R(4))for(let x=0;x<w;x+=g+R(4)){if(rand()<.72)glyph(ctx,rect,x,y,g,fg,code^(1<<R(8)));if(rand()<.07)rect(x,y,g*2,1,bg)}}
+ if(kind===51){ctx.save();ctx.translate(w*.45,h*.68);ctx.rotate((rand()-.5)*.65);ctx.font='900 '+Math.max(12,S*.95)+'px Arial Black, Arial, sans-serif';ctx.fillText(pick(['A','X','R','K','N','L','/','7','4']),-S*.3,0);ctx.restore()}
+ // Local clustered damage rather than an even noise filter.
+ for(let k=0;k<3+R(6);k++){let x=rand()*w,y=rand()*h,rx=w*(.04+rand()*.23),ry=h*(.03+rand()*.2),n=Math.min(1000,Math.max(15,Math.floor(rx*ry*.15)));
+  for(let j=0;j<n;j++){let a=rand()*6.283,d=Math.sqrt(rand()),xx=x+Math.cos(a)*rx*d,yy=y+Math.sin(a)*ry*d;rect(xx,yy,1+R(3),1+R(3),rand()<.68?bg:fg)}
+ }
+ }
+ // Twelve new mark grammars: irregular printing, non-readable ligatures, diagrams and cuts.
+ if(kind>=52){
+ let S=Math.min(w,h),g=3+R(9),n=3+R(12),code=1+R(254);ctx.strokeStyle=hex(fg);ctx.fillStyle=hex(fg);
+ if(kind===52||kind===60){for(let yy=0;yy<h;yy+=g+R(3)){let x=R(g);let c=code^(1<<R(8));while(x<w){let z=g+R(4);if(rand()<.83){glyph(ctx,rect,x,yy,z,fg,c);if(rand()<.18)rect(x,yy+z*.5,z*2,1,accent)}x+=z+R(5)+1}}}
+ if(kind===53||kind===59){for(let j=0;j<n;j++){let z=Math.max(7,S*(.18+rand()*.75)),x=R(w),y=R(h);ctx.save();ctx.translate(x,y);ctx.rotate((rand()-.5)*.55);ctx.fillStyle=hex(fg);ctx.fillRect(-z*.45,-z*.45,z*.14,z*.9);ctx.fillRect(-z*.45,-z*.45,z*.9,z*.14);ctx.fillRect(-z*.18,z*.14,z*.54,z*.13);ctx.restore();}if(kind===59)rect(0,h*.2,w*.38,h*.62,bg)}
+ if(kind===54||kind===58){if(!imageMemory(ctx,w,h,38,fg,bg,hex)){for(let y=0;y<h;y+=g){let q=w*(.5+.45*Math.sin(y*.04+phase));rect(0,y,q,1+R(3),fg)}}for(let j=0;j<n*4;j++){let x=R(w),y=R(h);rect(x,y,1+R(Math.max(2,w*.15)),1+R(3),rand()<.65?bg:accent)}}
+ if(kind===55||kind===61){let x=R(w),y=R(h);for(let j=0;j<n*5;j++){let dx=(R(2)?1:-1)*(1+R(Math.max(2,w*.21))),dy=(R(2)?1:-1)*(1+R(Math.max(2,h*.17)));ctx.beginPath();ctx.moveTo(x,y);x=Math.max(0,Math.min(w-1,x+dx));ctx.lineTo(x,y);y=Math.max(0,Math.min(h-1,y+dy));ctx.lineTo(x,y);ctx.lineWidth=1+R(2);ctx.stroke();if(rand()<.15)rect(x-2,y-2,5,5,accent)}}
+ if(kind===56||kind===62){for(let y=0;y<h;y+=g){let x=0;while(x<w){let z=1+R(g*4);if(rand()<.65)rect(x,y,z,1+R(3),rand()<.15?accent:fg);x+=z+1+R(g)}}for(let j=0;j<n;j++)rect(R(w),R(h),1,1+R(Math.max(2,h*.6)),fg)}
+ if(kind===57){for(let y=0;y<h;y+=g)for(let x=0;x<w;x+=g){let z=(Math.floor(x/g)*19^Math.floor(y/g)*31^phase)%23;if(z<15){rect(x,y,g-1,1,fg);if(z%3===0)rect(x,y,1,g-1,fg)}if(z===20)rect(x,y,g-1,g-1,accent)}}
+ if(kind===63){for(let j=0;j<n;j++){let x=R(w),y=R(h),z=Math.max(6,S*(.12+rand()*.55));ctx.beginPath();ctx.moveTo(x,y);for(let k=0;k<7;k++){x+=(rand()-.5)*z;y+=(rand()-.5)*z;ctx.lineTo(x,y)}ctx.lineWidth=1+R(4);ctx.stroke();glyph(ctx,rect,x,y,z*.4,fg,code^(1<<R(8)))}}
+ // clustered wear, preserving crisp marks elsewhere
+ for(let j=0;j<5;j++){let x=R(w),y=R(h),rr=Math.max(3,S*(.04+rand()*.22));for(let k=0;k<Math.min(350,rr*rr*.14);k++){let t=rand()*6.283,d=Math.sqrt(rand())*rr;rect(x+Math.cos(t)*d,y+Math.sin(t)*d,1+R(2),1+R(2),rand()<.7?bg:fg)}}
+ }
+ if(rand()<.12)rect(0,0,w,1,fg);if(rand()<.22)rect(0,0,1,h,fg);
+ const src=ctx.getImageData(0,0,w,h).data;
+ let pix=new Uint8Array(w*h*4),mem=new Uint8Array(w*h*4),field=new Uint8Array(w*h*4);
+ for(let yy=0;yy<h;yy++){
+  const i=(h-1-yy)*w*4,k=((H-1-y-yy)*W+x)*4;
+  pix.set(src.subarray(yy*w*4,(yy+1)*w*4),i);
+  for(let xx=0;xx<w;xx++){let p=i+xx*4;field[p]=id;field[p+1]=gene;field[p+2]=speed;field[p+3]=porosity;pix[p+3]=255}
+  if(remember){mem.set(baseData.subarray(k,k+w*4),i);memoryData.set(mem.subarray(i,i+w*4),k)}
+  else{mem.set(pix.subarray(i,i+w*4),i);memoryData.set(pix.subarray(i,i+w*4),k)}
+  baseData.set(pix.subarray(i,i+w*4),k);fieldData.set(field.subarray(i,i+w*4),k);
+ }
+ if(remember){upload(base,b,pix);upload(regions,b,field);upload(archive,b,mem)}
+}
+function upload(tex,b,data){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);gl.texSubImage2D(gl.TEXTURE_2D,0,b.x,H-b.y-b.h,b.w,b.h,gl.RGBA,gl.UNSIGNED_BYTE,data)}
+function genome(b){let f=new Uint8Array(b.w*b.h*4);for(let i=0;i<f.length;i+=4){f[i]=b.id;f[i+1]=b.gene;f[i+2]=b.speed;f[i+3]=b.porosity}upload(regions,b,f)}
+function initAtlas(){
+ boxes=[];let rects=[];
+ const add=(x,y,w,h)=>{if(w>0&&h>0)rects.push({x,y,w,h})};
+ function divide(b,d){if(d<=0||b.w<Math.max(14,20/profile.density)||b.h<Math.max(14,20/profile.density)){rects.push(b);return}let vertical=b.w/b.h>1.65?true:b.h/b.w>1.65?false:rand()<.5;let k=.21+rand()*.58;for(const q of splitBox(b,k,vertical))divide(q,d-1-(rand()<.16?1:0))}
+ if(layout===0){let axis= W>H, parts=splitBox({x:0,y:0,w:W,h:H},.24+rand()*.36,axis);divide(parts[0],2+R(4));divide(parts[1],7+R(2))}
+ if(layout===1){let nx=13+R(5),ny=9+R(4);for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){let x=Math.floor(i*W/nx),y=Math.floor(j*H/ny);add(x,y,Math.floor((i+1)*W/nx)-x,Math.floor((j+1)*H/ny)-y)}}
+ if(layout===2){for(let y=0;y<H;){let h=Math.min(H-y,6+R(40)),n=rand()<.55?1:2+R(4);for(let i=0;i<n;i++){let x=Math.floor(i*W/n);add(x,y,Math.floor((i+1)*W/n)-x,h)}y+=h}}
+ if(layout===3){let b={x:0,y:0,w:W,h:H};let parts=splitBox(b,.38+rand()*.24,true);divide(parts[0],1+R(2));divide(parts[1],5+R(2))}
+ if(layout===4){let q=splitBox({x:0,y:0,w:W,h:H},.2+rand()*.15,false);divide(q[0],5+R(2));let z=splitBox(q[1],.4+rand()*.2,true);divide(z[0],2+R(2));divide(z[1],6+R(2))}
+ if(layout===5){let q=splitBox({x:0,y:0,w:W,h:H},.36+rand()*.22,false);divide(q[0],1+R(2));divide(q[1],7+R(2))}
+ if(layout===6){let q=splitBox({x:0,y:0,w:W,h:H},.3+rand()*.3,true);let a=splitBox(q[0],.2+rand()*.55,false);divide(a[0],1+R(2));divide(a[1],5+R(2));divide(q[1],4+R(4))}
+ if(rects.length>250){rects=[];divide({x:0,y:0,w:W,h:H},7)}
+ while(rects.length>250){rects=[];divide({x:0,y:0,w:W,h:H},6)}
+ rects.forEach((r,i)=>{let b=styleBox(makeBox(r,i+1),true);boxes.push(b);paint(b,false)});
+}
+function freeId(){let used=new Set(boxes.map(b=>b.id));for(let i=1;i<=250;i++)if(!used.has(i))return i;return 0}
+function adjacent(a,b){return (a.y===b.y&&a.h===b.h&&(a.x+a.w===b.x||b.x+b.w===a.x))||(a.x===b.x&&a.w===b.w&&(a.y+a.h===b.y||b.y+b.h===a.y))}
+function adjacentLoose(a,b){return ((a.x+a.w===b.x||b.x+b.w===a.x)&&Math.min(a.y+a.h,b.y+b.h)>Math.max(a.y,b.y))||((a.y+a.h===b.y||b.y+b.h===a.y)&&Math.min(a.x+a.w,b.x+b.w)>Math.max(a.x,b.x))}
+function mutateGene(b){b.gene=(b.gene+1+R(39))%40;b.speed=10+R(235);b.porosity=20+R(225);genome(b)}
+function evolve(){
+ if(!boxes.length)return;
+ let b=pick(boxes),r=rand();
+ if(rand()<.23)b=pick(boxes.slice().sort((a,b)=>b.w*b.h-a.w*a.h).slice(0,Math.min(10,boxes.length)));
+ let near=boxes.filter(q=>q!==b&&adjacent(b,q));
+ let adjacentAll=boxes.filter(q=>q!==b&&adjacentLoose(b,q));
+ if((r<.18||boxes.length<18&&r<.5)&&boxes.length<218&&(b.w>=40||b.h>=40)){
+  let vertical=b.w>=40&&(b.h<40||b.w/b.h>1.5||rand()<.5),id=freeId();
+  if(id){let [p,q]=splitBox(b,.24+rand()*.52,vertical);let m=styleBox(makeBox(p,b.id)),n=styleBox(makeBox(q,id));boxes.splice(boxes.indexOf(b),1,m,n);paint(m,true);paint(n,true)}
+ }else if(r<.32&&near.length&&boxes.length>12){
+  let q=pick(near),x=Math.min(b.x,q.x),y=Math.min(b.y,q.y),w=Math.max(b.x+b.w,q.x+q.w)-x,h=Math.max(b.y+b.h,q.y+q.h)-y;
+  let m=styleBox(makeBox({x,y,w,h},b.id));boxes=boxes.filter(z=>z!==b&&z!==q);boxes.push(m);paint(m,true);
+ }else if(r<.46&&near.length){
+  // Tectonic boundary migration: change ownership, but preserve every live feedback pixel.
+  let q=pick(near),x=Math.min(b.x,q.x),y=Math.min(b.y,q.y),w=Math.max(b.x+b.w,q.x+q.w)-x,h=Math.max(b.y+b.h,q.y+q.h)-y,vertical=b.y===q.y&&b.h===q.h;
+  if((vertical?w:h)>=32){let [p,n]=splitBox({x,y,w,h},.23+rand()*.54,vertical);let m={...b,...p},z={...q,...n};boxes=boxes.filter(k=>k!==b&&k!==q);boxes.push(m,z);paint(m,true);paint(z,true)}
+ }else if(r<.68){styleBox(b);paint(b,true)}
+ else if(r<.87){mutateGene(b)}
+ else if(r<.95){for(const q of adjacentAll.slice(0,5)){q.gene=(b.gene+R(3))%40;q.porosity=150+R(105);genome(q)}}
+ else if(adjacentAll.length){let q=pick(adjacentAll);let props=['gene','kind','bg','fg','accent','scale','phase'];for(const k of props)q[k]=b[k];paint(q,true)}
+ events++;
+ nextEvent=age+(burst>0?(burst--,.18+rand()*.55):.5+Math.pow(rand(),2)*4.4)/(profile.density*(1+chaosLevel*.65));
+}
+function pigmentUpload(){
+ pigmentData.fill(0);for(const [id,p] of pigments){let rgb=rgba(palettes[p.palette][2]),i=id*4;pigmentData[i]=rgb[0];pigmentData[i+1]=rgb[1];pigmentData[i+2]=rgb[2];pigmentData[i+3]=Math.round(255*Math.max(0,Math.min(1,(age-p.start)/2+.15,(p.end-age)/4)))}
+ gl.activeTexture(gl.TEXTURE5);gl.bindTexture(gl.TEXTURE_2D,pigmentTex);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,256,1,gl.RGBA,gl.UNSIGNED_BYTE,pigmentData);
+}
+function infectPigment(b,palette,duration){
+ if(!b||pigments.has(b.id))return;
+ b.palette=palette;b.accent=2;
+ if(rand()<.27)b.kind=pick([5,10,26,30,32,39,42,43,46,50,51]);
+ paint(b,true);
+ pigments.set(b.id,{box:b,palette,start:age,end:age+duration});
+}
+function spectralEvent(){
+ // Different colours may coexist; no frame-wide palette switching. Keep coloured area bounded.
+ for(const [id,p] of pigments){
+  let b=boxes.find(q=>q.id===id);
+  if(!b||b!==p.box||age>=p.end||b.palette!==p.palette){
+   if(b&&b.palette>=4){b.palette=paletteIndex;b.accent=b.fg;paint(b,true)}
+   pigments.delete(id);
+  }
+ }
+ for(const b of boxes)if(b.palette>=4&&!pigments.has(b.id)){b.palette=paletteIndex;b.accent=b.fg;paint(b,true)}
+ let area=0;for(const p of pigments.values())area+=p.box.w*p.box.h/(W*H);
+ let cap=.10+profile.pigment*.115;
+ if(age>=nextPigment){
+  let candidates=boxes.filter(b=>!pigments.has(b.id)&&b.w*b.h/(W*H)>.0006&&b.w*b.h/(W*H)<Math.min(.13,cap-area)&&b.w>9&&b.h>9);
+  if(candidates.length&&pigments.size<12){
+   let count=rand()<.18*profile.pigment?2+R(3):1,palette=4+R(palettes.length-4);
+   for(let k=0;k<count&&candidates.length;k++){let b=candidates.splice(R(candidates.length),1)[0],ar=b.w*b.h/(W*H);if(area+ar>cap)continue;infectPigment(b,rand()<.76?palette:4+R(palettes.length-4),5+rand()*29);area+=ar}
+  }
+  nextPigment=age+(rand()<.3?1.5+rand()*4:4+Math.pow(rand(),1.55)*29)/profile.pigment;
+ }
+ if(age>=nextSpread){
+  if(pigments.size&&area<cap&&rand()<.56*profile.pigment){
+   let p=pick([...pigments.values()]),near=boxes.filter(b=>b!==p.box&&!pigments.has(b.id)&&adjacentLoose(p.box,b)&&b.w*b.h/(W*H)<cap-area&&b.w>9&&b.h>9);
+   if(near.length)infectPigment(pick(near),p.palette,5+rand()*25);
+  }
+  nextSpread=age+1.4+rand()*5;
+ }
+ pigmentUpload();
+}
+function phenomena(){
+ if(age>=nextAnomaly){
+  anomalyStart=age;anomalyEnd=age+4+rand()*15;anomalyKind=R(4);anomaly=[.09+rand()*.82,.09+rand()*.82,.03+rand()*.16,0];
+  anomalyInk=rgba(palettes[4+R(palettes.length-4)][2]).map(x=>x/255);
+  nextAnomaly=anomalyEnd+2+Math.pow(rand(),1.6)*23;
+ }
+ if(age<anomalyEnd){let u=Math.max(0,Math.min(1,(age-anomalyStart)/(anomalyEnd-anomalyStart)));anomaly[2]=.04+u*(anomalyKind===0?.28:.13);anomaly[3]=Math.sin(Math.PI*u)*(.55+profile.chaos*.4)}
+ else anomaly[3]=0;
+ if(age>=nextRewrite&&boxes.length){
+  // Families can acquire new visual grammar without restarting or replacing the composition.
+  let b=pick(boxes),near=boxes.filter(q=>q!==b&&adjacentLoose(b,q)),gene=R(40),kind=52+R(12);
+  b.gene=gene;b.kind=kind;paint(b,true);
+  if(rand()<.45){for(const q of near.slice(0,2+R(3))){if(rand()<.55){q.gene=(gene+R(4))%40;genome(q)}}}
+  nextRewrite=age+3+Math.pow(rand(),1.4)*14;
+ }
+}
+function chaosEvent(){
+ if(age>=nextChaos){chaosStart=age;chaosEnd=age+5+rand()*22;chaosPeak=(.35+rand()*.65)*profile.chaos;nextChaos=chaosEnd+8+Math.pow(rand(),1.4)*58;burst=2+R(7)}
+ if(age<chaosEnd){let u=(age-chaosStart)/Math.max(1,chaosEnd-chaosStart);chaosLevel=Math.sin(Math.PI*Math.max(0,Math.min(1,u)))*chaosPeak}else chaosLevel=0;
+}
+function climateEvent(){
+ if(age>=nextWeather){weather=pick([0,0,0,1,1,2,3]);nextWeather=age+5+rand()*32;if(weather===2||weather===3)burst=2+R(7);if(rand()<.24)paletteIndex=R(4)}
+}
+function deepMemory(){
+ if(age<nextSnapshot)return;
+ nextSnapshot=age+35+rand()*60;
+ // A bounded history of actual GPU feedback, copied without CPU readback.
+ let tex=snapshots[archiveIndex];gl.bindFramebuffer(gl.FRAMEBUFFER,fb[read]);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);
+ gl.copyTexSubImage2D(gl.TEXTURE_2D,0,0,0,0,0,W,H);
+ archiveIndex=(archiveIndex+1)%snapshots.length;
+ let b=pick(boxes),older=snapshots[archiveIndex];let temp=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,temp);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,older,0);
+ gl.bindTexture(gl.TEXTURE_2D,archive);gl.copyTexSubImage2D(gl.TEXTURE_2D,0,b.x,H-b.y-b.h,b.x,H-b.y-b.h,b.w,b.h);gl.deleteFramebuffer(temp);
+}
+function newFracture(){
+ if(!fractureCtx)return;
+ const c=fractureCtx,S=Math.min(W,H);
+ c.clearRect(0,0,W,H);
+ // Broad forms span multiple moving cells; no single global reset.
+ let n=4+R(6),x0=W*(.15+rand()*.7),y0=H*(.15+rand()*.7);
+ for(let i=0;i<n;i++){
+  let x=i===0?x0:W*rand(),y=i===0?y0:H*rand(),z=S*(.10+Math.pow(rand(),1.6)*.55);
+  c.save();c.translate(x,y);c.rotate((rand()-.5)*.8);c.fillStyle=c.strokeStyle=(i>0&&rand()<.06*profile.pigment)?palettes[4+R(palettes.length-4)][2]:(rand()<.5?'#101010':'#f5f5f2');c.globalAlpha=.75+rand()*.25;
+  let t=Math.max(2,z*(.06+rand()*.1)),kind=R(5);
+  if(kind===0||kind===1){c.fillRect(-z*.5,-z*.5,t,z);c.fillRect(-z*.5,-z*.5,z,t);c.fillRect(z*.3,-z*.15,t,z*.65);c.fillRect(-z*.18,z*.36,z*.55,t)}
+  if(kind===2){c.beginPath();c.moveTo(-z*.5,z*.5);c.lineTo(z*.08,-z*.7);c.lineTo(z*.08+t,-z*.7);c.lineTo(-z*.5+t,z*.5);c.fill();c.fillRect(-z*.27,z*.05,z*.55,t)}
+  if(kind===3){c.font='900 '+Math.round(z)+'px Arial Black, Arial, sans-serif';c.fillText(pick(['R','X','A','K','N','L','/','7']),-z*.5,z*.3)}
+  if(kind===4){for(let k=0;k<9;k++){c.fillRect(-z*.5+k*z/9,-z*.5+rand()*z*.6,t*.45,z*(.2+rand()*.6))}}
+  c.globalCompositeOperation='destination-out';
+  for(let j=0;j<45;j++){let xx=(rand()-.5)*z,yy=(rand()-.5)*z;c.fillRect(xx,yy,z*(.008+rand()*.14),Math.max(1,z*(.006+rand()*.065)))}
+  c.restore();
+ }
+ const data=c.getImageData(0,0,W,H).data,flipped=new Uint8Array(data.length);
+ for(let y=0;y<H;y++)flipped.set(data.subarray(y*W*4,(y+1)*W*4),(H-y-1)*W*4);
+ gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,fractureField);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,flipped);
+ fractureAge=age;fractureLife=10+fresh()*40;nextFracture=age+fractureLife;
+}
+function rebuild(change=false){
+ if(change||!seed)seed=(crypto.getRandomValues(new Uint32Array(1))[0]>>>0)||1;
+ rand=fresh;layout=profile.layout;pigments.clear();nextPigment=.8+rand()*8;nextAnomaly=2+rand()*7;nextRewrite=5+rand()*8;anomaly=[0,0,0,0];anomalyEnd=0;nextSpread=2;nextChaos=4+rand()*12;chaosStart=0;chaosEnd=0;chaosLevel=0;paletteIndex=R(4);era=0;nextColour=8+rand()*26;colourID=0;colourEnd=0;nextWeather=5+rand()*10;weather=0;burst=0;nextSnapshot=25+rand()*30;archiveIndex=0;
+ let r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);
+ canvas.width=Math.max(2,Math.round(r.width*d));canvas.height=Math.max(2,Math.round(r.height*d));
+ [W,H]=resolutionFor(canvas.width,canvas.height,!preview||fullQuality);
+ [...targets,base,regions,archive,fractureField,pigmentTex,...snapshots].filter(Boolean).forEach(t=>gl.deleteTexture(t));fb.forEach(t=>gl.deleteFramebuffer(t));
+ baseData=new Uint8Array(W*H*4);fieldData=new Uint8Array(W*H*4);memoryData=new Uint8Array(W*H*4);initAtlas();
+ base=texture(baseData);regions=texture(fieldData);archive=texture(memoryData);fractureField=texture(null);pigmentTex=gl.createTexture();gl.activeTexture(gl.TEXTURE5);gl.bindTexture(gl.TEXTURE_2D,pigmentTex);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);pigmentData.fill(0);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,256,1,0,gl.RGBA,gl.UNSIGNED_BYTE,pigmentData);fractureCanvas=document.createElement('canvas');fractureCanvas.width=W;fractureCanvas.height=H;fractureCtx=fractureCanvas.getContext('2d',{willReadFrequently:true});snapshots.length=0;for(let i=0;i<3;i++)snapshots.push(texture(baseData));
+ let initial=baseData.slice();for(let i=3;i<initial.length;i+=4)initial[i]=0;
+ targets=[texture(initial),texture(initial)];fb=targets.map(t=>{let a=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,a);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Framebuffer incomplete');return a});
+ read=0;step=0;acc=0;last=0;age=0;epoch=0;events=0;nextEvent=.4+rand()*2;entropy=Math.floor(fresh()*100000000);nextEntropy=0;newFracture();draw();
+}
+function mutate(){
+ gl.useProgram(sim);gl.bindFramebuffer(gl.FRAMEBUFFER,fb[1-read]);gl.viewport(0,0,W,H);
+ bind(targets[read],0,su.prev);bind(base,1,su.original);bind(regions,2,su.field);bind(archive,3,su.memoryTex);bind(fractureField,4,su.fractures);bind(pigmentTex,5,su.pigmentsTex);gl.uniform1f(su.chaos,chaosLevel);gl.uniform1f(su.chromatic,profile.pigment);gl.uniform1i(su.signature,profile.signature);gl.uniform4fv(su.phenomenon,anomaly);gl.uniform3fv(su.phenomenonInk,anomalyInk);gl.uniform1i(su.entropy,entropy);gl.uniform1f(su.fractureStrength,profile.fracture);gl.uniform1f(su.drift,profile.drift);gl.uniform1f(su.imprint,Math.min(1,(age-fractureAge)/2+0.05)*Math.min(1,(nextFracture-age)/3));
+ gl.uniform2i(su.dim,W,H);if(++step>=1000000){step=0;epoch++}gl.uniform1i(su.tick,step);gl.uniform1f(su.key,(seed+epoch*131)%997);gl.uniform1i(su.climate,weather);gl.uniform1i(su.accentID,colourID);gl.uniform1i(su.study,variant);
+ gl.drawArrays(gl.TRIANGLES,0,3);read=1-read;
+}
+function draw(){gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);gl.useProgram(show);bind(targets[read],0,du.tex);gl.uniform2f(du.view,canvas.width,canvas.height);gl.drawArrays(gl.TRIANGLES,0,3);}
+function frame(now){let dt=last?Math.min(now-last,100):0;last=now;if(!paused&&!document.hidden){age+=dt/1000;if(age>=nextEntropy){entropy=Math.floor(fresh()*100000000);nextEntropy=age+.6+fresh()*2.8;}if(age>=nextFracture)newFracture();if(age>=nextEvent){evolve();spectralEvent();}phenomena();chaosEvent();climateEvent();deepMemory();acc=Math.min(acc+dt,100);let n=0;while(acc>=1000/((preview&&!fullQuality)?24:30)&&n<((preview&&!fullQuality)?1:2)){mutate();acc-=1000/((preview&&!fullQuality)?24:30);n++;}if(n)draw()}requestAnimationFrame(frame)}
+window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===parent&&e.data&&e.data.type==='study-visibility'){paused=!e.data.visible;last=0}});
+
+let fullQuality=false;
+function resolutionFor(w,h,high){
+ const coarse=matchMedia('(pointer:coarse)').matches;
+ // Keep gallery previews genuinely detailed; fullscreen uses a larger native simulation.
+ const pixels=high?(coarse?1600000:5500000):(coarse?480000:1100000);
+ const maxW=high?(coarse?2000:3200):(coarse?1200:1920);
+ const maxH=high?(coarse?1700:2000):(coarse?1000:1200);
+ const k=Math.min(1,maxW/w,maxH/h,Math.sqrt(pixels/(w*h)));
+ return [Math.max(2,Math.round(w*k)),Math.max(2,Math.round(h*k))];
+}
+function resampleBytes(src,ow,oh,nw,nh){
+ const dst=new Uint8Array(nw*nh*4),xmap=new Int32Array(nw);
+ for(let x=0;x<nw;x++)xmap[x]=Math.min(ow-1,Math.floor((x+.5)*ow/nw))*4;
+ for(let y=0;y<nh;y++){let sy=Math.min(oh-1,Math.floor((y+.5)*oh/nh))*ow*4;
+  for(let x=0;x<nw;x++){let a=sy+xmap[x],b=(y*nw+x)*4;dst[b]=src[a];dst[b+1]=src[a+1];dst[b+2]=src[a+2];dst[b+3]=src[a+3]}}
+ return dst;
+}
+function resizeSimulation(nw,nh){
+ if(!targets.length||nw===W&&nh===H)return;
+ const ow=W,oh=H,oldTargets=targets.slice(),oldFb=fb.slice(),oldBase=base,oldRegions=regions,oldArchive=archive,oldSnapshots=snapshots.slice();
+ const a=gl.createFramebuffer(),b=gl.createFramebuffer();
+ W=nw;H=nh;
+ function transfer(t){const dst=texture(null);
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER,a);gl.framebufferTexture2D(gl.READ_FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
+  gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,b);gl.framebufferTexture2D(gl.DRAW_FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,dst,0);
+  gl.blitFramebuffer(0,0,ow,oh,0,0,W,H,gl.COLOR_BUFFER_BIT,gl.NEAREST);return dst;
+ }
+ base=transfer(oldBase);regions=transfer(oldRegions);archive=transfer(oldArchive);targets=oldTargets.map(transfer);
+ snapshots.length=0;for(const t of oldSnapshots)snapshots.push(transfer(t));
+ const oldFracture=fractureField;fractureField=transfer(oldFracture);gl.deleteTexture(oldFracture);
+ const oldCanvas=fractureCanvas;fractureCanvas=document.createElement('canvas');fractureCanvas.width=W;fractureCanvas.height=H;fractureCtx=fractureCanvas.getContext('2d',{willReadFrequently:true});fractureCtx.imageSmoothingEnabled=false;fractureCtx.drawImage(oldCanvas,0,0,W,H);
+ gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.deleteFramebuffer(a);gl.deleteFramebuffer(b);
+ for(const t of [...oldTargets,oldBase,oldRegions,oldArchive,...oldSnapshots])gl.deleteTexture(t);
+ oldFb.forEach(f=>gl.deleteFramebuffer(f));
+ baseData=resampleBytes(baseData,ow,oh,W,H);memoryData=resampleBytes(memoryData,ow,oh,W,H);
+ fieldData=new Uint8Array(W*H*4);
+ // Shared rounded boundaries keep the existing atlas contiguous.
+ for(const box of boxes){let x=Math.round(box.x*W/ow),y=Math.round(box.y*H/oh),right=Math.round((box.x+box.w)*W/ow),bottom=Math.round((box.y+box.h)*H/oh);box.x=x;box.y=y;box.w=right-x;box.h=bottom-y}
+ boxes=boxes.filter(box=>box.w>0&&box.h>0);
+ // Regenerate full-resolution ownership and genes; do not replace the live feedback.
+ for(const box of boxes){genome(box);for(let y=H-box.y-box.h;y<H-box.y;y++)for(let x=box.x;x<box.x+box.w;x++){let i=(y*W+x)*4;fieldData[i]=box.id;fieldData[i+1]=box.gene;fieldData[i+2]=box.speed;fieldData[i+3]=box.porosity}}
+ fb=targets.map(t=>{let f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);return f});
+ 
+ // Future local rewrites now generate native-resolution details instead of enlarging pixels.
+ draw();
+}
+function fitArt(){
+ const r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);
+ const w=Math.max(2,Math.round(r.width*d)),h=Math.max(2,Math.round(r.height*d));
+ if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}
+ if(targets.length){const [nw,nh]=resolutionFor(w,h,!preview||fullQuality);resizeSimulation(nw,nh);draw()}
+}
+
+let timer;new ResizeObserver(()=>{clearTimeout(timer);timer=setTimeout(fitArt,120)}).observe(canvas);
+window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===parent&&e.data?.type==='study-quality'){fullQuality=!!e.data.fullscreen;clearTimeout(timer);timer=setTimeout(fitArt,100)}});
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();paused=true;el('err').textContent='Graphics context lost. Reload to restart.'});
+async function boot(){
+ const sources=variant===1?(window.RESIDUE_MEMORY||[]):[];
+ const pending=sources.map(o=>new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=o.src;}));
+ sourceImages=(await Promise.all(pending)).filter(Boolean);
+ try{rebuild(true);requestAnimationFrame(frame)}catch(e){el('err').textContent=e.message;throw e}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+</script></html>
