@@ -26,8 +26,9 @@ function closeActive(){
  if(!active)return;
  active.video.pause();
  active.video.removeAttribute('src');
+ const source=active.video.querySelector('source');if(source)source.removeAttribute('src');
  active.video.load();
- active.card.querySelector('.thumb').replaceChildren(active.preview);
+ active.card.querySelector('.thumb').replaceChildren(active.preview,active.button);
  active.button.textContent='play study';
  active=null;
 }
@@ -44,7 +45,7 @@ for(const item of studies){
    closeActive();
    const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='none';video.poster=item.poster?'../media/'+item.poster:'';
    const source=document.createElement('source');source.src='../media/'+item.file;source.type='video/mp4';video.append(source);
-   thumb.replaceChildren(video);button.textContent='close video';active={card,video,preview,button};
+   thumb.replaceChildren(video,button);button.textContent='close video';active={card,video,preview,button};
    video.load();video.play().catch(()=>{});
  });
  const label=document.createElement('div');label.className='label';
