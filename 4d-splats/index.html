@@ -411,7 +411,7 @@ function layout(resetCam=true){
   if(orientation==='side')camera.position.set(distance,0,0);
   else if(orientation==='vertical')camera.position.set(0,0,distance);
   else camera.position.set(0,radial&&n>1?radius*.23:.15,distance);
-  controls.minDistance=Math.max(1.5,distance*.18);controls.maxDistance=180;controls.update();
+  controls.minDistance=camera.near*2;controls.maxDistance=180;controls.update();
  }
  setSpin(spinAngle);
 }
