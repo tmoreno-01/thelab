@@ -31,9 +31,9 @@ main{max-width:1800px;margin:0 auto;padding:12px clamp(20px,3.1vw,48px) 56px}
 .tile-title{position:absolute;z-index:2;left:15px;right:15px;bottom:13px;margin:0;font-size:clamp(15px,1.55vw,23px);font-weight:500;letter-spacing:-.055em;line-height:1.1}
 @media(hover:hover){.project-tile:hover img{transform:scale(1.045);filter:saturate(1.08)}}
 .project-tile:focus-visible::after{background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,.78))}
-footer{padding-top:44px;color:#999;font-size:10px;letter-spacing:.09em;text-transform:uppercase}
-@media(max-width:980px){.project-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:620px){.header{height:72px}.brand img{width:28px;height:28px}.brand span{font-size:20px}.header-link{font-size:9px}main{padding-top:16px}.project-grid{grid-template-columns:1fr;gap:9px}.project-tile{aspect-ratio:2.7/1;min-height:132px}.tile-title{font-size:19px}}
+.archive{margin-top:clamp(54px,7vw,92px);padding-top:20px;border-top:1px solid #e8e8e8}.archive-heading{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:26px}.archive-eyebrow,.archive-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#999}.archive-title{font-size:clamp(24px,3vw,34px);line-height:1.05;letter-spacing:-.065em;font-weight:400;margin:8px 0 0}.archive-intro{max-width:380px;margin:0;color:#888;font-size:11px;line-height:1.7}.archive-group+.archive-group{margin-top:28px}.archive-label{margin-bottom:9px}.archive-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.archive-link{min-width:0;display:flex;flex-direction:column;gap:5px;padding:12px 13px;border:1px solid #e9e9e9;min-height:86px;transition:background 180ms ease,border-color 180ms ease}.archive-link:hover{background:#f8f8f8;border-color:#bbb}.archive-version{font-size:9px;letter-spacing:.08em;color:#999;text-transform:uppercase}.archive-link strong{font-size:13px;line-height:1.25;font-weight:500;letter-spacing:-.025em}.archive-detail{font-size:10px;line-height:1.5;color:#999}footer{padding-top:44px;color:#999;font-size:10px;letter-spacing:.09em;text-transform:uppercase}
+@media(max-width:980px){.project-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.archive-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.header{height:72px}.brand img{width:28px;height:28px}.brand span{font-size:20px}.header-link{font-size:9px}main{padding-top:16px}.project-grid{grid-template-columns:1fr;gap:9px}.project-tile{aspect-ratio:2.7/1;min-height:132px}.tile-title{font-size:19px}.archive-heading{display:block}.archive-intro{margin-top:12px}.archive-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.archive-link{padding:10px;min-height:92px}.archive-link strong{font-size:12px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.project-tile img{transition:none}}
 </style>
 </head>
@@ -70,6 +70,20 @@ footer{padding-top:44px;color:#999;font-size:10px;letter-spacing:.09em;text-tran
   </a>
  <a class="project-tile" href="after-all-that/" aria-label="After All That"><img src="./media/after-all-that-preview.svg" alt="" loading="lazy" decoding="async"><div class="tile-top">006</div><h2 class="tile-title">After All That</h2></a>
 </section>
+ <section class="archive" aria-labelledby="archive-title">
+  <div class="archive-heading"><div><div class="archive-eyebrow">LIFEAFTERLOGIC / LAB HISTORY</div><h2 class="archive-title" id="archive-title">Previous versions.</h2></div><p class="archive-intro">Earlier prototypes stay available as projects evolve. New iterations are added here rather than replacing the work that came before.</p></div>
+  <div class="archive-group"><div class="archive-label">PALIMPSEST / EARLIER VERSIONS</div><div class="archive-grid">
+   <a class="archive-link" href="./palimpsest/?version=001"><span class="archive-version">001 / Original render</span><strong>Palimpsest</strong><span class="archive-detail">The first 8-second drawing score</span></a>
+   <a class="archive-link" href="./palimpsest/?version=002"><span class="archive-version">002 / Drawing score</span><strong>Palimpsest</strong><span class="archive-detail">Portrait, bird and architecture</span></a>
+   <a class="archive-link" href="./palimpsest/?version=003"><span class="archive-version">003 / Adaptive composition</span><strong>Palimpsest</strong><span class="archive-detail">Inherited motifs and attachment points</span></a>
+   <a class="archive-link" href="./palimpsest/?version=004"><span class="archive-version">004 / Directional field</span><strong>Palimpsest</strong><span class="archive-detail">Fourteen concurrent drawing regions</span></a>
+  </div></div>
+  <div class="archive-group"><div class="archive-label">OTHER PROJECT ARCHIVES</div><div class="archive-grid">
+   <a class="archive-link" href="./field-studies/"><span class="archive-version">001–012 / 14 studies</span><strong>Field Studies</strong><span class="archive-detail">Earlier pigment and motion experiments</span></a>
+   <a class="archive-link" href="./after-all-that/archive/"><span class="archive-version">49 rounds / 127+ studies</span><strong>After All That</strong><span class="archive-detail">A searchable archive of evolving prototypes</span></a>
+   <a class="archive-link" href="./tests/"><span class="archive-version">01–19 / Numbered tests</span><strong>Early experiments</strong><span class="archive-detail">The first Lab prototypes and studies</span></a>
+  </div></div>
+ </section>
  <footer>THE LAB — LIFEAFTERLOGIC</footer>
 </main>
 </body>
