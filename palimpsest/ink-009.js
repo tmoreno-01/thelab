@@ -210,14 +210,14 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
   const rx=clamp(inheritedRadius*scaleBias,65,410),ry=rx*rand(.27,1.58);
   const inheritedAngle=inherited?place.nearest.angle+(place.relation==="counterpoint"?Math.PI*.5:0)+rand(-.48,.48):place.orientation+rand(-.85,.85);
   const ang=place.edge>.035&&R()<.72?inheritedAngle:a.feature.orientation*.28+rand(-Math.PI,Math.PI)*.72;
-  const flip=R()<.5,warpAmount=rand(3,22)+Math.min(5,place.edge*20),ops=[],usedA=new Set(),usedB=new Set();
+  const flip=R()<.5,warpAmount=rand(3,22)+Math.min(5,place.edge*20),ops=[],usedA=new Set(),usedB=new Set(),usedC=new Set();
   const complexity=clamp(.86+(a.feature.complexity+b.feature.complexity)*.16,.86,1.28);
   const count=Math.floor(rand(25,45)*(place.d>.27?.78:place.d<.12?1.14:1)*complexity),polarity=place.d>.44?WHITE:INK;
   const palette=sessionPalette;
   const colourOn=!initial&&R()<.32,colourStrength=rand(.65,1.15);
   const startOffset=initial?0:Math.floor(rand(0,22));
   for(let i=0;i<count;i++){
-   const source=R()<.20?b:R()<.13?c:a,pa=choosePath(source,source===a?usedA:usedB);if(!pa)continue;const q=pa.shape||(pa.shape=describeShape(pa));if(q.coil&&R()<.94)continue;
+   const source=R()<.20?b:R()<.13?c:a,pa=choosePath(source,source===a?usedA:source===b?usedB:usedC);if(!pa)continue;const q=pa.shape||(pa.shape=describeShape(pa));if(q.coil&&R()<.94)continue;
    let raw=transformPath(pa,cx,cy,rx,ry,ang,flip,warpAmount),closed=pa.closed;
    if((q.round>.62&&R()<.86)||(pa.closed&&R()<.25)){raw=fragment(raw,rand(0,.24),rand(.55,.91));closed=false;}
    if(raw.length<5||pathLength(raw)<7)continue;
