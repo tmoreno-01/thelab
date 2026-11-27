@@ -11,7 +11,7 @@ function waveSin(v){let t=v*waveFactor,b=Math.floor(t),i=b&8191;return waveTable
 function waveCos(v){return waveSin(v+Math.PI*.5);}
 function fastHypot(x,y){return Math.sqrt(x*x+y*y);}
 const mapInterval=requestedStudy===139?.083:requestedStudy===140?.075:.066;
-let pendingPlan=null;
+let pendingPlan=null,motionOps=null,motionOpCount=0;
 const pigmentFamilies=[[2,6,10],[3,7,9],[4,8,5],[9,6,2],[5,10,8]];
 const palettePacked=palette.map(c=>(c[0]|(c[1]<<8)|(c[2]<<16)|(255<<24))>>>0);
 const feedbackProfile=testNumber===136
@@ -622,7 +622,7 @@ function applyPigmentEvents(){
  }
 }
 function allocateMotionBuffers(){
- const n=W*H;motionSource=new Uint8Array(n);feedbackPrevious=new Uint8Array(n);feedbackReady=false;
+ const n=W*H;motionOps={dst:new Int32Array(n),src:new Int32Array(n),flags:new Uint8Array(n),colour:new Uint8Array(n)};motionOpCount=0;motionSource=new Uint8Array(n);feedbackPrevious=new Uint8Array(n);feedbackReady=false;
  motionX=new Float32Array(n);motionY=new Float32Array(n);motionStrength=new Float32Array(n);
  motionMemory=new Float32Array(n);motionErase=new Float32Array(n);motionColour=new Float32Array(n);motionHue=new Uint8Array(n);motionIndices=new Int32Array(n);motionIndexCount=0;motionMapReady=false;nextMotionMap=age;
 }
@@ -667,8 +667,9 @@ function motionNoise(x,y,salt){
 function smooth(a,b,x){let t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);}
 function apply62CMotionFields(){
  if(!motionSource||!motionFields.length)return;
+ const rebuild=!motionMapReady||age>=nextMotionMap;
  const stride=requestedStudy===139?4:3,cols=Math.ceil(W/stride),rows=Math.ceil(H/stride),aspect=W/H;
- if(!motionMapReady||age>=nextMotionMap){
+ if(rebuild){
   // Compute continuous field geometry on a small control lattice; sample actual
   // image pixels individually. This never reduces the artwork's resolution.
   for(let k=0;k<motionIndexCount;k++){const i=motionIndices[k];motionX[i]=motionY[i]=motionStrength[i]=motionMemory[i]=motionErase[i]=motionColour[i]=motionHue[i]=0;}
@@ -703,10 +704,10 @@ function apply62CMotionFields(){
   motionTouched=motionIndexCount*stride*stride;
   nextMotionMap=age+mapInterval;motionMapReady=true;
  }
- if(!motionIndexCount)return;
- motionSource.set(renderField);
+ if(!motionIndexCount){motionOpCount=0;return;}
+ if(rebuild){
+ motionOpCount=0;
  const pixelScale=clamp(H/720,.75,2.2)*motionProfile.pixelScale,salt=testNumber*991;
- motionMoved=0;
  for(let j=0;j<motionIndexCount;j++){
   const i=motionIndices[j],amount=motionStrength[i];if(amount<=.04)continue;
   const bx=(i%cols)*stride,by=((i/cols)|0)*stride,ex=Math.min(W,bx+stride),ey=Math.min(H,by+stride);
@@ -715,11 +716,22 @@ function apply62CMotionFields(){
   const mem=motionMemory[i],erase=motionErase[i],colour=motionColour[i];
   for(let y=by;y<ey;y++)for(let x=bx;x<ex;x++){
    const dst=y*W+x,tx=x+ox,ty=y+oy;
-   if((ox||oy)&&tx>=0&&tx<W&&ty>=0&&ty<H&&motionNoise(x>>1,y>>1,salt+913)<amount*.93){renderField[dst]=motionSource[ty*W+tx];motionMoved++;}
-   if(mem>.08&&motionNoise(x>>1,y>>1,salt+127)<mem*.10)renderField[dst]=motionSource[clamp(y+my,0,H-1)*W+clamp(x+mx,0,W-1)];
-   if(erase>.08&&motionNoise(x>>1,y>>1,salt+251)<erase*.025)renderField[dst]=paletteLum[field[dst]]>127?1:0;
-   if(colour>.10&&renderField[dst]===0&&motionNoise(x>>1,y>>1,salt+383)<colour*.020)renderField[dst]=2+(motionHue[i]%4);
+   let src=-1,flags=0;
+   if((ox||oy)&&tx>=0&&tx<W&&ty>=0&&ty<H&&motionNoise(x>>1,y>>1,salt+913)<amount*.93)src=ty*W+tx;
+   if(mem>.08&&motionNoise(x>>1,y>>1,salt+127)<mem*.10)src=clamp(y+my,0,H-1)*W+clamp(x+mx,0,W-1);
+   if(erase>.08&&motionNoise(x>>1,y>>1,salt+251)<erase*.025)flags|=1;
+   if(colour>.10&&motionNoise(x>>1,y>>1,salt+383)<colour*.020)flags|=2;
+   if(src>=0||flags){const k=motionOpCount++;motionOps.dst[k]=dst;motionOps.src[k]=src;motionOps.flags[k]=flags;motionOps.colour[k]=2+(motionHue[i]%4);}
   }
+ }
+ }
+ if(!motionOpCount)return;
+ motionSource.set(renderField);motionMoved=0;
+ for(let k=0;k<motionOpCount;k++){
+  const dst=motionOps.dst[k],src=motionOps.src[k],flags=motionOps.flags[k];
+  if(src>=0){renderField[dst]=motionSource[src];motionMoved++;}
+  if(flags&1)renderField[dst]=paletteLum[field[dst]]>127?1:0;
+  if((flags&2)&&renderField[dst]===0)renderField[dst]=motionOps.colour[k];
  }
 }
 function applyFlowPockets(){
