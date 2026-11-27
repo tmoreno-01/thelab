@@ -111,7 +111,7 @@ const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-per
 const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(43,innerWidth/innerHeight,.025,400),controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.maxDistance=120;
 const world=new THREE.Group(),layoutRoot=new THREE.Group();scene.add(world);world.add(layoutRoot);
 let spinAngle=0;
-const spinAxis=new THREE.Vector3(),parentInverse=new THREE.Quaternion(),uprightRotation=new THREE.Quaternion(),upAxis=new THREE.Vector3(0,1,0);if(matchMedia('(pointer: coarse)').matches)$('tier').value='mobile';
+const spinAxis=new THREE.Vector3(),parentInverse=new THREE.Quaternion(),uprightRotation=new THREE.Quaternion(),upAxis=new THREE.Vector3(0,1,0),centerWorld=new THREE.Vector3(),parentRotation=new THREE.Quaternion();if(matchMedia('(pointer: coarse)').matches)$('tier').value='mobile';
 
 const vertexShader=`
 uniform sampler2D depthTex,colorTex;
@@ -185,19 +185,31 @@ function setLayoutOrientation(){
  else if(mode==='tilted')layoutRoot.rotation.set(.48,0,.38);
  else layoutRoot.rotation.set(0,0,0);
 }
-// Rotate around the arrangement's own normal, not the global Y axis.
-// Vertical rings act like a Ferris wheel: each scan remains upright while
-// its centre travels around the wheel. Horizontal layouts keep their old pose.
+// Vertical wheel: travel clockwise (down on the right) in the selected plane.
+// Keep the scans level and face their original capture direction towards the
+// camera by yawing only; no pitch or roll is inherited from the wheel.
+function isVertical(){const o=$('orientation').value;return o==='vertical'||o==='side';}
+function faceVerticalCaptures(){
+ if(!isVertical())return;
+ parentRotation.copy(world.quaternion).multiply(layoutRoot.quaternion);
+ parentInverse.copy(parentRotation).invert();
+ for(const s of states){
+  if(!s.root||!s.root.visible)continue;
+  centerWorld.copy(s.root.position).applyQuaternion(parentRotation);
+  const dx=camera.position.x-centerWorld.x,dz=camera.position.z-centerWorld.z;
+  const yaw=Math.hypot(dx,dz)>1e-6?Math.atan2(dx,dz):($('orientation').value==='side'?Math.PI/2:0);
+  uprightRotation.setFromAxisAngle(upAxis,yaw);
+  s.root.quaternion.copy(parentInverse).multiply(uprightRotation);
+ }
+}
 function setSpin(angle){
  spinAngle=angle;
  const orientation=$('orientation').value;
  spinAxis.copy(upAxis).applyQuaternion(layoutRoot.quaternion).normalize();
- world.quaternion.setFromAxisAngle(spinAxis,angle);
- if(orientation==='vertical'||orientation==='side'){
-  parentInverse.copy(world.quaternion).multiply(layoutRoot.quaternion).invert();
-  uprightRotation.setFromAxisAngle(upAxis,orientation==='side'?Math.PI/2:0);
-  for(const s of states)if(s.root)s.root.quaternion.copy(parentInverse).multiply(uprightRotation);
- }
+ // The front plane's normal is +Z; the side plane's normal is -X.
+ // Both presets move down on the right of their respective default view.
+ world.quaternion.setFromAxisAngle(spinAxis,orientation==='vertical'?-angle:angle);
+ faceVerticalCaptures();
 }
 function layout(resetCam=true){
  const a=visible(),n=a.length,mode=$('layout').value,columns=Math.ceil(Math.sqrt(n||1)*1.25),rows=Math.ceil(n/columns);
@@ -206,7 +218,7 @@ function layout(resetCam=true){
  for(let i=0;i<n;i++){
   const s=a[i];if(!s.root)continue;let x=0,y=0,z=0,rx=0,ry=0,rz=0;
   if(n>1){
-   if(mode==='ring'){const t=2*Math.PI*i/n;x=Math.sin(t)*radius;z=Math.cos(t)*radius;ry=t;y=Math.sin(i*1.8)*.12;}
+   if(mode==='ring'){const t=2*Math.PI*i/n;x=Math.sin(t)*radius;z=Math.cos(t)*radius;ry=t;y=isVertical()?0:Math.sin(i*1.8)*.12;}
    else if(mode==='helix'){const t=2*Math.PI*i/n*1.2;x=Math.sin(t)*radius;z=Math.cos(t)*radius;y=(i-(n-1)/2)*.72;ry=t;}
    else if(mode==='arc'){const t=(i/(n-1)-.5)*Math.PI*1.5;x=Math.sin(t)*radius;z=Math.cos(t)*radius;ry=t;}
    else if(mode==='sphere'){const phi=Math.acos(1-2*(i+.5)/n),theta=Math.PI*(1+Math.sqrt(5))*i;x=radius*Math.sin(phi)*Math.cos(theta);y=radius*Math.cos(phi);z=radius*Math.sin(phi)*Math.sin(theta);ry=theta+Math.PI/2;}
@@ -222,8 +234,8 @@ function layout(resetCam=true){
   const radial=['ring','helix','arc','sphere'].includes(mode);
   const span=radial?radius+(mode==='helix'?n*.36:0)+1.45*maxScale:mode==='line'?Math.max(2,n*1.65/camera.aspect)+maxScale:Math.max(rows*1.35,columns*1.5/camera.aspect)+1.0*maxScale;
   const distance=span/Math.tan(halfFov)+.9,orientation=$('orientation').value;
-  if(orientation==='side')camera.position.set(distance,.15,.15);
-  else if(orientation==='vertical')camera.position.set(0,.15,distance);
+  if(orientation==='side')camera.position.set(distance,0,0);
+  else if(orientation==='vertical')camera.position.set(0,0,distance);
   else camera.position.set(0,radial&&n>1?radius*.23:.15,distance);
   controls.minDistance=Math.max(1.5,distance*.18);controls.maxDistance=180;controls.update();
  }
@@ -296,7 +308,7 @@ async function renderMp4Loop(){
   for(let frame=0;frame<total;frame++){
    const timestamp=frame/fps,angle=(frame/total)*Math.PI*2;
    await Promise.all(active.map(s=>ensureFrameReady(s,Math.floor(timestamp*s.m.fps)%s.m.num_frames)));
-   setSpin(angle);renderer.render(scene,camera);
+   setSpin(angle);faceVerticalCaptures();renderer.render(scene,camera);
    recordCtx.drawImage(renderer.domElement,0,0,width,height);
    await videoSource.add(timestamp,1/fps,{keyFrame:frame===0});
    if(frame%4===0){
@@ -500,7 +512,7 @@ function animate(now){requestAnimationFrame(animate);if(document.hidden)return;c
   if(!s.chunks.has(k))requestChunk(s,k);
  }cursor=(cursor+1)%n;}
  if(orbit&&playing&&!exporting)setSpin((spinAngle+dt*Number($('speed').value))%(Math.PI*2));
- controls.update();renderer.render(scene,camera);
+ controls.update();faceVerticalCaptures();renderer.render(scene,camera);
  ticks++;if(!report)report=now;if(now-report>900){fps=Math.round(ticks*1000/(now-report));ticks=0;report=now;const loaded=a.filter(s=>s.root).length,points=a.reduce((sum,s)=>sum+(s.geo?.drawRange.count||0),0);
  $('status').textContent=loaded+'/'+n+' visible · '+fps+' render fps · '+points.toLocaleString()+' samples · '+(a.some(s=>s.original)?'original ZIPs · ':'')+(stalled?'buffering '+stalled:'local streaming')+(rate==='auto'?' · adaptive playback':'');
  if($('detail').value==='auto'&&n>1){const nextBudget=fps<24?Math.max(350000,frameBudget*.8):fps>48?Math.min(1800000,frameBudget*1.08):frameBudget;if(nextBudget!==frameBudget){frameBudget=nextBudget;applyDetail();}}
