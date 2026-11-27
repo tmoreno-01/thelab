@@ -63,12 +63,12 @@ function extract(im,meta,variant=0){
  return {...meta,id:meta.id+"-plate-"+(variant+1),label:meta.label+" / "+(variant===0?"whole":"detail"),sourceId:meta.id,variant,paths,feature};
 }
 function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
- canvas.width=canvas.height=N;const ctx=canvas.getContext("2d",{alpha:false});
- let R=rng(seed),originSeed=seed>>>0,frame=0,marks=0,bundles=0,atlas=[],session=[],tracks=[],density=new Float32Array(G*G),history=[],field=[0,0,0,0],recent=[],memory=readMemory(),readyState=false,failed=0,lastSources=[],previousSources=[],pendingSeed=originSeed;
+ canvas.width=canvas.height=N;const ctx=canvas.getContext("2d",{alpha:false});const inkCanvas=document.createElement("canvas");inkCanvas.width=inkCanvas.height=N;const inkCtx=inkCanvas.getContext("2d",{alpha:false});
+ let R=rng(seed),originSeed=seed>>>0,frame=0,marks=0,bundles=0,atlas=[],session=[],tracks=[],density=new Float32Array(G*G),history=[],field=[0,0,0,0],recent=[],memory=readMemory(),readyState=false,failed=0,lastSources=[],previousSources=[],pendingSeed=originSeed,motion=[],anchors=[],motionEvents=0,nextMotionEvent=0;
  const rand=(a,b)=>mix(a,b,R()),pick=a=>a[Math.floor(R()*a.length)];
  function readMemory(){try{let m=JSON.parse(localStorage.getItem(KEY)||"{}");return{directions:Array.isArray(m.directions)?m.directions.slice(0,12):[],recent:Array.isArray(m.recent)?m.recent.slice(0,16):[]};}catch(e){return{directions:[],recent:[]};}}
  function writeMemory(){try{localStorage.setItem(KEY,JSON.stringify(memory));return true;}catch(e){return false;}}
- function paper(){ctx.fillStyle=PAPER;ctx.fillRect(0,0,N,N);const tile=document.createElement("canvas");tile.width=128;tile.height=128;const t=tile.getContext("2d"),im=t.createImageData(128,128);for(let i=0;i<im.data.length;i+=4){let n=rand(-10,10);im.data[i]=238+n;im.data[i+1]=233+n;im.data[i+2]=220+n;im.data[i+3]=255;}t.putImageData(im,0,0);ctx.fillStyle=ctx.createPattern(tile,"repeat");ctx.globalAlpha=.25;ctx.fillRect(0,0,N,N);ctx.globalAlpha=1;}
+ function paper(){inkCtx.fillStyle=PAPER;inkCtx.fillRect(0,0,N,N);const tile=document.createElement("canvas");tile.width=128;tile.height=128;const t=tile.getContext("2d"),im=t.createImageData(128,128);for(let i=0;i<im.data.length;i+=4){let n=rand(-10,10);im.data[i]=238+n;im.data[i+1]=233+n;im.data[i+2]=220+n;im.data[i+3]=255;}t.putImageData(im,0,0);inkCtx.fillStyle=inkCtx.createPattern(tile,"repeat");inkCtx.globalAlpha=.25;inkCtx.fillRect(0,0,N,N);inkCtx.globalAlpha=1;}
  function densityAt(x,y,r=24){let sum=0,n=0;const step=14;for(let yy=-r;yy<=r;yy+=step)for(let xx=-r;xx<=r;xx+=step){if(xx*xx+yy*yy>r*r)continue;let gx=Math.floor((x+xx)/N*G),gy=Math.floor((y+yy)/N*G);if(gx<0||gy<0||gx>=G||gy>=G)continue;sum+=density[gy*G+gx];n++;}return n?sum/n:0;}
  function touchDensity(x,y,w,color){let v=color===INK?1:0,rad=Math.max(2,w*.8),x0=Math.max(0,Math.floor((x-rad)/N*G)),x1=Math.min(G-1,Math.ceil((x+rad)/N*G)),y0=Math.max(0,Math.floor((y-rad)/N*G)),y1=Math.min(G-1,Math.ceil((y+rad)/N*G));for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++){let px=(gx+.5)*N/G,py=(gy+.5)*N/G;if(Math.hypot(px-x,py-y)<rad+N/G*.45){let k=gy*G+gx;density[k]=mix(density[k],v,.12);}}}
  function warp(x,y,amount=12){let fx=field[0],fy=field[1],f=field[2];return[x+Math.sin(y*.009+fx)*amount+Math.sin((x+y)*.014+f)*amount*.32,y+Math.cos(x*.008+fy)*amount+Math.sin((x-y)*.012+f)*amount*.28];}
@@ -84,10 +84,40 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
  }
  function chooseSource(exclude){let options=session.filter(s=>s.paths.length&&(!exclude||s.id!==exclude));if(!options.length)options=session.filter(s=>s.paths.length);let weights=options.map(s=>{let rec=recent.slice(-10).filter(x=>x===s.id).length+(previousSources.slice(0,10).filter(x=>x===s.id).length*.9);let novelty=1/(1+rec*1.8);let complexity=.6+s.feature.complexity*.7;return novelty*complexity*(s.family==="drawn"?.8:1);});let total=weights.reduce((a,b)=>a+b,0),v=R()*total;for(let i=0;i<options.length;i++){v-=weights[i];if(v<=0)return options[i];}return options[0];}
  function matchPath(source,target,used){if(!source||!source.paths.length)return null;let best=[],targetAspect=target.aspect||1,targetCurvature=target.curvature||0;for(let i=0;i<source.paths.length;i++){if(used.has(i))continue;let p=source.paths[i];if(p.len<7)continue;let score=Math.abs(Math.log((p.len+1)/(target.len+1)))*.38+Math.abs(Math.log((p.aspect||1)/targetAspect))*.72+Math.abs((p.curvature||0)-targetCurvature)*.34+(p.closed===target.closed?0:.42)+Math.abs(p.level-target.level)/255*.16+R()*.22;best.push({p,i,score});}if(!best.length)return choosePath(source,used);best.sort((a,b)=>a.score-b.score);let choice=best[Math.floor(Math.pow(R(),1.8)*Math.min(8,best.length))];used.add(choice.i);return choice.p;}
- function candidatePlacement(){let best=null;for(let i=0;i<22;i++){let x=rand(90,870),y=rand(90,870),d=densityAt(x,y,rand(38,88)),target=d>.48?.19:.34,near=tracks.reduce((n,t)=>n+(distance([x,y],t.center)<150?1:0),0),score=1-Math.abs(d-target)*2.2-near*.16+R()*.65;if(!best||score>best.score)best={x,y,d,score};}return best||{x:480,y:480,d:0};}
+ function candidatePlacement(){let best=null,coverage=density.reduce((a,b)=>a+b,0)/density.length,target=coverage>.24?.105:coverage>.13?.19:.29;for(let i=0;i<34;i++){let x=rand(85,875),y=rand(85,875),d=densityAt(x,y,rand(34,82)),gx=densityAt(x+30,y,26)-densityAt(x-30,y,26),gy=densityAt(x,y+30,26)-densityAt(x,y-30,26),edge=Math.hypot(gx,gy),near=anchors.reduce((n,a)=>n+Math.exp(-distance([x,y],[a.x,a.y])/125)*Math.exp(-(frame-a.age)/560),0),moving=motion.reduce((n,m)=>n+Math.exp(-distance([x,y],m.center)/145)*.6,0),quadrant=(x>N/2?1:0)+(y>N/2?2:0),qCount=anchors.filter(a=>((a.x>N/2?1:0)+(a.y>N/2?2:0))===quadrant&&frame-a.age<900).length,score=1-Math.abs(d-target)*2.5-near*.2-moving*.14-qCount*.045+edge*.22+R()*.38;if(!best||score>best.score)best={x,y,d,score};}return best||{x:480,y:480,d:0};}
  function choosePath(source,used){if(!source||!source.paths.length)return null;let pool=source.paths.filter((p,i)=>!used.has(i)&&p.len>7);if(!pool.length){used.clear();pool=source.paths;}let weights=pool.map(p=>Math.min(1.8,.35+p.len/85)*(p.closed&&p.area>25?1.25:1)*(p.level>50&&p.level<210?1.1:.85));let sum=weights.reduce((a,b)=>a+b,0),v=R()*sum;for(let i=0;i<pool.length;i++){v-=weights[i];if(v<=0){let index=source.paths.indexOf(pool[i]);used.add(index);return pool[i];}}return pool[0];}
  function resample(path,n){if(path.length<2)return path;let lengths=[0];for(let i=1;i<path.length;i++)lengths.push(lengths[i-1]+distance(path[i-1],path[i]));let total=lengths[lengths.length-1]||1,out=[];for(let j=0;j<n;j++){let d=total*j/(n-1),i=1;while(i<lengths.length-1&&lengths[i]<d)i++;let t=(d-lengths[i-1])/(lengths[i]-lengths[i-1]||1);out.push([mix(path[i-1][0],path[i][0],t),mix(path[i-1][1],path[i][1],t)]);}return out;}
  function interpolatePath(a,b,t){let n=Math.max(12,Math.min(44,Math.max(a.length,b.length))),aa=resample(a,n),bb=resample(b,n);return aa.map((p,i)=>[mix(p[0],bb[i][0],t),mix(p[1],bb[i][1],t)]);}
+ function centroid(path){let x=0,y=0;for(const p of path){x+=p[0];y+=p[1];}return[x/Math.max(1,path.length),y/Math.max(1,path.length)];}
+ function addMotion(pathA,pathB,color,width,sourceIds=[]){
+  if(!pathA||pathA.length<5)return;const ca=centroid(pathA),cb=centroid(pathB&&pathB.length>4?pathB:pathA),n=clamp(Math.max(pathA.length,pathB?.length||0),18,52),aa=resample(pathA,n).map(p=>[p[0]-ca[0],p[1]-ca[1]]),bb=resample(pathB&&pathB.length>4?pathB:pathA,n).map(p=>[p[0]-cb[0],p[1]-cb[1]]),centre=[(ca[0]+cb[0])*.5,(ca[1]+cb[1])*.5],crowd=densityAt(centre[0],centre[1],36),types=crowd<.2?["orbit","drift","fold","ripple","knot","pulse","vortex"]:["shear","fracture","vortex","fold","ripple","orbit","knot"];
+  motion.push({a:aa,b:bb,center:centre,type:pick(types),age:0,life:Math.floor(rand(145,310)),phase:rand(0,Math.PI*2),cycles:rand(.7,2.4),speed:rand(.018,.052),spin:rand(-.014,.014),amplitude:rand(7,39),width:clamp(width*rand(.48,.9),.65,2.5),color:color||INK,echo:R()<.58,nodes:R()<.32,oscillate:R()<.42,settle:R()<.62,sourceIds});
+  if(motion.length>20)motion.shift();
+ }
+ function motionGeometry(m,forcedProgress=null){
+  const t=forcedProgress===null?clamp(m.age/m.life,0,1):clamp(forcedProgress,0,1),phase=m.phase+m.age*m.speed,mt=m.oscillate?.5-.5*Math.cos(t*Math.PI*2*m.cycles):t*t*(3-2*t),n=m.a.length,out=[],centreX=m.center[0]+Math.cos(phase*.73)*m.amplitude*.26,centreY=m.center[1]+Math.sin(phase*.61)*m.amplitude*.22;
+  for(let i=0;i<n;i++){const ax=m.a[i],bx=m.b[i],u=mix(ax[0],bx[0],mt),v=mix(ax[1],bx[1],mt),along=i/(n-1),wave=Math.sin(along*Math.PI*2*m.cycles+phase),chunk=Math.floor(along*5),radius=Math.hypot(u,v),baseAngle=Math.atan2(v,u);let x=u,y=v,angle=0,sx=1,sy=1;
+   if(m.type==="orbit"){angle=Math.sin(phase+t*Math.PI*2*m.cycles)*.62+m.spin*m.age;x+=Math.cos(phase+t*4)*m.amplitude*.36;y+=Math.sin(phase+t*3.1)*m.amplitude*.3;}
+   else if(m.type==="shear"){x+=Math.sin(v*.023+phase)*m.amplitude;y+=Math.cos(u*.019-phase*.8)*m.amplitude*.36;angle=Math.sin(phase+t*5)*.12;}
+   else if(m.type==="fold"){sx=Math.cos(phase+t*Math.PI*2*m.cycles);sy=.72+.28*Math.sin(phase*.7+t*Math.PI*2);x*=sx;y*=sy;angle=Math.sin(phase+t*3)*.16;}
+   else if(m.type==="vortex"){angle=(.25+.95*Math.sin(phase+t*5))*Math.exp(-radius/Math.max(30,m.amplitude*4));}
+   else if(m.type==="fracture"){x+=Math.sin(phase+chunk*2.13)*m.amplitude*.52;y+=Math.cos(phase*.8+chunk*1.71)*m.amplitude*.42;angle=Math.sin(phase+chunk)*.12;}
+   else if(m.type==="ripple"){const prev=m.a[Math.max(0,i-1)],next=m.a[Math.min(n-1,i+1)],tx=next[0]-prev[0],ty=next[1]-prev[1],len=Math.hypot(tx,ty)||1,offset=wave*m.amplitude*.62;x+=-ty/len*offset;y+=tx/len*offset;}
+   else if(m.type==="drift"){x+=Math.cos(phase+t*4)*m.amplitude*.5;y+=Math.sin(phase+t*3)*m.amplitude*.42;angle=Math.sin(phase+t*2)*.22;}
+   else if(m.type==="knot"){angle=Math.sin(phase+t*4)*.5+(radius/Math.max(40,m.amplitude*5))*.8*Math.sin(phase*.6);}
+   else if(m.type==="pulse"){sx=sy=1+Math.sin(phase+t*Math.PI*2*m.cycles)*.28;angle=Math.sin(phase+t*3)*.1;}
+   const c=Math.cos(angle),s=Math.sin(angle),rx=x*sx*c-y*sy*s,ry=x*sx*s+y*sy*c,globalWave=Math.sin(along*Math.PI*2+phase*.7)*m.amplitude*.12;out.push([centreX+rx+Math.cos(baseAngle+Math.PI/2)*globalWave,centreY+ry+Math.sin(baseAngle+Math.PI/2)*globalWave]);
+  }return out;
+ }
+ function render(){
+  ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.drawImage(inkCanvas,0,0);
+  for(const m of motion){const t=clamp(m.age/m.life,0,1),fade=Math.pow(Math.max(0,Math.sin(Math.PI*t)),.62);if(fade<.015)continue;const p=motionGeometry(m),n=p.length;if(n<3)continue;ctx.save();ctx.globalAlpha=fade*(m.echo?.66:.9);ctx.strokeStyle=m.color;ctx.lineWidth=m.width*(.82+.18*Math.sin(m.age*.08+m.phase));ctx.lineCap="round";ctx.lineJoin="round";if(ctx.setLineDash){ctx.setLineDash(m.type==="fracture"?[4,2]:m.type==="ripple"?[2,2]:[]);ctx.lineDashOffset=-m.age*1.7;}ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);for(let i=1;i<n;i++)ctx.lineTo(p[i][0],p[i][1]);ctx.stroke();if(m.echo){ctx.globalAlpha=fade*.24;ctx.strokeStyle=m.color===INK?WHITE:INK;ctx.lineWidth=Math.max(.55,m.width*.55);ctx.beginPath();ctx.moveTo(p[0][0]+2,p[0][1]-2);for(let i=1;i<n;i++)ctx.lineTo(p[i][0]+2,p[i][1]-2);ctx.stroke();}if(m.nodes){ctx.globalAlpha=fade*.72;ctx.fillStyle=m.color;for(let i=3;i<n;i+=Math.max(5,Math.floor(n/5))){ctx.beginPath();ctx.arc(p[i][0],p[i][1],1.1+(i%3)*.35,0,Math.PI*2);ctx.fill();}}ctx.restore();}
+  ctx.restore();
+ }
+ function launchMotionBurst(){
+  const place=candidatePlacement(),a=chooseSource(),b=chooseSource(a.id),pa=choosePath(a,new Set());if(!pa)return;const pb=matchPath(b,pa,new Set()),cx=place.x,cy=place.y,rx=rand(95,240),ry=rx*rand(.52,1.18),angle=rand(-Math.PI,Math.PI),rawA=transformPath(pa,cx,cy,rx,ry,angle,R()<.5,rand(7,28)),rawB=pb?transformPath(pb,cx+rand(-24,24),cy+rand(-24,24),rx*rand(.86,1.12),ry*rand(.86,1.12),angle+rand(-.35,.35),R()<.5,rand(5,22)):rawA,local=densityAt(cx,cy,34),color=local>.39?WHITE:INK,count=R()<.28?2:1;
+  for(let i=0;i<count;i++)addMotion(rawA,rawB,color,rand(1,2.8),[a.id,b.id]);motionEvents++;
+ }
  function makeBundle(initial=false){
   const place=candidatePlacement(),a=chooseSource(),b=chooseSource(a.id),cx=place.x,cy=place.y,rx=rand(125,310),ry=rx*rand(.52,1.22),ang=rand(-Math.PI,Math.PI),flip=R()<.5,warpAmount=rand(3,22),ops=[],usedA=new Set(),usedB=new Set(),count=Math.floor(rand(26,48)),polarity=place.d>.44?WHITE:INK;
   const startOffset=initial?0:Math.floor(rand(0,22));
@@ -108,22 +138,22 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
    }
   }
   if(!ops.length)return;
-  ops.sort((x,y)=>x.start-y.start);const track={age:0,cursor:0,live:[],items:ops,center:[cx,cy],sources:[a.id,b.id],family:[a.family,b.family]};tracks.push(track);recent.push(a.id,b.id);if(recent.length>32)recent=recent.slice(-32);bundles++;history.push([a.id,b.id]);if(history.length>24)history.shift();
+  ops.sort((x,y)=>x.start-y.start);const track={age:0,cursor:0,live:[],items:ops,center:[cx,cy],sources:[a.id,b.id],family:[a.family,b.family]};tracks.push(track);anchors.push({x:cx,y:cy,age:frame});if(anchors.length>36)anchors.shift();recent.push(a.id,b.id);if(recent.length>32)recent=recent.slice(-32);bundles++;history.push([a.id,b.id]);if(history.length>24)history.shift();const candidates=ops.filter(o=>!o.fill&&o.p.length>8),motionCount=initial?2:(R()<.3?2:1);for(let i=0;i<motionCount&&candidates.length;i++){const first=pick(candidates),alternates=candidates.filter(o=>o!==first),second=alternates.length?pick(alternates):first;addMotion(first.p,second.p,R()<.36?(first.color===INK?WHITE:INK):first.color,first.w,[a.id,b.id]);}
   if(initial){for(const op of ops)paint(op,0,1);track.cursor=ops.length;track.live=[];}
  }
  function paint(op,from,to){
   const p=op.p,n=p.length-1;if(n<1)return;const lo=Math.max(0,Math.floor(from*n)),hi=Math.min(n,Math.ceil(to*n));if(hi<=lo)return;
-  ctx.strokeStyle=op.color;ctx.fillStyle=op.color;ctx.lineCap="round";ctx.lineJoin="round";
-  if(op.fill&&to>=1){ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);for(let i=1;i<p.length;i++)ctx.lineTo(p[i][0],p[i][1]);ctx.closePath();ctx.fill();}
-  ctx.lineWidth=op.w;ctx.beginPath();ctx.moveTo(p[lo][0],p[lo][1]);for(let i=lo+1;i<=hi;i++)ctx.lineTo(p[i][0],p[i][1]);ctx.stroke();
+  inkCtx.strokeStyle=op.color;inkCtx.fillStyle=op.color;inkCtx.lineCap="round";inkCtx.lineJoin="round";
+  if(op.fill&&to>=1){inkCtx.beginPath();inkCtx.moveTo(p[0][0],p[0][1]);for(let i=1;i<p.length;i++)inkCtx.lineTo(p[i][0],p[i][1]);inkCtx.closePath();inkCtx.fill();}
+  inkCtx.lineWidth=op.w;inkCtx.beginPath();inkCtx.moveTo(p[lo][0],p[lo][1]);for(let i=lo+1;i<=hi;i++)inkCtx.lineTo(p[i][0],p[i][1]);inkCtx.stroke();
   const stride=Math.max(1,Math.floor((hi-lo)/28));for(let i=lo;i<=hi;i+=stride)touchDensity(p[i][0],p[i][1],op.w,op.color);if(to>=1)marks++;
  }
  function initialise(s){
-  originSeed=s>>>0;R=rng(originSeed);frame=marks=bundles=0;tracks=[];density=new Float32Array(G*G);history=[];recent=[];field=[rand(0,6),rand(0,6),rand(0,6),rand(0,6)];paper();chooseSession();
+  originSeed=s>>>0;R=rng(originSeed);frame=marks=bundles=motionEvents=0;tracks=[];motion=[];anchors=[];nextMotionEvent=Math.floor(rand(55,110));density=new Float32Array(G*G);history=[];recent=[];field=[rand(0,6),rand(0,6),rand(0,6),rand(0,6)];paper();chooseSession();
   // Four overlapping source plates establish a continuous page, not isolated stickers.
   const placements=[[rand(240,370),rand(250,390)],[rand(600,760),rand(220,370)],[rand(350,600),rand(560,740)],[rand(700,840),rand(650,810)]];
   for(const [x,y] of placements)makeBundle(true);
-  for(let i=0;i<2;i++)makeBundle(true);
+  for(let i=0;i<2;i++)makeBundle(true);render();
  }
  async function buildAtlas(){
   onStatus("005 / loading source atlas");
@@ -133,12 +163,13 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
  }
  function reset(s=(Math.random()*4294967295)>>>0){pendingSeed=s>>>0;if(readyState)initialise(pendingSeed);}
  function remember(){if(!readyState)return false;const direction={sources:session.map(s=>s.id),families:session.map(s=>s.family),seed:originSeed,created:Date.now()};memory.directions.unshift(direction);memory.directions=memory.directions.slice(0,12);memory.recent=recent.slice(-16);writeMemory();return true;}
- function step(){if(!readyState)return;frame++;if(frame%180===0){field[0]+=rand(-.5,.5);field[1]+=rand(-.5,.5);field[2]+=rand(-.4,.4);field[3]+=rand(-.4,.4);}
+ function step(){if(!readyState)return;frame++;field[0]+=(R()-.5)*.025;field[1]+=(R()-.5)*.025;field[2]+=(R()-.5)*.018;field[3]+=(R()-.5)*.018;
   for(const t of tracks){t.age++;while(t.cursor<t.items.length&&t.items[t.cursor].start<=t.age)t.live.push({...t.items[t.cursor++],last:0});for(const op of t.live){let f=clamp((t.age-op.start)/op.dur,0,1);if(f>op.last)paint(op,op.last,f);op.last=f;}t.live=t.live.filter(o=>o.last<1);}
-  tracks=tracks.filter(t=>t.cursor<t.items.length||t.live.length);if(frame%17===0&&tracks.length<15)makeBundle(false);if(frame%41===0&&tracks.length<13)makeBundle(false);
+  for(const m of motion)m.age++;const expired=motion.filter(m=>m.age>=m.life);for(const m of expired)if(m.settle&&R()<.68){const finalPath=motionGeometry(m,1);paint({p:finalPath,w:m.width*.82,color:m.color,fill:false},0,1);}motion=motion.filter(m=>m.age<m.life);
+  tracks=tracks.filter(t=>t.cursor<t.items.length||t.live.length);if(frame>=nextMotionEvent){launchMotionBurst();nextMotionEvent=frame+Math.floor(rand(76,174));}if(frame%17===0&&tracks.length<15)makeBundle(false);if(frame%41===0&&tracks.length<13)makeBundle(false);render();
  }
  const ready=buildAtlas();
- return{ready,step,reset,remember,get frame(){return frame},get seconds(){return frame/FPS},get seed(){return originSeed},get finished(){return false},get stats(){return{marks,bundles,active:tracks.length,sources:session.map(s=>s.label),families:[...new Set(session.map(s=>s.family))],memory:memory.directions.length,atlas:atlas.length,contours:atlas.reduce((n,a)=>n+a.paths.length,0),images:SOURCES.length,failed}}};
+ return{ready,step,reset,remember,get frame(){return frame},get seconds(){return frame/FPS},get seed(){return originSeed},get finished(){return false},get stats(){return{marks,bundles,active:tracks.length,moving:motion.length,events:motionEvents,sources:session.map(s=>s.label),families:[...new Set(session.map(s=>s.family))],memory:memory.directions.length,atlas:atlas.length,contours:atlas.reduce((n,a)=>n+a.paths.length,0),images:SOURCES.length,failed}}};
 }
 function getMemoryCount(){try{return JSON.parse(localStorage.getItem(KEY)||"{}").directions?.length||0;}catch(e){return 0;}}
 root.Palimpsest005={create,FPS,SIZE:N,SOURCES,getMemoryCount};
