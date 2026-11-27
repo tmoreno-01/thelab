@@ -1,0 +1,875 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lifeafterlogic / Structural Evolution</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efeee9}canvas{display:block;width:100%;height:100%;image-rendering:pixelated}#err{position:fixed;left:10px;bottom:10px;color:#777;font:10px monospace;pointer-events:none}</style></head><body><canvas id="art"></canvas><div id="err"></div><script>
+"use strict";
+const q=new URLSearchParams(location.search),study=q.get('study')||'pressure',requestedStudy=Number(study),testNumber=({139:136,140:137,141:138,142:136,143:137,144:138,145:136,146:137,147:138}[requestedStudy]||requestedStudy),mode=study==='reorganisation'?1:(study==='fault'||[124,125,126,127,128,129,130,131,132,136,137,138].includes(testNumber))?2:0;
+document.title='lifeafterlogic / '+({139:'139 — Local Feedback / Optimised',140:'140 — Chromatic Feedback / Optimised',141:'141 — Unstable Feedback / Optimised',142:'142 — Recursive Tissue',143:'143 — Mutable Syntax',144:'144 — Unstable Ecology',145:'145 — Distributed Instinct',146:'146 — Mutual Disturbance',147:'147 — Restless Matter'}[requestedStudy]||({124:'124 — Slip Memory',125:'125 — Phase Slip',126:'126 — Residual Current',127:'127 — Local Current',128:'128 — Counterflow',129:'129 — Phase Inheritance',130:'130 — Local Matter',131:'131 — Unstable Matter',132:'132 — Phase Turbulence',136:'136 — Local Feedback',137:'137 — Chromatic Feedback',138:'138 — Unstable Feedback'}[testNumber]||['121 — Pressure Memory','122 — Reorganisation','123 — Living Fault'][mode]));
+const canvas=document.getElementById('art'),ctx=canvas.getContext('2d',{alpha:false}),small=document.createElement('canvas'),sc=small.getContext('2d',{alpha:false});
+const palette=[[239,238,232],[19,20,21],[41,75,204],[201,43,30],[201,140,22],[14,119,109],[91,161,199],[222,94,82],[194,203,83],[145,112,181],[76,150,133],[216,169,104]];
+const paletteLum=palette.map(c=>c[0]*.299+c[1]*.587+c[2]*.114);
+const waveTable=new Float32Array(8193),waveFactor=8192/(2*Math.PI);
+for(let i=0;i<=8192;i++)waveTable[i]=Math.sin(i/waveFactor);
+function waveSin(v){let t=v*waveFactor,b=Math.floor(t),i=b&8191;return waveTable[i]+(waveTable[i+1]-waveTable[i])*(t-b);}
+function waveCos(v){return waveSin(v+Math.PI*.5);}
+function fastHypot(x,y){return Math.sqrt(x*x+y*y);}
+const mapInterval=requestedStudy===145?.083:requestedStudy===146?.075:.066;
+let pendingPlan=null,motionOps=null,motionOpCount=0,gpu=null,gpuFailure='',gpuSlots=0,gpuTick=0,gpuCoverage=0,territoryBirths=0;let territoryVisits=new Float32Array(48),ink=null,inkOwner=null,inkSerial=0,inkNext=0,inkCells=0,inkGrown=0,inkRetired=0,inkWhite=0,inkBlack=0;
+const pigmentFamilies=[[2,6,10],[3,7,9],[4,8,5],[9,6,2],[5,10,8]];
+const palettePacked=palette.map(c=>(c[0]|(c[1]<<8)|(c[2]<<16)|(255<<24))>>>0);
+const feedbackProfile=testNumber===136
+ ?{slots:8,gap:[.8,1.8],radius:[.045,.080],amp:.94,duration:[9,17],pigmentMax:2,pigmentGap:[5,9],pigmentChance:.24,pigmentAmp:.72}
+ :testNumber===137
+  ?{slots:10,gap:[.65,1.45],radius:[.045,.085],amp:1.02,duration:[10,20],pigmentMax:3,pigmentGap:[4,8],pigmentChance:.32,pigmentAmp:.80}
+  :{slots:12,gap:[.45,1.1],radius:[.045,.090],amp:1.12,duration:[10,22],pigmentMax:3,pigmentGap:[3,6],pigmentChance:.40,pigmentAmp:.88};
+const motionProfile=testNumber===130
+ ?{gain:.98,radius:.90,speed:.92,pixelScale:1.12,slots:3,weights:[1.1,1.0,1.7,1.0,1.2,.8,1.4,1.3],initial:[2,4,6]}
+ :testNumber===131
+  ?{gain:1.20,radius:1.0,speed:1.0,pixelScale:1.25,slots:4,weights:[1.3,1.1,1.9,1.1,1.3,.8,1.6,1.5],initial:[2,6,7,1]}
+  :{gain:1.42,radius:1.02,speed:1.12,pixelScale:1.32,slots:4,weights:[1.4,1.2,2.1,.95,1.5,.7,1.9,1.7],initial:[6,2,7,0]};
+let W=0,H=0,field,rgba,rgba32=null,active=[],agents=[],memory=[],used=new Set(),last=0,lastDraw=0,age=0,next=0,nextSense=0,paused=false,quality=!q.has('preview'),seed=crypto.getRandomValues(new Uint32Array(1))[0]||1;
+let trials=0,accepted=0,finished=0,colourBirths=0,inherited=0,refusals=0,changes=0,previous=null,focus=-1,nextFocus=0,colonies=[],morphChanges=0,flowChanges=0,colonyCount=0,nextMorph=0,fronts=[],nextFront=0,frontCount=0,frontEdits=0,microSlips=[],nextSlip=0,slipHistory=[],slipEvents=0,slipPairs=0,renderField=null,flowPockets=[],nextFlow=0,flowHistory=[],flowEvents=0,flowCells=0,motionFields=[],motionSource=null,motionX=null,motionY=null,motionStrength=null,motionMemory=null,motionErase=null,motionColour=null,motionHue=null,motionIndices=null,motionIndexCount=0,motionMapReady=false,nextMotionMap=0,motionEvents=0,motionTouched=0,motionMoved=0,motionActive=0,feedbackFields=[],feedbackHistory=[],feedbackModeUse=new Uint16Array(40),feedbackRecent=[],nextFeedback=0,feedbackPrevious=null,feedbackReady=false,feedbackEvents=0,feedbackTouched=0,feedbackMoved=0,feedbackActive=0,pigmentEvents=[],pigmentHistory=[],pigmentFamilyUse=new Uint16Array(5),pigmentRecent=[],nextPigment=0,pigmentEventCount=0,pigmentTransitions=0;
+function random(){seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return (seed>>>0)/4294967296}
+const R=n=>Math.floor(random()*n),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),pick=a=>a[R(a.length)],range=(a,b)=>a+random()*(b-a);
+const binary=v=>v===0?0:1,at=(x,y)=>binary(field[clamp(y,0,H-1)*W+clamp(x,0,W-1)]);
+function set(x,y,v){if(x>=0&&x<W&&y>=0&&y<H)field[y*W+x]=v;}
+function init(){
+ field=new Uint8Array(W*H);active=[];agents=[];memory=[];colonies=[];fronts=[];microSlips=[];slipHistory=[];flowPockets=[];flowHistory=[];motionFields=[];feedbackFields=[];feedbackHistory=[];feedbackModeUse.fill(0);feedbackRecent=[];feedbackReady=false;feedbackEvents=feedbackTouched=feedbackMoved=feedbackActive=0;pigmentEvents=[];pigmentHistory=[];pigmentFamilyUse.fill(0);pigmentRecent=[];pigmentEventCount=pigmentTransitions=0;nextFeedback=age+range(.1,.5);nextPigment=age+range(6,11);nextMorph=nextFront=0;used.clear();previous=null;age=next=nextSense=nextFocus=0;nextSlip=testNumber>=127?range(3.5,6):range(4.5,7.5);nextFlow=range(2,4);flowEvents=flowCells=motionEvents=motionTouched=motionMoved=motionActive=0;focus=-1;
+ let a=new Int16Array(W),b=new Int16Array(H),c=new Int16Array(W),flip=R(2),base=range(.35,.62),sign=random()<.5?-1:1;
+ function terrace(arr,size,center,slope){let v=size*center;for(let x=0;x<arr.length;){let len=3+R(Math.max(4,arr.length*.13));v=clamp(v*.44+(center+slope*(x/arr.length-.5))*size*.56+range(-size*.065,size*.065),size*.10,size*.90);for(let j=x;j<Math.min(arr.length,x+len);j++)arr[j]=Math.round(v);x+=len;}}
+ terrace(a,H,base,sign*.48);terrace(b,W,range(.34,.67),-sign*.30);terrace(c,H,range(.65,.83),sign*.20);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){let v=mode===1?Number((x<b[y]&&y>a[x])||(x>=b[y]&&y<c[x])):Number((x<b[y])!==(y<a[x]));if(mode===2&&x>W*.09&&x<W*.86&&y>c[x]&&y<c[x]+H*.075)v=1-v;set(x,y,v^flip);}
+ // Deliberate, interlocking ribs and recesses at multiple scales, not a tiled atlas.
+ for(let i=0;i<(mode===1?12:19);i++){
+  let x=R(W),y=a[x],direction=pick([-1,1]),depth=2+R(Math.max(3,H*.13)),len=4+R(Math.max(5,W*.28)),v=1-at(x,clamp(y+direction*depth,0,H-1)),pitch=2+R(3);
+  for(let j=0;j<depth;j+=pitch){let n=Math.round(len*(1-j/depth*.68));for(let k=0;k<n;k++)set(x+k-Math.floor(len*.3),y+direction*j,v);}
+ }
+ for(let i=0;i<(mode===1?6:10);i++){
+  let y=R(H),x=b[y],depth=3+R(Math.max(3,W*.07)),len=4+R(Math.max(5,H*.26)),dir=pick([-1,1]),v=1-at(clamp(x+dir*depth,0,W-1),y);
+  for(let j=0;j<depth;j+=2+R(2))for(let k=0;k<len-Math.floor(j*.5);k++)set(x+dir*j,y+k-Math.floor(len*.3),v);
+ }
+ for(let j=0;j<30;j++)agents.push({id:j,next:range(0,10),reward:new Float32Array(13),count:new Uint16Array(13),recent:[],energy:range(.4,1),signature:[],repeat:0,goal:R(3),edge:0,change:0});
+}
+function resize(){
+ let r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=Math.max(2,Math.round(r.width*d));canvas.height=Math.max(2,Math.round(r.height*d));
+ // Identical crisp lattice pitch in preview and fullscreen; preserve current state.
+ let k=Math.min(1,(quality?2300:1500)/canvas.width,(quality?1400:950)/canvas.height),density=Math.sqrt(7.2),nw=Math.max(30,Math.round(canvas.width*k*density/5.07)),nh=Math.max(24,Math.round(canvas.height*k*density/5.07));
+ if(nw===W&&nh===H){draw();return}
+ pendingPlan=null;let old=field,ow=W,oh=H;W=nw;H=nh;small.width=W;small.height=H;rgba=sc.createImageData(W,H);rgba32=new Uint32Array(rgba.data.buffer);renderField=new Uint8Array(W*H);allocateMotionBuffers();ink=new Uint8Array(W*H);inkOwner=new Uint8Array(W*H);inkSerial=0;inkCells=0;inkNext=age;territoryVisits.fill(-100);territoryBirths=0;
+ if(!old)init();else{field=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++)field[y*W+x]=old[Math.min(oh-1,Math.floor(y*oh/H))*ow+Math.min(ow-1,Math.floor(x*ow/W))];active=[];colonies=[];fronts=[];microSlips=[];slipHistory=[];flowPockets=[];flowHistory=[];feedbackFields=[];feedbackHistory=[];feedbackReady=false;pigmentEvents=[];pigmentHistory=[];nextFeedback=age+range(.1,.5);nextPigment=age+range(6,11);nextSlip=age+(testNumber>=127?range(3.5,6):range(4.5,7.5));nextFlow=age+range(2,4);previous=null;}
+ resetMotionFields();
+ if(gpu){try{gpu.resize();}catch(e){disableGPU(e);}}
+ draw();
+}
+function draw(){
+ if(!rgba)return;
+ if(!renderField||renderField.length!==field.length)renderField=new Uint8Array(field.length);
+ renderField.set(field);
+ applyFlowPockets();
+ if(!gpu){apply62CMotionFields();applyFeedbackFields();}
+ applyPigmentEvents();
+ // A rare, phase-coherent slip moves a few neighbouring contour cells out and back.
+ // It borrows the earlier displacement behaviour without translating the composition.
+ for(const s of microSlips){
+  const p=clamp((age-s.start)/s.duration,0,1);
+  const pulse=.5-.5*Math.cos(p*Math.PI*2);
+  const moved=Math.floor(s.pairs.length*pulse);
+  for(let k=0;k<moved;k++){
+   const [a,b]=s.pairs[k],v=renderField[a];
+   renderField[a]=renderField[b];renderField[b]=v;
+  }
+ }
+ if(gpu){try{gpu.render();return;}catch(e){disableGPU(e);}}
+ let p=rgba32;
+ for(let i=0;i<renderField.length;i++)p[i]=palettePacked[renderField[i]]||palettePacked[1];
+ sc.putImageData(rgba,0,0);ctx.imageSmoothingEnabled=false;ctx.drawImage(small,0,0,canvas.width,canvas.height);
+ if(feedbackPrevious){feedbackPrevious.set(renderField);feedbackReady=true;}
+}
+function localStats(cx,cy,rad,overlay){
+ let n=0,sum=0,e=0;
+ const stride=Math.max(2,Math.ceil(rad/30)),x0=Math.max(1,cx-rad),x1=Math.min(W-1,cx+rad),y0=Math.max(1,cy-rad),y1=Math.min(H-1,cy+rad);
+ for(let y=y0;y<y1;y+=stride)for(let x=x0;x<x1;x+=stride){
+  const i=y*W+x;
+  let a=overlay?(overlay.get(i)??field[i]):field[i],b=overlay?(overlay.get(i+1)??field[i+1]):field[i+1],c=overlay?(overlay.get(i+W)??field[i+W]):field[i+W];
+  a=+(a!==0);b=+(b!==0);c=+(c!==0);sum+=a;e+=(a!==b)+(a!==c);n++;
+ }
+ return [sum/Math.max(1,n),e/Math.max(1,n*2)];
+}
+function anchor(agent){
+ // Select a real edge from the evolving image, favour neglected areas and current goals.
+ let ax=(agent.id%6+.5)*W/6,ay=(Math.floor(agent.id/6)+.5)*H/5,best=null;
+ for(let i=0;i<80;i++){
+  let x=clamp(Math.round(ax+range(-W*.13,W*.13)),1,W-2),y=clamp(Math.round(ay+range(-H*.17,H*.17)),1,H-2),gx=at(x+1,y)-at(x-1,y),gy=at(x,y+1)-at(x,y-1);
+  if(!gx&&!gy)continue;
+  let near=active.some(a=>Math.hypot(x-a.x,y-a.y)<a.radius*.8);if(near)continue;
+  let v=range(0,.6)+(Math.abs(gx)+Math.abs(gy))*.13;if(!best||v>best.v)best={x,y,gx,gy,v};
+ }
+ return best;
+}
+function propose(agent,p,type,parent){
+ let x=p.x,y=p.y,axis=parent?parent.axis:(Math.abs(p.gx)>Math.abs(p.gy)?1:0);if(random()<.22)axis=1-axis;
+ let dir=pick([-1,1]),side=pick([-1,1]),length=Math.max(5,Math.round((axis?H:W)*range(.045,.22))),depth=Math.max(2,Math.round((axis?W:H)*range(.012,.075))),pitch=2+R(4),bend=1+R(5),tone=1-at(x,y);
+ if(parent){pitch=parent.pitch;type=parent.type;depth=Math.max(2,Math.round(depth*parent.ratio));}
+ let map=new Map(),order=[],radius=Math.max(length,depth),colour=0;
+ // Paint geometry in its own construction order. No image translation or restoration.
+ function put(u,v,t){
+  let xx=x+(axis?side*v:dir*u),yy=y+(axis?dir*u:side*v);
+  xx=Math.round(xx);yy=Math.round(yy);if(xx<0||xx>=W||yy<0||yy>=H)return;
+  let i=yy*W+xx;if(map.has(i))return;map.set(i,t);order.push(i);
+ }
+ function span(u,v,n,t){for(let k=0;k<n;k++)put(u,v+k,t);}
+ if(type===0){ // growing terraces
+  for(let u=0;u<length;u++){let h=Math.max(1,Math.round(depth*(.28+.72*(1-Math.floor(u/Math.max(2,pitch*2))*pitch*2/length))));for(let v=0;v<h;v++)put(u,v,tone);}
+ }else if(type===1){ // linked comb with irregular tooth lengths
+  for(let u=0;u<length;u++){put(u,0,tone);if(u%pitch===0){let h=Math.max(2,Math.round(depth*(.28+.72*Math.abs(Math.sin(u*.13+bend)))));span(u,1,h,tone);}}
+ }else if(type===2){ // recess: erase a corridor, leave a narrow rib
+  for(let u=0;u<length;u++){let off=Math.floor(u/Math.max(3,pitch*2))*side;for(let v=0;v<depth;v++)if(v!==1||u%pitch===0)put(u,v+off,tone);}
+ }else if(type===3){ // split a boundary into parallel offset seams
+  for(let u=0;u<length;u++){let off=Math.floor(u/Math.max(3,pitch*3))*bend;put(u,off,tone);if(u%pitch!==0)put(u,off+depth,tone);if(u%Math.max(4,pitch*3)===0)span(u,off,depth,tone);}
+ }else if(type===4){ // a bridge interrupted by a deliberately incomplete junction
+  let cut=Math.floor(length*range(.32,.68));for(let u=0;u<length;u++){if(Math.abs(u-cut)<2)continue;span(u,Math.floor(u/Math.max(5,pitch*4))*bend,Math.max(1,Math.floor(depth*.27)),tone);if(u%pitch===0&&u<cut)span(u,1,depth,tone);}
+ }else if(type===5){ // sparse residue attached to an edge, never isolated full-frame noise
+  for(let u=0;u<length;u++)for(let v=0;v<depth;v++)if((u+v*2)%pitch===0&&random()<.64*(1-v/depth))put(u,v,tone);
+ }else if(type===6){ // stepwise aperture, with nested teeth
+  for(let u=0;u<length;u++){let n=Math.max(2,Math.floor(depth*(.3+.7*Math.abs(Math.cos(u/length*3.14)))));for(let v=0;v<n;v++)if(v%pitch===0||u%pitch===0)put(u,v,tone);}
+ }else if(type===7){ // branching orthogonal trace
+  for(let u=0;u<length;u++){let off=Math.floor(u/Math.max(3,pitch*3))*bend;put(u,off,tone);if(u%Math.max(3,pitch*2)===0)span(u,off,depth,tone);if(u>length*.4&&u%pitch!==0)put(u,-off-2,tone);}
+ }else if(type===8){ // area reclaimed by long thin alternating cuts
+  for(let v=0;v<depth;v+=pitch){let n=Math.max(2,Math.floor(length*(1-v/depth*.8)));for(let u=0;u<n;u++)put(u,v,tone);}
+ }else if(type===9){ // cross-connection, independently terminated
+  for(let u=0;u<length;u++){if(u%pitch!==0)put(u,0,tone);if(u%pitch===0)span(u,-Math.floor(depth*.5),depth,tone);if(u>length*.52)put(u,Math.floor(depth*.5),tone);}
+ }else if(type===10){ // braided double register with intermittent cross-links
+  let phase=R(pitch),gap=Math.max(2,Math.floor(depth*.42));
+  for(let u=0;u<length;u++){
+   let drift=Math.round(Math.sin(u*.17+bend)*Math.max(1,depth*.12));
+   put(u,drift,tone);
+   if((u+phase)%pitch!==0)put(u,drift+gap,tone);
+   if(u%Math.max(3,pitch*2)===0){span(u,drift+1,Math.max(2,depth-gap),tone);if(u%Math.max(4,pitch*3)===0)put(u,drift-gap,tone);}
+  }
+ }else if(type===11){ // nested stepped contour with changing apertures
+  for(let u=0;u<length;u++){
+   let taper=.32+.68*Math.abs(Math.sin(Math.PI*(u+1)/(length+1)));
+   let outer=Math.max(2,Math.round(depth*taper)),offset=Math.floor(u/Math.max(3,pitch*2))*side;
+   put(u,offset,tone);put(u,offset+outer,tone);
+   if(u%pitch===0)for(let v=1;v<outer;v++)if(v%2===0||u%Math.max(4,pitch*2)===0)put(u,offset+v,tone);
+   if(u>length*.38&&u%Math.max(3,pitch+1)===0)put(u,offset+outer+2,tone);
+  }
+ }else{ // counter-stepped relay: two partial traces exchange their alignment
+  for(let u=0;u<length;u++){
+   let step=Math.floor(u/Math.max(2,pitch)),offset=(step%2===0?1:-1)*Math.floor(depth*.22);
+   put(u,offset,tone);
+   if(u%pitch===0)span(u,offset-1,Math.max(2,Math.floor(depth*.62)),tone);
+   if(u%Math.max(4,pitch*2)===0)put(u,offset+depth*.55,tone);
+   if(u>length*.55&&u%Math.max(3,pitch+1)===0)put(u,-offset-2,tone);
+  }
+ }
+ // Remove no-op cells and compare the actual proposed composition.
+ order=order.filter(i=>binary(field[i])!==binary(map.get(i)));let overlay=new Map(order.map(i=>[i,map.get(i)]));
+ let before=localStats(x,y,Math.max(7,Math.floor(radius*.55))),after=localStats(x,y,Math.max(7,Math.floor(radius*.55)),overlay);
+ let desired=mode===1?.46:mode===2?.15:.10;
+ let densityCost=Math.max(0,Math.abs(after[0]-.5)-.39)*1.5,edgeTarget=mode===1?.07:mode===2?.20:.13;
+ let edgeGain=Math.abs(before[1]-edgeTarget)-Math.abs(after[1]-edgeTarget);
+ let variety=agent.recent.includes(type)?-.35:.16;
+ let score=edgeGain*1.9-densityCost+variety+(agent.reward[type]||0)*.24+Math.min(.22,order.length/Math.max(20,radius*depth)*.24);
+ score+=agent.goal===0?Math.max(0,edgeGain)*.35:agent.goal===2?Math.max(0,after[1]-before[1])*.35:0;
+ score-=Math.max(0,after[1]-.36)*2.5;
+ let key=[agent.id,type,axis,dir,side,Math.round(x/3),Math.round(y/3),length,depth,pitch,bend].join('/');
+ if(used.has(key)||order.length<4)score=-100;
+ return {x,y,axis,dir,side,length,depth,pitch,bend,type,tone,order,overlay,score,key,radius,agent,before,after,parent:!!parent,colour};
+}
+function plan(){
+ if(pendingPlan)return;
+ let pool=agents.filter(a=>a.next<=age);if(!pool.length||active.length>=(testNumber>=127?6:5))return;
+ pool.sort((a,b)=>(b.repeat*.22+b.energy*.2+(b.id===focus?.2:0))-(a.repeat*.22+a.energy*.2+(a.id===focus?.2:0)));
+ let a=null,p=null;for(let candidate of pool.slice(0,8)){let edge=anchor(candidate);candidate.next=age+range(2,9);if(edge){a=candidate;p=edge;break;}}if(!p)return;
+ const types=testNumber>=127?[0,1,3,4,5,6,7,8,9,10,11,12]:mode===0?[0,1,3,4,5,7,8,9]:mode===1?[0,2,3,4,6,8]:[1,3,5,6,7,8,9];
+ pendingPlan={a,p,types,remaining:19,best:null};
+}
+function planStep(){
+ if(!pendingPlan)return;
+ const job=pendingPlan,{a,p,types}=job;
+ for(let i=0;i<2&&job.remaining>0;i++,job.remaining--){
+  let type=pick(types),parent=mode===2&&memory.length&&random()<.55?pick(memory.slice(-24)):null;
+  if(parent&&a.recent.includes(parent.type))parent=null;
+  let c=propose(a,p,type,parent);trials++;if(!a.recent.includes(c.type)&&c.score>-.15){if(!job.best||c.score>job.best.score)job.best=c;}else refusals++;
+ }
+ if(job.remaining>0)return;
+ pendingPlan=null;const c=job.best;if(!c)return;
+ used.add(c.key);if(used.size>25000)used.delete(used.values().next().value);
+ a.recent.push(c.type);if(a.recent.length>Math.min(4,types.length-2))a.recent.shift();a.repeat=0;
+ c.start=age;c.duration=range(2.0,6.0);c.cursor=0;
+ // Colour is a state of newly constructed dark material, not an animated overlay.
+ c.colour=0;
+ if(c.score>.015&&random()<feedbackProfile.pigmentChance)beginPigmentEvent(c);
+ if(c.parent)inherited++;active.push(c);accepted++;
+ spawnColony(c);
+}
+function evolve(dt){
+ for(let a of active){
+  let progress=clamp((age-a.start)/a.duration,0,1);
+  // Nonuniform construction cadence, interrupted by short rests.
+  let work=progress<1?Math.min(.999,progress+Math.sin(progress*6.28)*.06):1;
+  let end=Math.max(a.cursor,Math.floor(work*a.order.length));
+  for(let k=a.cursor;k<end;k++){let i=a.order[k],v=a.overlay.get(i);if(v===1&&a.colour&&((k%a.pitch)<a.pitch-1))v=a.colour;if(field[i]!==v){field[i]=v;changes++;}}
+  a.cursor=end;
+  if(progress>=1){let d=a.agent,after=localStats(a.x,a.y,Math.max(7,Math.floor(a.radius*.55)));
+   let target=mode===1?.07:mode===2?.20:.13,gain=Math.abs(a.before[1]-target)-Math.abs(after[1]-target);
+   d.count[a.type]++;d.reward[a.type]+=(gain-d.reward[a.type])/Math.min(12,d.count[a.type]);d.energy=clamp(d.energy*.8+.2*(.5+gain*2),.15,1);d.goal=gain<-.04?0:after[1]<.05?2:1;
+   if(gain>-.06){memory.push({type:a.type,pitch:a.pitch,axis:a.axis,ratio:clamp(a.depth/Math.max(2,a.length)*3,.5,1.7)});if(memory.length>100)memory.shift();}
+   finished++;
+   if(gain<-.035||after[1]>.26){let cl=colonies.find(z=>z.owner===a.key);if(cl){cl.rule=5;cl.end=Math.min(cl.end,age+6);}}
+  }
+ }
+ active=active.filter(a=>a.cursor<a.order.length);
+}
+// Growth is a consequence of construction, not a global animation.
+function spawnColony(c){
+ let rule=mode===0?pick([0,1,2,3,6]):mode===1?pick([1,4,5,7]):pick(testNumber>=127?[0,2,3,6,7,8,9,10,11]:[0,2,3,6,7]);
+ let a=c.agent;if(a.lastMorph===rule)rule=(rule+1+R(5))%8;a.lastMorph=rule;
+ let radius=Math.max(4,Math.min(Math.round(Math.min(W,H)*.18),Math.floor(c.radius*.65)));
+ colonies.push({owner:c.key,x:c.x,y:c.y,radius,rule,axis:c.axis,dir:c.dir,side:c.side,pitch:c.pitch,tone:c.tone,colour:c.colour,start:age+range(.6,2.6),end:age+range(10,24),cursor:0,phase:random(),energy:range(.5,.9),agent:a,visits:new Map()});
+ colonyCount++;if(colonies.length>(testNumber>=127?15:12))colonies.shift();
+}
+function morph(){
+ if(age<nextMorph)return;nextMorph=age+(testNumber>=127?.085:.095);
+ colonies=colonies.filter(c=>age<c.end);
+ // Read a snapshot so local births/deaths are order-independent within each pass.
+ if(!colonies.length)return;
+ let old=field,patch=new Map();
+ const val=(x,y)=>+(old[y*W+x]!==0);
+ for(let c of colonies){
+  if(age<c.start)continue;
+  let progress=clamp((age-c.start)/(c.end-c.start),0,1),r=Math.max(3,Math.round(c.radius*(.28+.72*Math.min(1,progress*2.2))));
+  let x0=Math.max(1,c.x-r),x1=Math.min(W-2,c.x+r),y0=Math.max(1,c.y-r),y1=Math.min(H-2,c.y+r);
+  let limit=Math.max(3,Math.round((x1-x0+y1-y0)*(testNumber>=127?.27+c.energy*.29:.22+c.energy*.25))),writes=0;
+  // Active edges develop by mutually dependent births and deaths.
+  for(let k=0;k<limit*5&&writes<limit;k++){
+   let x=x0+R(x1-x0+1),y=y0+R(y1-y0+1),i=y*W+x;
+   if(patch.has(i)||Math.abs(x-c.x)+Math.abs(y-c.y)>r*1.48)continue;
+   let v=val(x,y),l=val(x-1,y),rr=val(x+1,y),u=val(x,y-1),d=val(x,y+1),h=l+rr,vert=u+d,n=h+vert;
+   if(n===4*v)continue;
+   // A cell cannot flip indefinitely; each colony edits it at most twice.
+   let visits=c.visits.get(i)||0;if(visits>=2)continue;
+   let next=v,rule=c.rule,diag=val(x-1,y-1)+val(x+1,y-1)+val(x-1,y+1)+val(x+1,y+1);
+   let a=c.axis?y:x,b=c.axis?x:y,t=c.axis?vert:h,cross=c.axis?h:vert;
+   if(rule===0){if(!v&&n>=2&&diag<=3)next=1;else if(v&&n<=1&&diag<=1)next=0;}
+   else if(rule===1){if(!v&&t===2&&cross<=1)next=1;else if(v&&cross===0&&t===1)next=0;}
+   else if(rule===2){if(!v&&n===1&&diag>=2&&a%c.pitch===0)next=1;else if(v&&n===2&&diag===0)next=0;}
+   else if(rule===3){if(!v&&n>=2&&((a+b)%c.pitch===0||t===2))next=1;else if(v&&n<=1)next=0;}
+   else if(rule===4){if(v&&n<=2&&cross<2)next=0;else if(!v&&n===3&&t===2)next=1;}
+   else if(rule===5){if(v&&n<3)next=0;else if(!v&&n===4)next=1;}
+   else if(rule===6){if(!v&&t>=1&&a%c.pitch===0)next=1;else if(v&&t===0&&cross<=1)next=0;}
+   else if(rule===7){if(!v&&n===2&&diag>=2)next=1;else if(v&&n===2&&diag<=1)next=0;}
+   else if(rule===8){if(!v&&n===2&&(a%c.pitch===0||diag===4))next=1;else if(v&&n===1&&diag===0)next=0;}
+   else if(rule===9){if(!v&&t===1&&cross===1&&diag>=2)next=1;else if(v&&t===0&&cross<=1)next=0;}
+   else if(rule===10){if(!v&&n>=2&&n<=3&&diag===2&&(a+b)%c.pitch===0)next=1;else if(v&&n===4&&diag<=1)next=0;}
+   else{if(!v&&n===3&&diag>=2)next=1;else if(v&&n<=2&&diag===0)next=0;}
+   // A short flow phase is a local exchange of neighbouring material, not a
+   // periodically displaced image. Exchanges conserve the two cell states.
+   let exchangeChance=mode===0?.025:mode===1?.04:testNumber>=127?(testNumber===127?.075:testNumber===128?.09:.105):.065;
+   if(progress>.25&&progress<.72&&random()<exchangeChance&&visits===0){
+    let axis=c.axis,dx=axis?0:c.dir,dy=axis?c.dir:0,j=(y+dy)*W+x+dx;
+    if(!patch.has(j)&&!c.visits.has(j)&&binary(old[j])!==v&&n>=1&&n<=3){
+     patch.set(i,old[j]);patch.set(j,old[i]);c.visits.set(i,1);c.visits.set(j,1);writes+=2;flowChanges+=2;continue;
+    }
+   }
+   if(next===v||random()>(.36+.35*c.energy)*(1-.4*progress))continue;
+   let pigment=next===1&&c.colour&&random()<.32?c.colour:next;
+   patch.set(i,pigment);c.visits.set(i,visits+1);writes++;morphChanges++;
+  }
+ }
+ for(let [i,v] of patch)field[i]=v;
+}
+
+// A fault is a finite, growing graph of contour edits. It never translates an image
+// or repeats a displacement cycle. It seeks a real edge, builds a connected
+// extension, then passes its accumulated pressure to another agent.
+function initiateFront(){
+ if(age<nextFront||fronts.length>=(testNumber>=127?(testNumber===129?6:5):4))return;
+ nextFront=age+range(testNumber>=127?(testNumber===127?1.6:testNumber===128?1.35:1.15):1.8,testNumber>=127?(testNumber===127?4.2:testNumber===128?3.7:3.25):4.6);
+ let pool=agents.slice().sort((a,b)=>b.repeat-a.repeat),a=null,p=null;
+ for(let candidate of pool.slice(0,12)){let edge=anchor(candidate);if(edge){a=candidate;p=edge;break;}}
+ if(!p)return;
+ let axis=Math.abs(p.gx)>Math.abs(p.gy)?1:0,dir=pick([-1,1]),side=pick([-1,1]),tone=1-at(p.x,p.y);
+ let len=Math.max(8,Math.floor((axis?H:W)*range(.12,.32))),depth=Math.max(2,Math.floor(Math.min(W,H)*range(.025,.075))),pitch=2+R(4);
+ let variant=(a.lastFront??R(testNumber>=127?10:7))+1+R(testNumber>=127?7:5);variant%=testNumber>=127?12:8;a.lastFront=variant;
+ let path=[],seen=new Set(),offset=0;
+ function put(u,v,val){let x=p.x+(axis?side*v:dir*u),y=p.y+(axis?dir*u:side*v);if(x<0||x>=W||y<0||y>=H)return;let i=y*W+x;if(seen.has(i))return;seen.add(i);path.push([i,val]);}
+ for(let u=0;u<len;u++){
+  if(u>0&&u%pitch===0&&random()<.42)offset+=pick([-1,1])*Math.min(depth,1+R(3));
+  let width=Math.max(1,Math.round(depth*(.25+.75*Math.sin(Math.PI*(u+1)/(len+1)))));
+  if(mode===0){for(let v=0;v<width;v++)if(variant%2===0||v===0||u%pitch===0)put(u,v+offset,tone);}
+  else if(mode===1){put(u,offset,tone);if(u%pitch===0)for(let v=1;v<width+2;v++)put(u,v+offset,tone);if(u>len*.35&&variant%3===0)put(u,offset-width,1-tone);}
+  else{
+   put(u,offset,tone);
+   if(u%pitch!==1)put(u,offset+width,tone);
+   if(u%Math.max(4,pitch*2)===0)for(let v=0;v<width;v++)put(u,offset+v,tone);
+   if(variant>=8&&u%Math.max(3,pitch+1)===0)put(u,offset-Math.max(1,Math.floor(width*.55)),tone);
+   if(variant>=9&&u>len*.3&&u%Math.max(4,pitch*3)===0)put(u,offset+width+2,tone);
+   if(variant>=10&&u%Math.max(5,pitch*4)===0)for(let v=1;v<width;v+=2)put(u,offset+v,tone);
+  }
+ }
+ path=path.filter(([i,v])=>binary(field[i])!==v);
+ if(path.length<5)return;
+ let colour=0;
+ fronts.push({path,cursor:0,start:age,duration:range(1.6,4.0),agent:a,colour,pitch});frontCount++;if(colour)colourBirths++;
+ if(random()<feedbackProfile.pigmentChance*.55)beginPigmentEvent({x:p.x,y:p.y,axis,dir,radius:Math.min(len,depth*3),score:.12,agent:a,tone});
+}
+function advanceFronts(){
+ initiateFront();
+ for(let f of fronts){
+  let t=clamp((age-f.start)/f.duration,0,1);
+  let end=Math.floor(f.path.length*(t*t*(3-2*t)));
+  while(f.cursor<end){let [i,v]=f.path[f.cursor++];if(v&&f.colour&&f.cursor%f.pitch!==0)v=f.colour;if(field[i]!==v){field[i]=v;frontEdits++;}}
+  if(t>=1){f.agent.energy=clamp(f.agent.energy+.08,0,1);let n=agents[(f.agent.id+pick([1,6,29]))%agents.length];n.next=Math.min(n.next,age+.3);n.goal=2;}
+ }
+ fronts=fronts.filter(f=>f.cursor<f.path.length);
+}
+// Tiny echoes of the earlier displacement language. The source is always a real,
+// currently visible contour; the effect is temporary, coherent and spatially isolated.
+function beginSlip(){
+ if(![124,125,126,127,128,129,130,131,132,136,137,138].includes(testNumber)||age<nextSlip||microSlips.length)return;
+ const cfg=testNumber>=130
+  ?testNumber===130?{gap:[13,20],length:[5,7],duration:[1.05,1.5],twoCell:.03}
+   :testNumber===131?{gap:[10,16],length:[6,8],duration:[.95,1.4],twoCell:.08}
+   :{gap:[8,13],length:[7,10],duration:[.85,1.35],twoCell:.14}
+  :testNumber>=127
+   ?testNumber===127?{gap:[13,20],length:[5,7],duration:[1.05,1.5],twoCell:.03}
+    :testNumber===128?{gap:[10,16],length:[6,8],duration:[.95,1.4],twoCell:.08}
+    :{gap:[8,13],length:[7,10],duration:[.85,1.35],twoCell:.14}
+  :testNumber===124
+   ?{gap:[26,38],length:[4,6],duration:[1.2,1.7],twoCell:0}
+   :testNumber===125
+    ?{gap:[20,30],length:[5,7],duration:[1.0,1.55],twoCell:.05}
+    :{gap:[15,23],length:[6,8],duration:[.9,1.4],twoCell:.12};
+ nextSlip=age+range(cfg.gap[0],cfg.gap[1]);
+ const length=Math.round(range(cfg.length[0],cfg.length[1]+1));
+ const offset=(testNumber>=129&&random()<cfg.twoCell)?2:1;
+ let pool=agents.slice();
+ for(let i=pool.length-1;i>0;i--){let j=R(i+1),v=pool[i];pool[i]=pool[j];pool[j]=v;}
+ let choice=null;
+ for(const agent of pool.slice(0,24)){
+  const p=anchor(agent);if(!p)continue;
+  const near=slipHistory.some(h=>age-h.age<90&&Math.hypot(p.x-h.x,p.y-h.y)<Math.min(W,H)*.17);
+  if(near)continue;
+  let nx=Math.abs(p.gx)>=Math.abs(p.gy)?Math.sign(p.gx):0;
+  let ny=nx===0?Math.sign(p.gy):0;
+  if(!nx&&!ny)continue;
+  let tx=-ny,ty=nx;
+  if(random()<.5){tx=-tx;ty=-ty;}
+  const shifts=[0,-2,2,-4,4,-6,6],sides=random()<.5?[-1,1]:[1,-1];
+  for(const side of sides){
+   for(const shift of shifts){
+    const pairs=[];
+    for(let k=0;k<length;k++){
+     const d=k-(length-1)*.5+shift;
+     const x=Math.round(p.x+tx*d),y=Math.round(p.y+ty*d);
+     const xx=x+nx*offset*side,yy=y+ny*offset*side;
+     if(x<1||x>=W-1||y<1||y>=H-1||xx<1||xx>=W-1||yy<1||yy>=H-1)continue;
+     const ia=y*W+x,ib=yy*W+xx;
+     if(field[ia]===field[ib])continue;
+     pairs.push([ia,ib]);
+    }
+    if(pairs.length>=3){choice={agent,p,pairs};break;}
+   }
+   if(choice)break;
+  }
+  if(choice)break;
+ }
+ if(!choice){nextSlip=age+range(3,5);return;}
+ microSlips.push({pairs:choice.pairs,start:age,duration:range(cfg.duration[0],cfg.duration[1]),agent:choice.agent.id});
+ slipHistory.push({x:choice.p.x,y:choice.p.y,age});
+ if(slipHistory.length>12)slipHistory.shift();
+ slipEvents++;slipPairs+=choice.pairs.length;
+}
+function advanceSlips(){
+ if(age>=nextSlip&&!microSlips.length)beginSlip();
+ microSlips=microSlips.filter(s=>age<s.start+s.duration);
+}
+// Local phase-flow pockets use coherent paired movement laws, confined to
+// small, non-repeating regions attached to live contours.
+function beginFlowPocket(){
+ if(testNumber<127||testNumber>129)return;
+ const cfg=testNumber===127
+  ?{gap:[6.5,10],max:2,w:[.065,.105],h:[.08,.135],dur:[2.2,3.7],amp:[1.15,1.75]}
+  :testNumber===128
+   ?{gap:[5,8],max:2,w:[.075,.12],h:[.09,.15],dur:[2.4,4.0],amp:[1.25,2.05]}
+   :{gap:[3.8,6.4],max:3,w:[.085,.135],h:[.10,.17],dur:[2.6,4.4],amp:[1.35,2.35]};
+ nextFlow=age+range(cfg.gap[0],cfg.gap[1]);
+ if(flowPockets.length>=cfg.max)return;
+ let pool=agents.slice();
+ for(let i=pool.length-1;i>0;i--){let j=R(i+1),v=pool[i];pool[i]=pool[j];pool[j]=v;}
+ let chosen=null;
+ for(const agent of pool.slice(0,22)){
+  const p=anchor(agent);if(!p)continue;
+  const repeated=flowHistory.some(h=>age-h.age<105&&Math.hypot(p.x-h.x,p.y-h.y)<Math.min(W,H)*.20);
+  if(repeated)continue;
+  chosen={agent,p};break;
+ }
+ if(!chosen)return;
+ const {agent,p}=chosen;
+ let nx=p.gx,ny=p.gy,n=Math.hypot(nx,ny)||1;nx/=n;ny/=n;
+ let ax=-ny,ay=nx;if(random()<.5){ax=-ax;ay=-ay;}
+ const w=Math.max(10,Math.round(W*range(cfg.w[0],cfg.w[1]))),h=Math.max(8,Math.round(H*range(cfg.h[0],cfg.h[1])));
+ const x0=clamp(Math.round(p.x-w/2),1,W-2),y0=clamp(Math.round(p.y-h/2),1,H-2);
+ const x1=clamp(x0+w,2,W-1),y1=clamp(y0+h,2,H-1);
+ flowPockets.push({x:p.x,y:p.y,x0,y0,x1,y1,ax,ay,nx,ny,start:age,duration:range(cfg.dur[0],cfg.dur[1]),amp:range(cfg.amp[0],cfg.amp[1]),speed:range(.72,1.24),phase:random()*Math.PI*2,law:R(6),agent:agent.id});
+ flowHistory.push({x:p.x,y:p.y,age});
+ if(flowHistory.length>16)flowHistory.shift();
+ flowEvents++;
+}
+function advanceFlowPockets(){
+ if(testNumber<127||testNumber>129)return;
+ if(age>=nextFlow)beginFlowPocket();
+ flowPockets=flowPockets.filter(c=>age<c.start+c.duration);
+}
+function chooseFeedbackMode(exclude=-1){
+ const recent=new Set(feedbackRecent.slice(-7));let total=0,weights=new Float32Array(40);
+ for(let i=0;i<40;i++){let w=1/(1+feedbackModeUse[i]*.42);if(recent.has(i)||i===exclude)w*=.16;weights[i]=w;total+=w;}
+ let r=random()*total,chosen=0;for(;chosen<39;chosen++){r-=weights[chosen];if(r<=0)break;}
+ feedbackModeUse[chosen]++;feedbackRecent.push(chosen);if(feedbackRecent.length>14)feedbackRecent.shift();return chosen;
+}
+function beginFeedbackField(){
+ const cfg=feedbackProfile,cap=gpu?cfg.slots:Math.min(3,cfg.slots);
+ nextFeedback=age+range(cfg.gap[0],cfg.gap[1]);if(feedbackFields.length>=cap)return;
+ let best=null,min=Math.min(W,H);
+ for(let i=0;i<48;i++){
+  const tile=R(48),x=clamp(Math.round((tile%8+range(.12,.88))*W/8),1,W-2),y=clamp(Math.round((Math.floor(tile/8)+range(.12,.88))*H/6),1,H-2);
+  const ry=min*range(cfg.radius[0],cfg.radius[1]),rx=ry*range(1.2,2.0);
+  let overlap=0;for(const f of feedbackFields){let d=Math.hypot(x-f.x,y-f.y);overlap+=Math.max(0,1-d/(rx+f.rx));}
+  if(overlap>1.05)continue;
+  let edge=0;for(let j=0;j<12;j++){let a=clamp(x+Math.round(range(-rx,rx)),1,W-2),b=clamp(y+Math.round(range(-ry,ry)),1,H-2),k=b*W+a;edge+=(field[k]!==field[k+1])+(field[k]!==field[k+W]);}
+  const neglect=clamp((age-territoryVisits[tile])/22,0,1),score=neglect*1.6+Math.min(1,edge/6)*.65-overlap*1.2+random()*.65;
+  if(!best||score>best.score)best={x,y,rx,ry,tile,score};
+ }
+ if(!best)return;
+ const {x,y,rx,ry,tile}=best,angle=range(0,Math.PI*2),modeA=chooseFeedbackMode(),modeB=chooseFeedbackMode(modeA),modeC=chooseFeedbackMode(modeB);
+ feedbackFields.push({x,y,rx,ry,angle,heading:angle+range(-.9,.9),modeA,modeB,modeC,start:age+range(.05,.35),duration:range(cfg.duration[0],cfg.duration[1]),amp:cfg.amp*range(.8,1.12),speed:range(.9,3.4),phase:range(0,Math.PI*2),seed:1+R(1000000),scale:range(.8,1.5),last:age});
+ territoryVisits[tile]=age;territoryBirths++;feedbackEvents++;
+}
+function updateFeedbackFields(dt){
+ if(testNumber<136)return;
+ feedbackFields=feedbackFields.filter(f=>age<f.start+f.duration);
+ if(age>=nextFeedback){beginFeedbackField();if(age<4&&gpu&&feedbackFields.length<Math.ceil(feedbackProfile.slots/2))nextFeedback=age+.18;}
+ feedbackActive=0;
+ for(const f of feedbackFields){
+  const step=clamp(dt,0,.1);f.last=age;f.heading+=Math.sin(f.phase+age*.11)*step*.17;
+  f.x+=Math.cos(f.heading)*f.speed*step;f.y+=Math.sin(f.heading)*f.speed*step;
+  if(f.x<f.rx||f.x>W-f.rx){f.heading=Math.PI-f.heading;f.x=clamp(f.x,f.rx,W-f.rx);}
+  if(f.y<f.ry||f.y>H-f.ry){f.heading=-f.heading;f.y=clamp(f.y,f.ry,H-f.ry);}
+  f.angle+=Math.sin(f.phase+age*.075)*step*.045;
+  if(age>=f.start&&age<f.start+f.duration)feedbackActive++;
+ }
+}
+function feedbackVector(mode,a,b,phase,u,cell,grain,beat,out){
+ let x=0,y=0,g=.62,wave,band,step;
+ switch(mode){
+  case 0:wave=waveSin(b*.095+phase+u*8);x=Math.sign(wave)*(2+6*Math.abs(wave));g=.18+.82*smooth(-.3,.55,wave);break;
+  case 1:wave=waveSin(a*.087-phase-u*7);y=Math.sign(wave)*(2+5*Math.abs(wave));g=.18+.82*smooth(-.3,.55,wave);break;
+  case 2:if(grain>.52){x=(grain-.5)*15;y=1;}else{y=(grain-.5)*14;x=-1;}g=.38+.62*Math.abs(grain-.5)*2;break;
+  case 3:x=waveSin(b*.057+phase+u*7)*6;y=waveSin(a*.043-phase*.7)*2.5;g=.72;break;
+  case 4:step=(Math.floor(a/cell)+Math.floor(b/cell)+beat)%2;x=step?4:-3;y=step?1:-2;g=.72;break;
+  case 5:x=(grain-.5)*15;y=waveSin(b*.035+phase)*1.6;g=.22+.78*smooth(.28,.82,grain);break;
+  case 6:wave=waveSin((a+b)*.074+phase);x=Math.sign(wave)*4;y=Math.sign(waveSin((a-b)*.057-phase))*2.5;g=.35+.65*Math.abs(wave);break;
+  case 7:band=((b/(cell*3)+phase/6.28-u*1.25)%1+1)%1;x=band<.24?6:-1;y=band<.24?1:0;g=band<.24?1:.10;break;
+  case 8:step=Math.floor((a+b)/(cell*2));x=step%2?4:-4;y=step%2?-2:2;g=.68;break;
+  case 9:{let la=((a%cell)+cell)%cell,lb=((b%cell)+cell)%cell;x=lb-la;y=la+lb-cell;g=.72;break;}
+  case 10:wave=waveSin(a*.085+phase+u*6);y=Math.sign(wave)*(2+6*Math.abs(wave));x=1;g=.25+.75*Math.abs(wave);break;
+  case 11:x=waveSin(a*.043+waveSin(b*.035+phase)*3)*5.5;y=waveCos(b*.05-u*4)*2.5;g=.72;break;
+  case 12:x=grain>.5?2:-2;y=0;g=.35+.65*Math.abs(grain-.5)*2;break;
+  case 13:band=Math.floor(b/(cell*1.5)+u*2);x=band%2?5:-3;y=band%3?1:-1;g=.70;break;
+  case 14:step=Math.floor((a+b)/cell);x=step%2?3:-4;y=step%3?2:-1;g=.68;break;
+  case 15:if(grain>.72){x=7;y=-2;}else if(grain<.28){x=-5;y=2;}else{x=1;y=0;}g=.25+.75*Math.abs(grain-.5)*2;break;
+  case 16:band=((b/(cell*4)+phase/6.28+u)%1+1)%1;x=band<.19?7:-1;g=band<.19?1:.12;break;
+  case 17:{let la=((a%cell)+cell)%cell,lb=((b%cell)+cell)%cell,edge=Math.min(la,lb,cell-la,cell-lb);if(la<=lb){x=0;y=lb<cell*.5?2:-2;}else{x=la<cell*.5?-2:2;y=0;}g=edge<3?.9:.42;break;}
+  case 18:step=Math.floor(a/cell);x=step%2?cell*.55:-cell*.55;y=(grain-.5)*4;g=.62;break;
+  case 19:wave=waveSin((a-b)*.09+phase-u*9);x=Math.sign(wave)*5;y=-Math.sign(wave)*3;g=.2+.8*Math.abs(wave);break;
+  case 20:step=(Math.floor(a/cell)+beat)%4;x=step<2?4:-3;y=step===0||step===3?2:0;g=.7;break;
+  case 21:{let la=((a%cell)+cell)%cell,lb=((b%cell)+cell)%cell;x=cell-la-lb;y=la-lb;g=.68;break;}
+  case 22:band=grain>.76?3:grain<.22?-3:0;x=band*2;y=grain>.88?3:0;g=.42+.58*Math.abs(grain-.5)*2;break;
+  case 23:x=waveSin(b*.04+phase+u*5)*7;y=waveCos(a*.032-phase)*2;g=.74;break;
+  case 24:step=Math.floor(a/(cell*2))+Math.floor(b/(cell*2));x=step%2?5:-4;y=step%2?2:-2;g=.68;break;
+  case 25:x=(grain>.5?1:-1)*(2+Math.floor(grain*5));y=waveSin(a*.06+phase)*1.8;g=.40+.60*Math.abs(grain-.5)*2;break;
+  case 26:step=Math.floor(a/(cell*1.5));x=step%3===0?6:step%3===1?-4:1;y=waveSin(b*.04+phase)*2;g=.66;break;
+  case 27:{let la=((a%cell)+cell)%cell,lb=((b%cell)+cell)%cell,ring=Math.min(la,lb,cell-la,cell-lb);x=ring<cell*.25?3:-2;y=ring<cell*.25?-2:3;g=.7;break;}
+  case 28:x=waveSin(a*.055+phase)*4+waveSin(b*.028-u*5)*3;y=waveSin(b*.061-phase)*3;g=.75;break;
+  case 29:step=(Math.floor(a/cell)^Math.floor(b/cell)^beat)%7;x=step<3?5:-2;y=step<3?0:3;g=.68;break;
+  case 30:band=((b/(cell*3)+phase/6.28-u*.8)%1+1)%1;x=band>.82?8:band<.12?-4:0;g=band>.82||band<.12?.92:.12;break;
+  default:wave=waveSin(a*.09+phase+u*9)*waveCos(b*.075-phase*.7);x=Math.sign(wave)*6;y=waveSin((a+b)*.05+phase)*3;g=.24+.76*Math.abs(wave);
+ }
+ out.x=x;out.y=y;out.g=g;
+}
+function applyFeedbackFields(){
+ if(testNumber<136||!feedbackPrevious)return;
+ if(!feedbackReady){feedbackPrevious.set(renderField);feedbackReady=true;return;}
+ feedbackTouched=feedbackMoved=0;
+ const va={x:0,y:0,g:0},vb={x:0,y:0,g:0};
+ for(const f of feedbackFields){
+  const u=clamp((age-f.start)/f.duration,0,1),env=smooth(0,.10,u)*(1-smooth(.82,1,u));
+  if(env<.008)continue;
+  if(!f.map||age>=f.map.next){
+   const rx=f.rx*(.82+.18*waveSin(u*Math.PI)),ry=f.ry*(.84+.16*waveSin(u*Math.PI)),bound=Math.max(rx,ry)*1.24;
+   const ax=waveCos(f.angle),ay=waveSin(f.angle),nx=-ay,ny=ax,cx=f.x,cy=f.y;
+   const x0=clamp(Math.floor(cx-bound),1,W-2),x1=clamp(Math.ceil(cx+bound),1,W-2),y0=clamp(Math.floor(cy-bound),1,H-2),y1=clamp(Math.ceil(cy+bound),1,H-2);
+   const capacity=(x1-x0+1)*(y1-y0+1);
+   let m=f.map;if(!m||m.dst.length<capacity)m=f.map={dst:new Int32Array(capacity),src:new Int32Array(capacity),alt:new Int32Array(capacity),flags:new Uint8Array(capacity)};
+   m.n=0;m.touched=0;m.next=age+mapInterval;
+   const phase=f.phase+age*f.speed*.72,cell=Math.max(3,Math.round((4+f.scale*5)*clamp(H/500,.85,1.5))),beat=Math.floor(age*(2.1+f.speed));
+   const ba=smooth(.24,.52,u),bb=smooth(.68,.90,u),first=ba<1?f.modeA:f.modeB,second=ba<1?f.modeB:f.modeC,blend=ba<1?ba:bb,offset=ba<1?0:1.7;
+   const sorting=[f.modeA,f.modeB,f.modeC].some(v=>v===12||v===25);
+   for(let y=y0;y<=y1;y++){const dy=y-cy,row=y*W;for(let x=x0;x<=x1;x++){
+    const dx=x-cx,along=dx*ax+dy*ay,across=dx*nx+dy*ny,shape=fastHypot(along/rx,across/ry);
+    if(shape>1.25)continue;
+    const irregular=waveSin(along/ry*1.8+phase)*.105+waveSin(across/ry*2.6-phase*.8)*.075+waveSin((along+across)/ry*1.2+phase*.3)*.035;
+    const mask=1-smooth(.43,1.06,shape+irregular);if(mask<.025)continue;m.touched++;
+    const chance=motionNoise(x>>1,y>>1,f.seed+beat*31+509),strengthMax=mask*env*f.amp;
+    if(chance>=strengthMax*.84||strengthMax<.035){
+     if(u>.58&&chance>.985){const k=m.n++;m.dst[k]=row+x;m.flags[k]=4;}continue;
+    }
+    const grain=motionNoise(Math.floor(x/cell),Math.floor(y/cell),f.seed+beat*17);
+    feedbackVector(first,along,across,phase+offset,u,cell,grain,beat+(ba<1?0:1),va);
+    if(blend>.001)feedbackVector(second,along,across,phase+(ba<1?1.7:3.1),u,cell,grain,beat+(ba<1?1:2),vb);else{vb.x=va.x;vb.y=va.y;vb.g=va.g;}
+    const sx=va.x+(vb.x-va.x)*blend,sy=va.y+(vb.y-va.y)*blend,gate=va.g+(vb.g-va.g)*blend,strength=strengthMax*gate;
+    if(strength<.035||chance>=strength*.84)continue;
+    const px=clamp(Math.round(x+ax*sx+nx*sy),x0,x1),py=clamp(Math.round(y+ay*sx+ny*sy),y0,y1);
+    const k=m.n++;m.dst[k]=row+x;m.src[k]=py*W+px;m.flags[k]=0;
+    if(u>.55&&chance<strength*.12){m.flags[k]=2;m.alt[k]=clamp(py+Math.round(sy*1.8),y0,y1)*W+clamp(px+Math.round(sx*1.8),x0,x1);}
+    else if(sorting&&chance<strength*.48){const dir=grain>.5?1:-1;m.flags[k]=1;m.alt[k]=clamp(py+dir,y0,y1)*W+clamp(px+dir,x0,x1);}
+   }}
+  }
+  const m=f.map;feedbackTouched+=m.touched;
+  for(let k=0;k<m.n;k++){
+   const i=m.dst[k],flag=m.flags[k];if(flag===4){if(field[i]>1)renderField[i]=1;continue;}
+   let v=feedbackPrevious[m.src[k]];
+   if(flag===1){const other=feedbackPrevious[m.alt[k]];if(paletteLum[v]<paletteLum[other])v=other;}
+   else if(flag===2&&field[i]===1)v=feedbackPrevious[m.alt[k]];
+   if(renderField[i]!==v)feedbackMoved++;renderField[i]=v;
+  }
+ }
+}
+function choosePigmentFamily(){
+ let weights=pigmentFamilies.map((_,i)=>{let w=1/(1+pigmentFamilyUse[i]*.55);if(pigmentRecent.slice(-2).includes(i))w*=.24;return w;}),total=weights.reduce((a,b)=>a+b,0),r=random()*total;
+ let i=0;for(;i<weights.length-1;i++){if((r-=weights[i])<=0)break;}
+ pigmentFamilyUse[i]++;pigmentRecent.push(i);if(pigmentRecent.length>8)pigmentRecent.shift();return pigmentFamilies[i];
+}
+// Pigment is a persistent cell state attached to a monochrome substrate.
+// A single seed expands only through neighbouring pixels of the same tone.
+function beginPigmentEvent(c){
+ if(!ink||!c||pigmentEvents.length>=feedbackProfile.pigmentMax)return;
+ const near=pigmentHistory.some(p=>age-p.age<16&&Math.hypot(c.x-p.x,c.y-p.y)<Math.min(W,H)*.085);if(near)return;
+ const min=Math.min(W,H),tone=c.tone===0||c.tone===1?c.tone:R(2),radius=Math.max(8,Math.round(min*range(.045,.105)));
+ let root=-1,best=-1;
+ for(let j=0;j<80;j++){
+  const x=clamp(Math.round(c.x+range(-radius*.65,radius*.65)),1,W-2),y=clamp(Math.round(c.y+range(-radius*.65,radius*.65)),1,H-2),i=y*W+x;
+  if(field[i]!==tone||inkOwner[i])continue;
+  const neighbours=(field[i-1]===tone)+(field[i+1]===tone)+(field[i-W]===tone)+(field[i+W]===tone);
+  if(neighbours<1)continue;
+  const score=(neighbours<4?1.5:0)+random()*.9;
+  if(score>best){root=i;best=score;}
+ }
+ if(root<0)return;
+ let id;do{id=1+(inkSerial++%254);}while(pigmentEvents.some(e=>e.id===id));
+ const family=choosePigmentFamily(),size=Math.max(36,Math.round(W*H*range(.003,.010))),duration=range(12,22);
+ const e={id,tone,x:root%W,y:(root/W)|0,radius:radius*range(1.0,1.6),colours:family.slice(),cells:[],depth:[],front:[],start:age,duration,limit:size,axis:R(2),dir:pick([-1,1]),law:R(4),seed:1+R(1000000),retire:0};
+ inkOwner[root]=id;ink[root]=e.colours[0];e.cells.push(root);e.depth.push(0);e.front.push(0);inkCells++;inkGrown++;if(tone)inkBlack++;else inkWhite++;
+ pigmentEvents.push(e);pigmentHistory.push({x:c.x,y:c.y,age});if(pigmentHistory.length>24)pigmentHistory.shift();pigmentEventCount++;colourBirths++;
+}
+function advancePigmentEvents(dt){
+ if(!ink||age<inkNext)return;inkNext=age+.065;
+ if(age>=nextPigment){nextPigment=age+range(feedbackProfile.pigmentGap[0],feedbackProfile.pigmentGap[1]);if(pigmentEvents.length<feedbackProfile.pigmentMax){
+  let tone=(pigmentEventCount%2),p=null;for(let j=0;j<24;j++){p=anchor(agents[R(agents.length)]);if(p)break;}
+  if(p)beginPigmentEvent({x:p.x,y:p.y,tone});
+ }}
+ const cap=Math.floor(field.length*.038);
+ for(let j=pigmentEvents.length-1;j>=0;j--){
+  const e=pigmentEvents[j],u=clamp((age-e.start)/e.duration,0,1);
+  if(u<.58&&e.front.length&&e.cells.length<e.limit&&inkCells<cap){
+   const budget=Math.min(125,Math.max(8,Math.round(e.limit*.065/(e.duration*.53)*1.65)));
+   for(let k=0;k<budget&&e.front.length&&e.cells.length<e.limit&&inkCells<cap;k++){
+    const pos=e.law===0?0:e.law===1?e.front.length-1:R(e.front.length),parent=e.front[pos];e.front[pos]=e.front[e.front.length-1];e.front.pop();
+    const i=e.cells[parent];if(inkOwner[i]!==e.id||field[i]!==e.tone)continue;
+    const x=i%W,y=(i/W)|0,depth=e.depth[parent]+1;
+    let dirs=e.axis?[W,-W,1,-1]:[1,-1,W,-W],rot=R(4);
+    for(let d=0;d<4&&e.cells.length<e.limit&&inkCells<cap;d++){
+     const off=dirs[(d+rot)%4],n=i+off,nx=n%W,ny=(n/W)|0;
+     if(nx<1||nx>=W-1||ny<1||ny>=H-1||Math.abs(nx-x)+Math.abs(ny-y)!==1||field[n]!==e.tone||inkOwner[n])continue;
+     const dx=nx-e.x,dy=ny-e.y,along=e.axis?dy:dx,across=e.axis?dx:dy;
+     if((along*along*.42+across*across)>e.radius*e.radius)continue;
+     const bias=e.law===2?(d===0?.94:.56):e.law===3?(Math.abs(across)%5<2?.96:.48):.88;
+     if(random()>bias)continue;
+     const band=Math.floor(depth/(5+e.seed%9)),col=e.colours[band%e.colours.length];
+     inkOwner[n]=e.id;ink[n]=col;e.front.push(e.cells.length);e.cells.push(n);e.depth.push(depth);inkCells++;inkGrown++;pigmentTransitions++;
+    }
+   }
+  }
+  // Structural edits invalidate the pigment rather than allowing it to float.
+  for(let k=0;k<Math.min(35,e.cells.length);k++){const i=e.cells[R(e.cells.length)];if(inkOwner[i]===e.id&&field[i]!==e.tone){inkOwner[i]=0;ink[i]=0;inkCells--;inkRetired++;}}
+  if(u>.64){
+   const target=Math.floor(e.cells.length*smooth(.64,1,u));
+   while(e.retire<target){const i=e.cells[e.cells.length-1-e.retire++];if(inkOwner[i]===e.id){inkOwner[i]=0;ink[i]=0;inkCells--;inkRetired++;}}
+  }
+  if(u>=1){for(const i of e.cells)if(inkOwner[i]===e.id){inkOwner[i]=0;ink[i]=0;inkCells--;inkRetired++;}pigmentEvents.splice(j,1);}
+ }
+}
+function applyPigmentEvents(){
+ if(!ink)return;
+ for(const e of pigmentEvents)for(const i of e.cells){
+  if(inkOwner[i]!==e.id)continue;
+  if(field[i]!==e.tone){inkOwner[i]=0;ink[i]=0;inkCells--;inkRetired++;continue;}
+  renderField[i]=ink[i];
+ }
+}
+function allocateMotionBuffers(){
+ const n=W*H;motionOps={dst:new Int32Array(n),src:new Int32Array(n),flags:new Uint8Array(n),colour:new Uint8Array(n)};motionOpCount=0;motionSource=new Uint8Array(n);feedbackPrevious=new Uint8Array(n);feedbackReady=false;
+ motionX=new Float32Array(n);motionY=new Float32Array(n);motionStrength=new Float32Array(n);
+ motionMemory=new Float32Array(n);motionErase=new Float32Array(n);motionColour=new Float32Array(n);motionHue=new Uint8Array(n);motionIndices=new Int32Array(n);motionIndexCount=0;motionMapReady=false;nextMotionMap=age;
+}
+function makeMotionField(slot,initial=false){
+ const weights=motionProfile.weights,total=weights.reduce((a,b)=>a+b,0);
+ let choice=random()*total,kind=0;
+ for(;kind<weights.length-1;kind++){choice-=weights[kind];if(choice<=0)break;}
+ if(initial&&motionProfile.initial[slot]!==undefined)kind=motionProfile.initial[slot];
+ const slow=kind===3||kind===5,delay=initial?slot*2.8:1+random()*10;
+ motionEvents++;
+ return {id:motionEvents,kind,x:.13+random()*.74,y:.13+random()*.74,
+  radius:(.065+Math.pow(random(),1.6)*.19)*motionProfile.radius,
+  angle:random()*6.283,heading:random()*6.283,
+  rate:((slow?.003:.007)+random()*.008)*motionProfile.speed,
+  start:age+delay,duration:(slow?16:9)+random()*25,
+  amp:(.42+random()*.48)*motionProfile.gain,phase:random()*6.283,last:age};
+}
+function resetMotionFields(){
+ motionFields=[];motionMapReady=false;nextMotionMap=age;
+ for(let i=0;i<motionProfile.slots;i++)motionFields.push(makeMotionField(i,true));
+}
+function updateMotionFields(){
+ motionActive=0;
+ for(let i=0;i<motionProfile.slots;i++){
+  let p=motionFields[i];
+  if(!p||age>p.start+p.duration)p=motionFields[i]=makeMotionField(i,false);
+  const dt=clamp(age-p.last,0,.1);p.last=age;
+  const u=clamp((age-p.start)/p.duration,0,1);
+  p.heading+=Math.sin(p.phase+age*.065)*dt*.12;
+  p.x+=Math.cos(p.heading)*p.rate*dt;p.y+=Math.sin(p.heading)*p.rate*dt;
+  if(p.x<.06||p.x>.94){p.heading=Math.PI-p.heading;p.x=clamp(p.x,.06,.94);}
+  if(p.y<.06||p.y>.94){p.heading=-p.heading;p.y=clamp(p.y,.06,.94);}
+  p.angle+=Math.sin(p.phase+age*.08)*dt*.035;
+  if(age>=p.start&&u<1&&Math.sin(Math.PI*u)>0)motionActive++;
+ }
+}
+function motionNoise(x,y,salt){
+ let n=(Math.imul(x|0,1597334677)^Math.imul(y|0,3812015801)^Math.imul(salt|0,2891336453))>>>0;
+ n^=n>>>16;n=Math.imul(n,0x7feb352d);n^=n>>>15;n=Math.imul(n,0x846ca68b);n^=n>>>16;
+ return (n>>>0)/4294967295;
+}
+function smooth(a,b,x){let t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);}
+function apply62CMotionFields(){
+ if(!motionSource||!motionFields.length)return;
+ const rebuild=!motionMapReady||age>=nextMotionMap;
+ const stride=requestedStudy===139?4:3,cols=Math.ceil(W/stride),rows=Math.ceil(H/stride),aspect=W/H;
+ if(rebuild){
+  // Compute continuous field geometry on a small control lattice; sample actual
+  // image pixels individually. This never reduces the artwork's resolution.
+  for(let k=0;k<motionIndexCount;k++){const i=motionIndices[k];motionX[i]=motionY[i]=motionStrength[i]=motionMemory[i]=motionErase[i]=motionColour[i]=motionHue[i]=0;}
+  motionIndexCount=motionTouched=0;
+  for(const p of motionFields){
+   const u=clamp((age-p.start)/p.duration,0,1),envelope=age<p.start?0:waveSin(Math.PI*u)**1.3;
+   if(envelope<.006)continue;
+   const radius=p.radius*(.72+.4*waveSin(Math.PI*u)),cx=p.x*W,cy=p.y*H,bound=radius*H/.62+stride;
+   const x0=clamp(Math.floor((cx-bound)/stride),0,cols-1),x1=clamp(Math.ceil((cx+bound)/stride),0,cols-1);
+   const y0=clamp(Math.floor((cy-bound)/stride),0,rows-1),y1=clamp(Math.ceil((cy+bound)/stride),0,rows-1);
+   const ax=waveCos(p.angle),ay=waveSin(p.angle),nx=-ay,ny=ax,phase=p.phase;
+   for(let y=y0;y<=y1;y++){const vy=(y*stride+stride*.5)/H-p.y,row=y*cols;
+    for(let x=x0;x<=x1;x++){
+     const vx=((x*stride+stride*.5)/W-p.x)*aspect,along=vx*ax+vy*ay,across=vx*nx+vy*ny;
+     const shape=fastHypot(along*.62,across*1.35)/Math.max(.001,radius);if(shape>1.24)continue;
+     const irregular=waveSin(along/radius*9+phase)*.12+waveSin(across/radius*17-phase)*.07;
+     const mask=(1-smooth(.32,1.03,shape+irregular))*p.amp*envelope;if(mask<.012)continue;
+     let strength=mask*(.72+.28*waveSin(phase+along*32)),ox=0,oy=0;const k=p.kind,i=row+x;
+     if(k===0){const hinge=Math.tanh((across-waveSin(along*18+phase)*radius*.12)/(radius*.09)),ripple=waveSin(along/radius*4+u*5)*2;ox=ax*hinge*(2+6*strength)+nx*ripple;oy=ay*hinge*(2+6*strength)+ny*ripple;}
+     else if(k===1){const shear=clamp(across/radius,-1,1)*(3+8*strength)-2*waveSin(across/radius*7);ox=nx*shear;oy=ny*shear;}
+     else if(k===2){const fork=waveSin(along/radius*11+phase),shift=2+4*strength,branch=Math.sign(fork)*(1+4*strength);ox=ax*shift+nx*branch;oy=ay*shift+ny*branch;strength*=.45+.55*smooth(-.15,.45,fork);}
+     else if(k===3){ox=ax*(3+7*strength)+nx*2;oy=ay*(3+7*strength)+ny*2;motionMemory[i]=Math.max(motionMemory[i],strength*.75);}
+     else if(k===4){const ripple=waveSin(across/radius*12+u*8)*2;ox=ax*(3+8*strength)+nx*ripple;oy=ay*(3+8*strength)+ny*ripple;}
+     else if(k===5){ox=ax*.75;oy=ay*.75;motionErase[i]=Math.max(motionErase[i],strength*.70);}
+     else if(k===6){const zip=waveSin(along/radius*22+u*10+across/radius*5),shift=Math.sign(zip)*(2+6*strength);ox=nx*shift+ax*2;oy=ny*shift+ay*2;}
+     else{const curl=waveSin(along/radius*6)*2;ox=ax*3+nx*curl;oy=ay*3+ny*curl;if(strength>motionColour[i]){motionColour[i]=strength;motionHue[i]=Math.floor(phase/(Math.PI*2)*4);}}
+     if(motionStrength[i]===0&&strength>0)motionIndices[motionIndexCount++]=i;
+     motionX[i]+=ox*strength;motionY[i]+=oy*strength;motionStrength[i]=Math.max(motionStrength[i],strength);
+    }
+   }
+  }
+  motionTouched=motionIndexCount*stride*stride;
+  nextMotionMap=age+mapInterval;motionMapReady=true;
+ }
+ if(!motionIndexCount){motionOpCount=0;return;}
+ if(rebuild){
+ motionOpCount=0;
+ const pixelScale=clamp(H/720,.75,2.2)*motionProfile.pixelScale,salt=testNumber*991;
+ for(let j=0;j<motionIndexCount;j++){
+  const i=motionIndices[j],amount=motionStrength[i];if(amount<=.04)continue;
+  const bx=(i%cols)*stride,by=((i/cols)|0)*stride,ex=Math.min(W,bx+stride),ey=Math.min(H,by+stride);
+  const ox=clamp(Math.round(motionX[i]*pixelScale),-24,24),oy=clamp(Math.round(motionY[i]*pixelScale),-24,24);
+  const mx=Math.round(motionX[i]*pixelScale*3),my=Math.round(motionY[i]*pixelScale*3);
+  const mem=motionMemory[i],erase=motionErase[i],colour=motionColour[i];
+  for(let y=by;y<ey;y++)for(let x=bx;x<ex;x++){
+   const dst=y*W+x,tx=x+ox,ty=y+oy;
+   let src=-1,flags=0;
+   if((ox||oy)&&tx>=0&&tx<W&&ty>=0&&ty<H&&motionNoise(x>>1,y>>1,salt+913)<amount*.93)src=ty*W+tx;
+   if(mem>.08&&motionNoise(x>>1,y>>1,salt+127)<mem*.10)src=clamp(y+my,0,H-1)*W+clamp(x+mx,0,W-1);
+   if(erase>.08&&motionNoise(x>>1,y>>1,salt+251)<erase*.025)flags|=1;
+   if(colour>.10&&motionNoise(x>>1,y>>1,salt+383)<colour*.020)flags|=2;
+   if(src>=0||flags){const k=motionOpCount++;motionOps.dst[k]=dst;motionOps.src[k]=src;motionOps.flags[k]=flags;motionOps.colour[k]=2+(motionHue[i]%4);}
+  }
+ }
+ }
+ if(!motionOpCount)return;
+ motionSource.set(renderField);motionMoved=0;
+ for(let k=0;k<motionOpCount;k++){
+  const dst=motionOps.dst[k],src=motionOps.src[k],flags=motionOps.flags[k];
+  if(src>=0){renderField[dst]=motionSource[src];motionMoved++;}
+  if(flags&1)renderField[dst]=paletteLum[field[dst]]>127?1:0;
+  // Chromatic state is supplied exclusively by connected material growth.
+ }
+}
+function applyFlowPockets(){
+ for(const c of flowPockets){
+  const progress=clamp((age-c.start)/c.duration,0,1),envelope=waveSin(Math.PI*progress);
+  if(envelope<.025)continue;
+  const source=renderField.slice();
+  const phase=age*c.speed+c.phase+waveSin(age*.071+c.phase)*.62+waveSin(age*.031+c.phase*.7)*.38;
+  for(let y=c.y0;y<c.y1;y++)for(let x=c.x0;x<c.x1;x++){
+   const i=y*W+x,dx=x-c.x,dy=y-c.y,u=dx*c.ax+dy*c.ay,v=dx*c.nx+dy*c.ny;
+   const edge=Math.min(x-c.x0,c.x1-1-x,y-c.y0,c.y1-1-y),fade=clamp(edge/3,0,1);
+   if(fade<=0)continue;
+   const a=waveSin(v*.31+phase),b=waveSin(u*.23-phase*.73+c.phase*.4);
+   const stepped=Math.sign(waveSin(v*.39+phase*.82));
+   const relay=1-Math.min(1,Math.abs(waveSin(u*.115-phase*.48)));
+   let main=0,secondary=0;
+   if(c.law===0){main=a*.95+b*.24;secondary=waveSin(u*.19+phase*.62)*.34;}
+   else if(c.law===1){main=stepped*.78+b*.34;secondary=waveSin(v*.22-phase*.71)*.62;}
+   else if(c.law===2){main=(waveSin(v*.22+phase)+waveSin(u*.17-phase*.61))*.57;secondary=waveSin((u+v)*.16+phase*.8)*.42;}
+   else if(c.law===3){main=Math.sign(waveSin(u*.14-phase*.57))*(.45+relay*.65);secondary=waveSin(v*.28+phase*.91)*.48;}
+   else if(c.law===4){main=waveSin(v*.27+phase*1.12)*.66+waveSin(u*.2-phase*.45)*.4;secondary=Math.sign(waveSin(v*.43-phase*.7))*.35;}
+   else{main=waveSin(v*.18+phase*.83)*.48+b*.48;secondary=waveSin(u*.31+phase*.59)*.62;}
+   const gate=.72+.28*waveSin(u*.12+v*.16+phase*.44+c.phase),strength=c.amp*envelope*fade*gate;
+   const sx=Math.round((c.ax*main+c.nx*secondary)*strength),sy=Math.round((c.ay*main+c.ny*secondary)*strength);
+   if(!sx&&!sy)continue;
+   const tx=clamp(x+sx,c.x0+1,c.x1-2),ty=clamp(y+sy,c.y0+1,c.y1-2);
+   renderField[i]=source[ty*W+tx];
+   flowCells++;
+  }
+ }
+}
+function sense(){
+ if(age<nextSense)return;nextSense=age+(testNumber>=127?1.7:2.1);let nextSig=new Uint8Array(30*16);
+ for(let a of agents){let ax=(a.id%6+.5)*W/6,ay=(Math.floor(a.id/6)+.5)*H/5,off=a.id*16,diff=0;
+  for(let j=0;j<4;j++)for(let i=0;i<4;i++){let x=clamp(Math.floor(ax+(i-1.5)*W/27),0,W-1),y=clamp(Math.floor(ay+(j-1.5)*H/23),0,H-1),v=at(x,y);nextSig[off+j*4+i]=v;if(previous)diff+=Math.abs(v-previous[off+j*4+i]);}
+  a.change=diff/16;a.repeat=a.change<.063?a.repeat+1:0;if(a.repeat>=3){a.next=Math.min(a.next,age+.5);a.goal=2;}
+ }
+ previous=nextSig;if(age>=nextFocus){let pool=agents.slice().sort((a,b)=>b.repeat-a.repeat);focus=pick(pool.slice(0,6)).id;nextFocus=age+range(13,29);}
+ // Pigment is gradually consumed where material is rewritten; sparse erosion prevents accumulation.
+ let colour=0;for(let i=0;i<field.length;i++)if(field[i]>1)colour++;
+ if(colour>0&&(colour>field.length*.035||random()<.38)){
+  let start=-1;for(let tries=0;tries<90;tries++){let i=R(field.length);if(field[i]>1){start=i;break;}}
+  if(start>=0){
+   let sx=start%W,sy=(start/W)|0,angle=range(0,Math.PI*2),length=range(12,Math.min(54,Math.max(14,Math.min(W,H)*.16))),width=range(1.1,3.8),salt=(age*71)|0;
+   for(let t=0;t<length;t+=1.4){
+    let bend=Math.sin(t*.12+salt)*width*1.8,cx=Math.round(sx+Math.cos(angle)*t-Math.sin(angle)*bend),cy=Math.round(sy+Math.sin(angle)*t+Math.cos(angle)*bend);
+    for(let k=-Math.ceil(width);k<=Math.ceil(width);k++){
+     let x=Math.round(cx-Math.sin(angle)*k),y=Math.round(cy+Math.cos(angle)*k);if(x<1||x>=W-1||y<1||y>=H-1)continue;
+     let i=y*W+x;if(field[i]>1&&motionNoise(x>>1,y>>1,salt+307)<.76)field[i]=1;
+    }
+   }
+   let limit=Math.max(1,Math.floor(colour*.009));for(let n=0;n<field.length&&limit>0;n++){let i=R(field.length);if(field[i]>1){field[i]=1;limit--;}}
+  }
+ }
+}
+function frame(t){let dt=last?Math.min(.1,(t-last)/1000):0;last=t;if(!paused&&!document.hidden){age+=dt;sense();if(age>=next){plan();next=age+range(.85,1.8);}planStep();evolve(dt);morph();advanceFronts();advanceSlips();advanceFlowPockets();updateMotionFields();updateFeedbackFields(dt);advancePigmentEvents(dt);if(!lastDraw||t-lastDraw>=33.0){draw();lastDraw=t;}if(q.has('debug'))document.getElementById('err').textContent='proposals '+trials+' accepted '+accepted+' completed '+finished+' rejected '+refusals+' inherited '+inherited+' pigment births '+colourBirths+' changed cells '+changes+' growth cells '+morphChanges+' exchanges '+flowChanges+' colonies '+colonyCount+' fronts '+frontCount+' front edits '+frontEdits+' local slips '+slipEvents+' shifted pairs '+slipPairs+' local flow events '+flowEvents+' flow cells '+flowCells+' 62C motion fields '+motionActive+' created '+motionEvents+' touched pixels '+motionTouched+' moved pixels '+motionMoved+' renderer '+(gpu?'WebGL2':'CPU fallback')+' gpu steps '+gpuTick+' regions '+gpuSlots+' footprint '+gpuCoverage+'% births '+territoryBirths+' chromatic cells '+inkCells+' grown '+inkGrown+' retired '+inkRetired+' white roots '+inkWhite+' black roots '+inkBlack+' feedback pockets '+feedbackActive+' events '+feedbackEvents+' touched '+feedbackTouched+' moved '+feedbackMoved+' pigment events '+pigmentEvents.length+' created '+pigmentEventCount+' transitions '+pigmentTransitions;}requestAnimationFrame(frame);}
+window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==parent)return;if(e.data?.type==='study-visibility'){paused=!e.data.visible;last=0;lastDraw=0;}if(e.data?.type==='study-quality'){quality=!!(e.data.full||e.data.fullscreen);resize();}});
+
+const gpuVS="#version 300 es\nvoid main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.-1.,0.,1.);}",gpuFS="#version 300 es\nprecision highp float;precision highp int;\nuniform highp sampler2D prev,homeTex;\nuniform ivec2 dim;\nuniform int tick,regionCount;\nuniform float seconds,globalGain;\nuniform vec4 regions[16], traits[16], genes[16];\nuniform highp sampler2D atlas;\nuniform ivec2 atlasDim;\nout vec4 outColor;\nuint mixbits(uint x){x^=x>>16u;x*=0x7feb352du;x^=x>>15u;x*=0x846ca68bu;x^=x>>16u;return x;}\nfloat noise(ivec2 p,int salt){uint n=mixbits(uint(p.x)*1597334677u^uint(p.y)*3812015801u^uint(salt)*2891336453u);return float(n&65535u)/65535.;}\nivec2 cp(ivec2 p){return clamp(p,ivec2(0),dim-1);}\nvec4 get(highp sampler2D tex,ivec2 p){return texelFetch(tex,cp(p),0);}\nbool inside(ivec2 p){return all(greaterThanEqual(p,ivec2(0)))&&all(lessThan(p,dim));}\nfloat maskAt(vec2 p,vec4 A,vec4 B){\n vec2 d=p-A.xy;if(abs(d.x)>max(A.z,A.w)*1.25||abs(d.y)>max(A.z,A.w)*1.25)return 0.;\n vec2 axis=vec2(cos(B.x),sin(B.x));vec2 normal=vec2(-axis.y,axis.x);\n float along=dot(d,axis)/A.z,across=dot(d,normal)/A.w;\n float shape=length(vec2(along,across));\n if(shape>1.23)return 0.;\n float irregular=sin(along*8.+B.z)*.09+sin(across*12.-B.z)*.065+sin((along+across)*5.+B.z)*.035;\n return (1.-smoothstep(.36,1.04,shape+irregular))*B.y;\n}\nivec2 transport(ivec2 p,int mode,int id,int salt,float speed,float phase,int season,out float gate){\n vec2 z=vec2(p);float t=float(tick);\n int beat=tick/(4+int((1.-speed)*19.));\n float row=noise(ivec2(p.y/(1+int(speed*7.)),id),salt);\n float col=noise(ivec2(p.x/(1+int(speed*5.)),id),salt+15);\n int dx=row>.5?1:-1,dy=col>.5?1:-1,pace=1+int(speed*5.);\n ivec2 q=p;gate=0.;float l=5.+speed*23.;\n if(mode==0){q+=ivec2(dx*pace,0);gate=step(.44,fract(z.y/(9.+speed*30.)+phase));}\n if(mode==1){q+=ivec2(0,dy*pace);gate=step(.42,fract(z.x/(7.+speed*30.)+phase));}\n if(mode==2){float a=noise(p/ivec2(3+int(speed*15.)),salt);q+=a>.5?ivec2(dx,0):ivec2(0,dy);gate=step(.23,a);}\n if(mode==3){float a=sin(z.x*.047+sin(z.y*.029+t*.008)*3.+float(id))+sin(z.y*.062-t*.009);q+=abs(a)>.7?ivec2(dx*2,0):ivec2(0,dy);gate=step(-.2,a);}\n if(mode==4){int a=(p.x/8+p.y/8+beat)%2;q+=a==0?ivec2(dx*3,0):ivec2(0,dy*2);gate=step(.26,noise(p/8,salt));}\n if(mode==5){float a=noise(ivec2(p.y/2,beat),salt);q+=ivec2(int(floor(a*17.))-8,0);gate=step(.55,row);}\n if(mode==6){q+=ivec2(dx,dy);gate=step(.44,noise(p/3,salt));}\n if(mode==7){q+=ivec2(dx*pace*2,0);gate=step(.32,fract(z.y/l+phase));}\n if(mode==8){int stripe=int(floor((z.x+z.y)/l));q+=ivec2(stripe%2==0?pace:-pace,stripe%2==0?-1:1);gate=step(.3,fract((z.x-z.y)/l));}\n if(mode==9){int size=4+int(speed*18.);ivec2 cell=p/size;ivec2 c=p-cell*size;int dir=(int(noise(cell,salt)*4.)+season)%4;ivec2 shift=dir==0?ivec2(1,0):dir==1?ivec2(0,1):dir==2?ivec2(-1,0):ivec2(0,-1);q=cell*size+ivec2((c.x+shift.x+size)%size,(c.y+shift.y+size)%size);gate=step(.25,noise(cell,salt+3));}\n if(mode==10){q+=ivec2(0,int(floor(noise(ivec2(p.x/3,beat),salt)*13.))-6);gate=step(.52,col);}\n if(mode==11){float a=fract((z.x+sin(z.y*.021+phase*6.28)*23.)/l-t*.008);q+=ivec2(a>.5?pace:-pace,dy);gate=step(.45,a);}\n if(mode==12){int g=3+int(speed*12.);ivec2 c=p/g;float a=noise(c,salt+season);q+=a>.5?ivec2(dx*g,0):ivec2(0,dy*g);gate=step(.62,a);}\n if(mode==13){int band=(p.y/3+beat/4)%7;q+=ivec2(band<4?pace:-pace,band==0?dy*2:0);gate=step(.4,fract(z.y/l+phase));}\n if(mode==14){q+=ivec2(dx,dy*2);gate=step(.3,fract((z.x*.63+z.y)/l+phase));}\n if(mode==15){float a=noise(p/ivec2(6,13),salt+beat/8);q+=a>.48?ivec2(dx,0):ivec2(0,dy);gate=step(.37,a);}\n if(mode==16){int band=p.y/(3+int(speed*12.));int d=(band+season)%3==0?-1:1;q+=ivec2(d*pace,0);gate=step(.27,fract((z.x+float(band)*17.)/(40.+speed*90.)-t*.004));}\n if(mode==17){int g=7+int(speed*24.);ivec2 cell=p/g;ivec2 c=p-cell*g;int edge=min(min(c.x,c.y),min(g-1-c.x,g-1-c.y));ivec2 v=c.y==edge?ivec2(1,0):c.x==g-1-edge?ivec2(0,1):c.y==g-1-edge?ivec2(-1,0):ivec2(0,-1);q+=v;gate=step(.23,noise(cell,salt));}\n if(mode==18){int k=4+int(speed*11.);ivec2 cell=p/k;float f=noise(cell+ivec2(beat/6,0),salt);q+=ivec2(f>.5?dx*k:0,f>.5?0:dy*k);gate=step(.64,f);}\n if(mode==19){float f=fract((z.x*.23+z.y)/(9.+speed*28.)-t*.005);q+=ivec2(f>.5?dx*pace:0,f>.5?0:dy);gate=step(.42,f);}\n if(mode==20){int k=3+int(speed*9.);int j=(p.y/k+beat/5)%9;q+=ivec2(j<3?dx*pace:0,j>=3?dy:0);gate=step(.55,noise(ivec2(p.x/k,j),salt));}\n if(mode==21){int k=8+int(speed*30.);ivec2 cell=p/k;ivec2 c=p-cell*k;int d=(int(noise(cell,salt)*3.99)+season)%4;q=cell*k+(d==0?ivec2(c.y,k-1-c.x):d==1?ivec2(k-1-c.y,c.x):d==2?ivec2(k-1-c.x,c.y):ivec2(c.x,k-1-c.y));gate=step(.82,noise(cell,salt+beat/7));}\n if(mode==22){int k=5+int(speed*14.);float f=noise(ivec2(p.y/k,p.x/(k*4)),salt);q+=ivec2(dx*pace*(f>.76?3:1),f<.21?dy:0);gate=step(.2,fract(z.y/float(k)+phase));}\n if(mode==23){float f=sin(z.x*.008+float(id))+cos(z.y*.009+t*.002);q+=abs(f)>.8?ivec2(dx*2,dy):ivec2(0,dy);gate=step(.2,fract((z.x+z.y)/(15.+speed*20.)+phase));}\n if(mode==24){int k=2+int(speed*8.);ivec2 c=p/k;int band=(c.x+c.y+beat/5)%13;q+=ivec2(band<5?dx*k:0,band>=5?dy:0);gate=step(.44,noise(c,salt));}\n if(mode==25){int k=5+int(speed*13.);ivec2 c=p/k;float f=noise(ivec2(c.x/5,c.y),salt+season);q+=ivec2(f>.5?dx*pace:0,f>.5?0:dy*2);gate=step(.35,fract(z.x/float(k)+phase));}\n if(mode==26){int k=4+int(speed*13.);ivec2 c=p/k;float f=noise(c,salt);q+=ivec2(f>.5?dx*2:0,f>.5?0:dy*2);gate=step(.49,noise(ivec2(c.x,c.y/3),salt+beat/11));}\n if(mode==27){int k=9+int(speed*21.);ivec2 c=p/k;ivec2 o=p-c*k;int ring=min(min(o.x,o.y),min(k-o.x-1,k-o.y-1));q+=ring%2==0?ivec2(dx,0):ivec2(0,dy);gate=step(.38,noise(c,salt));}\n if(mode==28){float f=sin(z.x*.023+phase*6.28)+sin(z.y*.021-t*.003);q+=ivec2(f>.1?dx*pace:0,f<=.1?dy:0);gate=step(.53,fract((z.x+z.y)/(7.+speed*22.)));}\n if(mode==29){int k=3+int(speed*11.);ivec2 c=p/k;int f=(c.x^c.y^season)%7;q+=ivec2(f<3?dx*k:0,f>=3?dy:0);gate=step(.62,noise(c,salt));}\n if(mode==30){float f=fract(z.y/(12.+speed*42.)+phase);q+=ivec2(dx*(f>.86?pace*3:1),0);gate=step(.37,f);}\n if(mode==31){int k=6+int(speed*18.);ivec2 c=p/k;float f=noise(c,salt+beat/12);q+=ivec2(f>.66?dx*k:dx,f<.23?dy*k:dy);gate=step(.52,f);}\n\n if(mode==32){int k=5+int(speed*17.);ivec2 c=p/k,o=p-c*k;int lane=(c.x+c.y+season)%4;q+=lane<2?ivec2(dx*(1+o.y/3),0):ivec2(0,dy*(1+o.x/3));gate=step(.32,noise(c,salt));}\n if(mode==33){float a=fract(z.x/(17.+speed*35.)+sin(z.y*.035+phase*6.28)*.23-t*.012);q+=ivec2(a<.18?dx*pace*3:0,a>.72?dy*pace:0);gate=step(.64,a)+step(a,.18);}\n if(mode==34){int k=6+int(speed*22.);ivec2 c=p/k,o=p-c*k;int d=(c.x+c.y+season)%2;int off=(o.y+o.x+beat/3)%k;q=c*k+(d==0?ivec2(off,o.y):ivec2(o.x,off));gate=step(.45,noise(c,salt));}\n if(mode==35){float a=sin(z.x*.071+sin(z.y*.025+phase*6.28)*3.);q+=ivec2(a>.15?pace:-pace,a<-.4?dy*3:0);gate=smoothstep(.15,.85,abs(a));}\n if(mode==36){int k=5+int(speed*14.);ivec2 c=p/k,o=p-c*k;int d=(int(noise(c,salt)*4.)+beat/6)%4;ivec2 shift=d==0?ivec2(0,1):d==1?ivec2(1,0):d==2?ivec2(0,-1):ivec2(-1,0);q=c*k+ivec2((o.x+shift.x+k)%k,(o.y+shift.y+k)%k);gate=step(.18,noise(c,salt+13));}\n if(mode==37){int k=3+int(speed*9.);int b=(p.x/k+p.y/(k*3)+beat/4)%5;q+=b<2?ivec2(dx*k,dy):ivec2(-dx,dy*k);gate=step(.27,noise(p/k,salt));}\n if(mode==38){float a=fract((z.y+sin(z.x*.047+phase*6.28)*15.)/(13.+speed*28.)+t*.01);q+=ivec2(a<.5?dx*pace:0,a<.5?0:dy*pace);gate=step(.18,abs(a-.5));}\n if(mode==39){int k=6+int(speed*20.);ivec2 c=p/k,o=p-c*k;int a=(c.x^c.y^season)%3;q=c*k+(a==0?ivec2(k-1-o.x,o.y):a==1?ivec2(o.x,k-1-o.y):ivec2(o.y,o.x));gate=step(.54,noise(c,salt+beat/9));}\n return q;\n}\nfloat lum(float v){int i=int(round(v*255.));if(i==0)return .93;if(i==1)return .08;if(i==2)return .32;if(i==3)return .35;if(i==4)return .57;if(i==5)return .34;if(i==6)return .58;if(i==7)return .49;if(i==8)return .76;if(i==9)return .49;if(i==10)return .52;return .65;}\nvoid main(){\n ivec2 p=ivec2(gl_FragCoord.xy);vec2 z=vec2(p);\n float home=get(homeTex,p).r;\n float power=0.,secondary=0.;int chosen=-1,partner=-1;\n ivec2 tile=clamp(p/32,ivec2(0),atlasDim-1);\n ivec4 candidates=ivec4(round(texelFetch(atlas,tile,0)*255.))-1;\n for(int j=0;j<4;j++){int i=candidates[j];if(i<0||i>=regionCount)continue;float m=maskAt(z,regions[i],traits[i]);if(m>power){secondary=power;partner=chosen;power=m;chosen=i;}else if(m>secondary){secondary=m;partner=i;}}\n // Outside the local active territory, the structural engine is returned exactly.\n if(chosen<0||power<.045){outColor=vec4(home,0.,home,1.);return;}\n vec4 A=regions[chosen],B=traits[chosen],C=genes[chosen];\n int salt=int(B.w),id=salt%223,season=tick/(110+salt%210);\n float phase=fract(B.z*.15915494),speed=clamp(.25+.65*noise(ivec2(id,season),salt),.20,.95);\n // A coherent local atlas: different connected bands have different inherited rules.\n vec2 axis=vec2(cos(B.x),sin(B.x)),normal=vec2(-axis.y,axis.x),d=z-A.xy;\n float along=dot(d,axis),across=dot(d,normal);\n float sector=sin(along/(13.+float(salt%17))+phase*6.28)+sin(across/(9.+float(salt%11))-phase*6.28);\n float u=C.w;\n int gene=int(C.x+.5);\n if((u>.31&&sector>.10)||(u>.49&&sector>-.5))gene=int(C.y+.5);\n if((u>.64&&sector<.55)||u>.86)gene=int(C.z+.5);\n // Rare subterritories inherit a mutated variant, without globally changing the image.\n float dialect=noise(ivec2(floor(z/vec2(23.,17.))),salt+season*7);\n if(dialect>.86)gene=(gene+1+int(dialect*9.))%40;\n float gate;ivec2 q=transport(p,gene,id,salt,speed,phase,season,gate);\n if(partner>=0&&secondary>.15&&noise(p/ivec2(11,7),salt+season)>.54){\n  vec4 other=genes[partner];int foreign=int(other.y+.5);float g2;ivec2 q2=transport(p,foreign,id+3,salt+71,speed,phase+.23,season,g2);\n  q+=q2-p;gate=max(gate,g2*.85);\n }\n float r=noise(p,tick+salt),stable=noise(p/2,salt+97),local=noise(p/ivec2(9,13),salt+season);\n vec4 past=get(prev,p);float live=max(0.,past.g-.018);\n // Excitation propagates from neighbouring pixels; no global effect or repeated animation.\n float infected=max(max(get(prev,p+ivec2(1,0)).g,get(prev,p-ivec2(1,0)).g),max(get(prev,p+ivec2(0,1)).g,get(prev,p-ivec2(0,1)).g));\n if(infected>.10&&r<.38)live=max(live,infected-.035);\n if(local>.93&&r<.045*power)live=max(live,.75);\n float influence=clamp(power*globalGain,0.,1.);\n if(live>.31&&r<live*.31){ivec2 drift=ivec2(sign(sin(across*.12+seconds*.4)),sign(cos(along*.09-seconds*.31)));q+=drift*(1+int(live*3.));gate=max(gate,.8);}\n float v=past.r;\n // Persist and transport previous output, not a freshly displaced base image.\n if(inside(q)&&maskAt(vec2(q),A,B)>.035&&r<influence*(.20+.70*gate)){\n  float other=get(prev,q).r;\n  if(gene==12||gene==25){v=(lum(other)>lum(v))==(along>0.)?other:v;}else v=other;\n  if(abs(other-past.r)>.001)live=max(live,.32*influence);\n }\n // Narrow, irregular recovery fronts retain the underlying architecture.\n float sweep=fract(across/(18.+float(salt%37))-seconds*.11+phase);\n float repair=(.055+.14*(1.-influence))*(1.-live*.45);\n if(r<repair||(sweep<.035&&stable<.55))v=home;\n // The previous base is stored in B. Fresh construction and pigment can penetrate the feedback.\n if(abs(home-past.b)>.001&&r<.58)v=home;\n // Avoid treating empty feedback pixels as a disconnected layer.\n if(stable>influence*.98&&r<.26)v=home;\n if(u>.82&&r<smoothstep(.82,1.,u)*.32)v=home;\n // Sparse memory exchange produces coherent residual strips, not arbitrary colours.\n if(live>.32&&local>.80&&r<.035){ivec2 m=cp(p+ivec2(round(axis*(3.+live*8.))));if(maskAt(vec2(m),A,B)>.1)v=get(prev,m).r;}\n // Chromatic state belongs to the connected substrate, never to a random feedback sample.\n if(home>1.5/255.)v=home;else if(v>1.5/255.)v=home;\n outColor=vec4(v,live*min(1.,power*2.),home,1.);\n}",gpuShow="#version 300 es\nprecision highp float;precision highp int;\nuniform highp sampler2D stateTex;uniform ivec2 dim;uniform vec2 viewSize;uniform vec3 pal[12];out vec4 outColor;\nvoid main(){vec2 uv=gl_FragCoord.xy/viewSize;ivec2 p=clamp(ivec2(vec2(uv.x,1.-uv.y)*vec2(dim)),ivec2(0),dim-1);int i=clamp(int(round(texelFetch(stateTex,p,0).r*255.)),0,11);outColor=vec4(pal[i],1.);}";
+let gpuCanvas=null;
+function disableGPU(error){
+ gpuFailure=String(error?.message||error||'WebGL2 unavailable');gpu=null;
+ if(gpuCanvas){gpuCanvas.remove();gpuCanvas=null;}
+ canvas.style.visibility='visible';
+}
+function createGPU(){
+ gpuCanvas=document.createElement('canvas');
+ gpuCanvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none;';
+ canvas.parentNode.insertBefore(gpuCanvas,canvas.nextSibling);
+ const gl=gpuCanvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,preserveDrawingBuffer:false,powerPreference:'high-performance'});
+ if(!gl)throw Error('WebGL2 unavailable');
+ function program(src){
+  function shader(type,code){const s=gl.createShader(type);gl.shaderSource(s,code);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
+  const p=gl.createProgram(),a=shader(gl.VERTEX_SHADER,gpuVS),b=shader(gl.FRAGMENT_SHADER,src);gl.attachShader(p,a);gl.attachShader(p,b);gl.linkProgram(p);gl.deleteShader(a);gl.deleteShader(b);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;
+ }
+ const sim=program(gpuFS),show=program(gpuShow),vao=gl.createVertexArray();gl.bindVertexArray(vao);
+ const uniforms=(p,names)=>Object.fromEntries(names.map(n=>[n,gl.getUniformLocation(p,n)]));
+ const u=uniforms(sim,['prev','homeTex','dim','tick','regionCount','seconds','globalGain','regions[0]','traits[0]','genes[0]','atlas','atlasDim']);
+ const v=uniforms(show,['stateTex','dim','viewSize','pal[0]']);
+ const paletteFloats=new Float32Array(palette.flatMap(c=>c.map(x=>x/255)));
+ let home=null,states=[],fbos=[],read=0,ready=false,tw=0,th=0;
+ const regionData=new Float32Array(64),traitData=new Float32Array(64),geneData=new Float32Array(64);let atlasTex=null,atlasData=null,atlasW=0,atlasH=0;
+ const gpuModes=new WeakMap(),recentModes=[],uses=new Uint16Array(40);
+ function choose(){
+  let best=0,bestScore=-1;
+  for(let k=0;k<8;k++){const m=R(40),score=random()/(1+uses[m]*.25)*(recentModes.includes(m)?.15:1);if(score>bestScore){best=m;bestScore=score;}}
+  uses[best]++;recentModes.push(best);if(recentModes.length>10)recentModes.shift();return best;
+ }
+ function texture(internal,format){
+  const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,internal,W,H,0,format,gl.UNSIGNED_BYTE,null);return t;
+ }
+ function bind(t,unit,loc){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,t);gl.uniform1i(loc,unit);}
+ function resize(){
+  gpuCanvas.width=canvas.width;gpuCanvas.height=canvas.height;
+  if(W===tw&&H===th&&home)return;
+  if(home)gl.deleteTexture(home);if(atlasTex)gl.deleteTexture(atlasTex);for(const t of states)gl.deleteTexture(t);for(const f of fbos)gl.deleteFramebuffer(f);
+  tw=W;th=H;gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);atlasW=Math.ceil(W/32);atlasH=Math.ceil(H/32);atlasData=new Uint8Array(atlasW*atlasH*4);atlasTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,atlasW,atlasH,0,gl.RGBA,gl.UNSIGNED_BYTE,null);home=texture(gl.R8,gl.RED);states=[texture(gl.RGBA8,gl.RGBA),texture(gl.RGBA8,gl.RGBA)];fbos=states.map(t=>{const f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Feedback framebuffer incomplete');return f;});gl.bindFramebuffer(gl.FRAMEBUFFER,null);read=0;ready=false;
+ }
+ function render(){
+  if(gl.isContextLost())throw Error('WebGL context lost');
+  if(W!==tw||H!==th||gpuCanvas.width!==canvas.width||gpuCanvas.height!==canvas.height)resize();
+  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,home);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,W,H,gl.RED,gl.UNSIGNED_BYTE,renderField);
+  let n=0,area=0;const limit=requestedStudy===145?.26:requestedStudy===146?.32:.38;
+  function add(x,y,rx,ry,angle,amp,phase,salt,a,b,c,progress){
+   if(n>=16||amp<.015||area>=limit)return;
+   const footprint=Math.PI*rx*ry/(W*H),scale=Math.min(1,Math.sqrt((limit-area)/Math.max(.00001,footprint)));if(scale<.55)return;rx*=scale;ry*=scale;area+=footprint*scale*scale;
+   regionData.set([x,y,rx,ry],n*4);traitData.set([angle,amp,phase,salt],n*4);geneData.set([a,b,c,progress],n*4);n++;
+  }
+  for(const f of feedbackFields){
+   const p=clamp((age-f.start)/f.duration,0,1),env=smooth(0,.09,p)*(1-smooth(.86,1,p));
+   if(age<f.start||env<.01)continue;
+   add(f.x,f.y,f.rx*1.08,f.ry*1.04,f.angle,f.amp*env,f.phase,f.seed,f.modeA,f.modeB,f.modeC,p);
+  }
+  // The earlier moving fields become smaller persistent feedback organisms as well.
+  // Their gene families are selected once and evolve over the lifetime of each region.
+  for(const f of motionFields){
+   const p=clamp((age-f.start)/f.duration,0,1),env=age<f.start?0:Math.sin(Math.PI*p)**1.1;
+   if(env<.015)continue;
+   let g=gpuModes.get(f);if(!g){g=[choose(),choose(),choose(),1+R(1000000)];gpuModes.set(f,g);}
+   const r=f.radius*H*.63;
+   add(f.x*W,f.y*H,r*1.25,r*.72,f.angle,env*Math.min(1,f.amp*.92),f.phase,g[3],g[0],g[1],g[2],p);
+  }
+  gpuSlots=n;gpuCoverage=Math.round(area*100);
+  atlasData.fill(0);
+  for(let y=0;y<atlasH;y++)for(let x=0;x<atlasW;x++){
+   const cx=x*32+16,cy=y*32+16,candidates=[];
+   for(let i=0;i<n;i++){const k=i*4,dx=cx-regionData[k],dy=cy-regionData[k+1],r=Math.max(regionData[k+2],regionData[k+3])*1.25+23;if(Math.abs(dx)>r||Math.abs(dy)>r)continue;const score=traitData[k+1]/(1+(dx*dx+dy*dy)/(r*r));candidates.push([i,score]);}
+   candidates.sort((a,b)=>b[1]-a[1]);for(let j=0;j<Math.min(4,candidates.length);j++)atlasData[(y*atlasW+x)*4+j]=candidates[j][0]+1;
+  }
+  gl.activeTexture(gl.TEXTURE0+2);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,atlasW,atlasH,gl.RGBA,gl.UNSIGNED_BYTE,atlasData);
+  gl.bindVertexArray(vao);gl.disable(gl.BLEND);gl.useProgram(sim);gl.viewport(0,0,W,H);
+  gl.uniform2i(u.dim,W,H);gl.uniform1i(u.tick,gpuTick);gl.uniform1f(u.seconds,age);gl.uniform1f(u.globalGain,requestedStudy===145?1.12:requestedStudy===146?1.32:1.52);
+  gl.uniform4fv(u['regions[0]'],regionData);gl.uniform4fv(u['traits[0]'],traitData);gl.uniform4fv(u['genes[0]'],geneData);
+  bind(home,0,u.homeTex);bind(atlasTex,2,u.atlas);gl.uniform2i(u.atlasDim,atlasW,atlasH);
+  if(!ready){gl.uniform1i(u.regionCount,0);gl.bindFramebuffer(gl.FRAMEBUFFER,fbos[0]);bind(home,1,u.prev);gl.drawArrays(gl.TRIANGLES,0,3);ready=true;read=0;}
+  gl.uniform1i(u.regionCount,n);gl.bindFramebuffer(gl.FRAMEBUFFER,fbos[1-read]);bind(states[read],1,u.prev);gl.drawArrays(gl.TRIANGLES,0,3);read=1-read;gpuTick++;
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,gpuCanvas.width,gpuCanvas.height);gl.useProgram(show);bind(states[read],0,v.stateTex);gl.uniform2i(v.dim,W,H);gl.uniform2f(v.viewSize,gpuCanvas.width,gpuCanvas.height);gl.uniform3fv(v['pal[0]'],paletteFloats);gl.drawArrays(gl.TRIANGLES,0,3);
+ }
+ gpuCanvas.addEventListener('webglcontextlost',e=>{e.preventDefault();disableGPU('context lost');});
+ canvas.style.visibility='hidden';
+ return {render,resize};
+}
+
+if(!q.has('cpu')){try{gpu=createGPU();}catch(e){disableGPU(e);}}
+new ResizeObserver(resize).observe(canvas);resize();requestAnimationFrame(frame);
+</script></body></html>
