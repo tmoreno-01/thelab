@@ -1,59 +1,53 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fff"><title>field studies — lab</title>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fff"><title>Field Studies — LifeAfterLogic lab</title>
+<link rel="icon" type="image/svg+xml" href="../media/lifeafterlogic-mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box}html,body{margin:0;background:#fff;color:#111;font:14px/1.45 Arial,Helvetica,sans-serif}header{padding:24px 28px;display:flex;justify-content:space-between;align-items:center}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline;text-underline-offset:4px}main{max-width:1600px;margin:auto;padding:5vh 28px 55px}.eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#888}.intro{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:35px}.title{font-size:clamp(42px,7vw,82px);letter-spacing:-.08em;line-height:.9;font-weight:400;margin:14px 0 0}.intro p{max-width:390px;color:#777;font-size:12px;margin:0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px 16px}.card{min-width:0}.thumb{position:relative;aspect-ratio:16/10;background:#eceae5;overflow:hidden;display:grid;place-items:center}.thumb img{display:block;width:100%;height:100%;object-fit:cover}.thumb video{display:block;width:100%;height:100%;object-fit:contain;background:#151515}.placeholder{font-size:11px;letter-spacing:.12em;color:#777}.play{position:absolute;right:12px;bottom:12px;border:0;border-radius:2px;background:#fff;color:#111;padding:10px 14px;font:12px Arial,sans-serif;cursor:pointer}.play:hover{background:#e9e7e2}.label{display:flex;justify-content:space-between;gap:12px;padding-top:9px}.label strong{font-weight:400}.label span{font-size:11px;color:#888;text-align:right}.credit{font-size:11px;color:#999;margin-top:5px}.credit a{text-decoration:underline;text-underline-offset:2px}.note{margin-top:42px;padding-top:15px;border-top:1px solid #ddd;font-size:11px;color:#888}@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){header{padding:20px}main{padding:5vh 20px 40px}.intro{display:block}.intro p{margin-top:16px}.grid{grid-template-columns:1fr;gap:25px}.label span{text-align:right}}
-</style></head><body><header><a href="../">← lab</a><span class="eyebrow">archive / 001—012</span></header><main>
-<div class="eyebrow">moving image / computational painting</div><div class="intro"><h1 class="title">field studies.</h1><p>Earlier iterations of the pigment renderer. All versions live on this page. Videos stay unloaded until you choose one, and only one study plays at a time.</p></div>
+:root{font-family:"Poppins","Helvetica Neue",Helvetica,Arial,sans-serif;color:#111;background:#fff;-webkit-font-smoothing:antialiased;font-synthesis:none}*{box-sizing:border-box}body{margin:0;background:#fff}a{color:inherit;text-decoration:none}a:focus-visible,button:focus-visible{outline:1px solid currentColor;outline-offset:4px}
+header{height:82px;padding:0 clamp(20px,3.1vw,48px);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ececec}.lab-brand{display:inline-flex;align-items:center;gap:10px;font-size:20px;font-weight:700;letter-spacing:-.065em}.lab-brand img{width:30px;height:30px;display:block}.eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#888}
+main{max-width:1800px;margin:auto;padding:clamp(48px,6vw,84px) clamp(20px,3.1vw,48px) 60px}.intro{display:flex;justify-content:space-between;align-items:end;gap:28px;margin-bottom:30px}.title{font-size:clamp(40px,6vw,76px);line-height:.95;letter-spacing:-.075em;font-weight:400;margin:12px 0 0}.intro p{max-width:390px;color:#777;font-size:12px;line-height:1.7;margin:0 0 4px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.study-card{position:relative;min-width:0}.thumb{position:relative;isolation:isolate;aspect-ratio:2.45/1;overflow:hidden;background:#161616;color:#fff}.visual{position:absolute;inset:0}.visual img,.visual video{display:block;width:100%;height:100%;object-fit:cover}.thumb:after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.02) 35%,rgba(0,0,0,.72))}.tile-copy{position:absolute;z-index:2;left:14px;right:48px;bottom:13px;color:#fff;pointer-events:none}.tile-copy strong{display:block;font-size:clamp(14px,1.45vw,20px);font-weight:500;letter-spacing:-.05em;line-height:1.15}.tile-copy span{display:block;margin-top:4px;font-size:9px;letter-spacing:.08em;color:rgba(255,255,255,.75)}.play{position:absolute;z-index:3;top:11px;right:11px;border:1px solid rgba(255,255,255,.55);background:rgba(10,10,10,.48);backdrop-filter:blur(8px);color:#fff;padding:7px 10px;font:500 10px "Poppins",sans-serif;letter-spacing:.04em;cursor:pointer}.play:hover{background:#fff;color:#111}.note{margin-top:35px;padding-top:14px;border-top:1px solid #e5e5e5;color:#888;font-size:10px;line-height:1.7}
+@media(max-width:980px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){header{height:72px}.lab-brand{font-size:19px}.lab-brand img{width:28px;height:28px}main{padding-top:52px}.intro{display:block;margin-bottom:24px}.intro p{margin-top:15px}.grid{grid-template-columns:1fr;gap:10px}.thumb{aspect-ratio:2.65/1;min-height:132px}.tile-copy strong{font-size:18px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style></head><body>
+<header><a class="lab-brand" href="../"><img src="../media/lifeafterlogic-mark.svg" alt=""><span>lab</span></a><span class="eyebrow">archive / 005—012</span></header>
+<main><div class="intro"><div><div class="eyebrow">Moving image / computational painting</div><h1 class="title">Field Studies.</h1></div><p>Earlier iterations of the pigment renderer. Select any study to play it here. Only one video is loaded at a time; all other versions remain static thumbnails.</p></div>
 <div class="grid" id="studies"></div>
-<div class="note">Dense optical flow, temporal change and image structure are extracted from source footage, then translated into a separate bristle and pigment simulation. Each version explores a different approach to pigment emission, transport, detail and motion.</div>
-</main><script>
+<div class="note">Dense optical flow, temporal change and image structure extracted from source footage, then translated into separate bristle and pigment simulations. Each study explores a different approach to pigment emission, transport, detail and motion.</div></main>
+<script>
 const studies=[
- {title:'012 — flowers',desc:'fresh motion-emitted pigment / no raster feedback',file:'field-studies-012-flowers.mp4',poster:'field-studies-012-flowers.jpg',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'},
- {title:'011 — flowers',desc:'detail-preserving pigment / native-resolution texture',file:'field-studies-011-flowers.mp4',poster:'field-studies-011-flowers.jpg',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'},
- {title:'010 — flowers',desc:'layered pigment / fluid deformation',file:'field-studies-010-flowers.mp4',poster:'field-studies-010-flowers.jpg',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'},
- {title:'009 — flowers',desc:'motion emission / micro-splats',file:'field-studies-009-flowers.mp4',poster:'field-studies-009-flowers.jpg',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'},
- {title:'008 — flowers',desc:'micro-filaments',file:'field-studies-008-flowers.mp4',poster:'field-studies-008-flowers.jpg',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'},
- {title:'007 — flowers',desc:'fine pigment / colour keys',file:'field-studies-007-flowers.mp4',poster:'field-studies-007-flowers.jpg',source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'},
- {title:'007 — taipei',desc:'fine pigment / motion fields',file:'field-studies-007-taipei.mp4',poster:'field-studies-007-taipei.jpg',source:'https://www.pexels.com/video/a-city-at-night-with-many-lights-and-cars-26102174/',credit:'Pexels'},
- {title:'007 — london',desc:'fine pigment / motion fields',file:'field-studies-007-london.mp4',poster:'field-studies-007-london.jpg',source:'https://www.pexels.com/video/city-at-night-5743582/',credit:'Pexels'},
- {title:'006 — taipei',desc:'neon / traffic',file:'field-studies-taipei.mp4',poster:'field-studies-taipei.jpg',source:'https://www.pexels.com/video/a-city-at-night-with-many-lights-and-cars-26102174/',credit:'Pexels'},
- {title:'006 — london',desc:'rain / reflections',file:'field-studies-london.mp4',poster:'field-studies-london.jpg',source:'https://www.pexels.com/video/city-at-night-5743582/',credit:'Pexels'},
- {title:'005 — flowers',desc:'directional pigment',file:'field-studies-005.mp4',poster:null,source:'https://www.pexels.com/video/a-beautiful-flowers-blowing-by-the-wind-9054643/',credit:'Zuzanna Musial / Pexels'}
+ {title:"012 — flowers",desc:"fresh motion-emitted pigment / no raster feedback",file:"field-studies-012-flowers.mp4",poster:"field-studies-012-flowers.jpg"},
+ {title:"011 — flowers",desc:"detail-preserving pigment / native-resolution texture",file:"field-studies-011-flowers.mp4",poster:"field-studies-011-flowers.jpg"},
+ {title:"010 — flowers",desc:"layered pigment / fluid deformation",file:"field-studies-010-flowers.mp4",poster:"field-studies-010-flowers.jpg"},
+ {title:"009 — flowers",desc:"motion emission / micro-splats",file:"field-studies-009-flowers.mp4",poster:"field-studies-009-flowers.jpg"},
+ {title:"008 — flowers",desc:"micro-filaments",file:"field-studies-008-flowers.mp4",poster:"field-studies-008-flowers.jpg"},
+ {title:"007 — flowers",desc:"fine pigment / colour keys",file:"field-studies-007-flowers.mp4",poster:"field-studies-007-flowers.jpg"},
+ {title:"007 — taipei",desc:"fine pigment / motion fields",file:"field-studies-007-taipei.mp4",poster:"field-studies-007-taipei.jpg"},
+ {title:"007 — london",desc:"fine pigment / motion fields",file:"field-studies-007-london.mp4",poster:"field-studies-007-london.jpg"},
+ {title:"006 — taipei",desc:"neon / traffic",file:"field-studies-taipei.mp4",poster:"field-studies-taipei.jpg"},
+ {title:"006 — london",desc:"rain / reflections",file:"field-studies-london.mp4",poster:"field-studies-london.jpg"},
+ {title:"005 — flowers",desc:"directional pigment",file:"field-studies-005.mp4",poster:"field-studies-005-preview.svg"}
 ];
-const grid=document.getElementById('studies');
-let active=null;
-function closeActive(){
- if(!active)return;
- active.video.pause();
- active.video.removeAttribute('src');
- const source=active.video.querySelector('source');if(source)source.removeAttribute('src');
- active.video.load();
- active.card.querySelector('.thumb').replaceChildren(active.preview,active.button);
- active.button.textContent='play study';
- active=null;
-}
+const grid=document.getElementById("studies");let active=null;
+function stopActive(){if(!active)return;active.video.pause();active.video.removeAttribute("src");const s=active.video.querySelector("source");if(s)s.removeAttribute("src");active.video.load();active.visual.replaceChildren(active.preview);active.button.textContent="play";active=null;}
 for(const item of studies){
- const card=document.createElement('article');card.className='card';
- const thumb=document.createElement('div');thumb.className='thumb';
- let preview;
- if(item.poster){preview=document.createElement('img');preview.src='../media/'+item.poster;preview.alt='';preview.loading='lazy';preview.decoding='async';}
- else{preview=document.createElement('div');preview.className='placeholder';preview.textContent='FIELD STUDY / 005';}
- thumb.append(preview);
- const button=document.createElement('button');button.className='play';button.type='button';button.textContent='play study';
- button.addEventListener('click',()=>{
-   if(active&&active.card===card){closeActive();return;}
-   closeActive();
-   const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='none';video.poster=item.poster?'../media/'+item.poster:'';
-   const source=document.createElement('source');source.src='../media/'+item.file;source.type='video/mp4';video.append(source);
-   thumb.replaceChildren(video,button);button.textContent='close video';active={card,video,preview,button};
-   video.load();video.play().catch(()=>{});
+ const card=document.createElement("article");card.className="study-card";
+ const thumb=document.createElement("div");thumb.className="thumb";
+ const visual=document.createElement("div");visual.className="visual";
+ const preview=document.createElement("img");preview.src="../media/"+item.poster;preview.alt="";preview.loading="lazy";preview.decoding="async";visual.append(preview);
+ const button=document.createElement("button");button.className="play";button.type="button";button.textContent="play";button.setAttribute("aria-label","Play "+item.title);
+ button.addEventListener("click",()=>{
+  if(active&&active.card===card){stopActive();return;}
+  stopActive();
+  const video=document.createElement("video");video.controls=true;video.playsInline=true;video.preload="none";video.poster="../media/"+item.poster;
+  const source=document.createElement("source");source.src="../media/"+item.file;source.type="video/mp4";video.append(source);
+  visual.replaceChildren(video);button.textContent="close";button.setAttribute("aria-label","Close "+item.title);
+  active={card,visual,video,preview,button};video.load();video.play().catch(()=>{});
  });
- const label=document.createElement('div');label.className='label';
- const strong=document.createElement('strong');strong.textContent=item.title;
- const desc=document.createElement('span');desc.textContent=item.desc;
- label.append(strong,desc);
- const credit=document.createElement('div');credit.className='credit';credit.innerHTML='Source footage: <a href="'+item.source+'" target="_blank" rel="noreferrer">'+item.credit+'</a>';
- thumb.append(button);card.append(thumb,label,credit);grid.append(card);
+ const copy=document.createElement("div");copy.className="tile-copy";
+ const strong=document.createElement("strong");strong.textContent=item.title;
+ const desc=document.createElement("span");desc.textContent=item.desc;
+ copy.append(strong,desc);thumb.append(visual,button);card.append(thumb,copy);grid.append(card);
 }
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&active)active.video.pause();});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&active)active.video.pause();});
 </script></body></html>
