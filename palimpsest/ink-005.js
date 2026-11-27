@@ -64,7 +64,7 @@ function extract(im,meta,variant=0){
 }
 function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
  canvas.width=canvas.height=N;const ctx=canvas.getContext("2d",{alpha:false});
- let R=rng(seed),originSeed=seed>>>0,frame=0,marks=0,bundles=0,atlas=[],session=[],tracks=[],density=new Float32Array(G*G),history=[],field=[0,0,0,0],recent=[],memory=readMemory(),readyState=false,failed=0,lastSources=[],pendingSeed=originSeed,sourcePairs=[];
+ let R=rng(seed),originSeed=seed>>>0,frame=0,marks=0,bundles=0,atlas=[],session=[],tracks=[],density=new Float32Array(G*G),history=[],field=[0,0,0,0],recent=[],memory=readMemory(),readyState=false,failed=0,lastSources=[],previousSources=[],pendingSeed=originSeed;
  const rand=(a,b)=>mix(a,b,R()),pick=a=>a[Math.floor(R()*a.length)];
  function readMemory(){try{let m=JSON.parse(localStorage.getItem(KEY)||"{}");return{directions:Array.isArray(m.directions)?m.directions.slice(0,12):[],recent:Array.isArray(m.recent)?m.recent.slice(0,16):[]};}catch(e){return{directions:[],recent:[]};}}
  function writeMemory(){try{localStorage.setItem(KEY,JSON.stringify(memory));return true;}catch(e){return false;}}
