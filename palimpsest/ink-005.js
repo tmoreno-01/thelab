@@ -74,12 +74,12 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
  function warp(x,y,amount=12){let fx=field[0],fy=field[1],f=field[2];return[x+Math.sin(y*.009+fx)*amount+Math.sin((x+y)*.014+f)*amount*.32,y+Math.cos(x*.008+fy)*amount+Math.sin((x-y)*.012+f)*amount*.28];}
  function transformPath(path,cx,cy,rx,ry,angle,flip,amount){const ca=Math.cos(angle),sa=Math.sin(angle),out=[];for(const p of path.pts){let u=(p[0]/W-.5)*2*(flip?-1:1),v=(p[1]/H-.5)*2,xx=u*rx,yy=v*ry,x=cx+xx*ca-yy*sa,y=cy+xx*sa+yy*ca;out.push(warp(x,y,amount));}return out;}
  function chooseSession(){
-  const fav=memory.directions.length&&R()<.30?pick(memory.directions):null;
-  let ids=fav?fav.sources.filter(id=>atlas.some(a=>a.id===id)):[];
-  let pool=atlas.filter(a=>!ids.includes(a.id));for(let i=pool.length-1;i>0;i--){let j=Math.floor(R()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
-  while(ids.length<Math.min(5,atlas.length)&&pool.length){let candidate=pool.shift();if(ids.length&&ids.every(id=>atlas.find(a=>a.id===id)?.family===candidate.family)&&R()<.72){pool.push(candidate);if(pool.length===1)break;continue;}ids.push(candidate.id);}
+  const usable=atlas.filter(a=>a.paths.length),fav=memory.directions.length&&R()<.30?pick(memory.directions):null;
+  let ids=fav?fav.sources.filter(id=>usable.some(a=>a.id===id)):[];
+  let pool=usable.filter(a=>!ids.includes(a.id));for(let i=pool.length-1;i>0;i--){let j=Math.floor(R()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  while(ids.length<Math.min(5,usable.length)&&pool.length){let candidate=pool.shift();if(ids.length&&ids.every(id=>usable.find(a=>a.id===id)?.family===candidate.family)&&R()<.72){pool.push(candidate);if(pool.length===1)break;continue;}ids.push(candidate.id);}
   if(ids.length<3)ids=usable.slice(0,Math.min(5,usable.length)).map(a=>a.id);
-  previousSources=memory.recent.slice(0,16);session=ids.map(id=>atlas.find(a=>a.id===id)).filter(Boolean);lastSources=session.map(s=>s.id);memory.recent=lastSources.concat(previousSources).slice(0,16);writeMemory();
+  previousSources=memory.recent.slice(0,16);session=ids.map(id=>usable.find(a=>a.id===id)).filter(Boolean);lastSources=session.map(s=>s.id);memory.recent=lastSources.concat(previousSources).slice(0,16);writeMemory();
   return fav;
  }
  function chooseSource(exclude){let options=session.filter(s=>s.paths.length&&(!exclude||s.id!==exclude));if(!options.length)options=session.filter(s=>s.paths.length);let weights=options.map(s=>{let rec=recent.slice(-10).filter(x=>x===s.id).length+(previousSources.slice(0,10).filter(x=>x===s.id).length*.9);let novelty=1/(1+rec*1.8);let complexity=.6+s.feature.complexity*.7;return novelty*complexity*(s.family==="drawn"?.8:1);});let total=weights.reduce((a,b)=>a+b,0),v=R()*total;for(let i=0;i<options.length;i++){v-=weights[i];if(v<=0)return options[i];}return options[0];}
@@ -99,11 +99,12 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
    ops.push({p:raw,w:width,color,start,dur,fill:false});
    if(R()<.27){const echo=raw.map(([x,y])=>[x+rand(-7,7),y+rand(-7,7)]);ops.push({p:echo,w:Math.max(.55,width*.48),color:color===INK?WHITE:INK,start:start+Math.floor(rand(3,16)),dur:Math.max(4,dur),fill:false});}
    if(R()<.31){
-    const pb=matchPath(b,pa,usedB),rb=transformPath(pb,cx+rand(-rx*.13,rx*.13),cy+rand(-ry*.13,ry*.13),rx*rand(.88,1.13),ry*rand(.88,1.13),ang+rand(-.24,.24),R()<.5,warpAmount*.7);
-    const n=Math.max(12,Math.min(38,Math.max(raw.length,rb.length))),morph=interpolatePath(raw,rb,.48+R()*.24),morphStart=start+Math.floor(rand(12,28));
-    ops.push({p:raw,w:width+1.1,color:WHITE,start:morphStart,dur:Math.max(4,dur*.6),fill:false});
-    ops.push({p:morph,w:width*.9,color,start:morphStart+3,dur:Math.max(4,dur),fill:false});
-    if(R()<.65)ops.push({p:rb,w:Math.max(.7,width*.72),color:color===INK?WHITE:INK,start:morphStart+Math.floor(rand(7,18)),dur:Math.max(4,dur),fill:false});
+    const pb=matchPath(b,pa,usedB);
+    if(pb){const rb=transformPath(pb,cx+rand(-rx*.13,rx*.13),cy+rand(-ry*.13,ry*.13),rx*rand(.88,1.13),ry*rand(.88,1.13),ang+rand(-.24,.24),R()<.5,warpAmount*.7),morph=interpolatePath(raw,rb,.48+R()*.24),morphStart=start+Math.floor(rand(12,28));
+     ops.push({p:raw,w:width+1.1,color:WHITE,start:morphStart,dur:Math.max(4,dur*.6),fill:false});
+     ops.push({p:morph,w:width*.9,color,start:morphStart+3,dur:Math.max(4,dur),fill:false});
+     if(R()<.65)ops.push({p:rb,w:Math.max(.7,width*.72),color:color===INK?WHITE:INK,start:morphStart+Math.floor(rand(7,18)),dur:Math.max(4,dur),fill:false});
+    }
    }
   }
   if(!ops.length)return;
