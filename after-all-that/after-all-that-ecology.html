@@ -15,10 +15,10 @@ let pendingPlan=null,motionOps=null,motionOpCount=0,gpu=null,gpuFailure='',gpuSl
 const pigmentFamilies=[[2,6,10],[3,7,9],[4,8,5],[9,6,2],[5,10,8]];
 const palettePacked=palette.map(c=>(c[0]|(c[1]<<8)|(c[2]<<16)|(255<<24))>>>0);
 const feedbackProfile=testNumber===136
- ?{slots:8,gap:[.8,1.8],radius:[.045,.080],amp:.94,duration:[9,17],pigmentMax:2,pigmentGap:[5,9],pigmentChance:.24,pigmentAmp:.72}
+ ?{slots:8,gap:[.8,1.8],radius:[.050,.090],amp:.94,duration:[9,17],pigmentMax:2,pigmentGap:[5,9],pigmentChance:.24,pigmentAmp:.72}
  :testNumber===137
-  ?{slots:10,gap:[.65,1.45],radius:[.045,.085],amp:1.02,duration:[10,20],pigmentMax:3,pigmentGap:[4,8],pigmentChance:.32,pigmentAmp:.80}
-  :{slots:12,gap:[.45,1.1],radius:[.045,.090],amp:1.12,duration:[10,22],pigmentMax:3,pigmentGap:[3,6],pigmentChance:.40,pigmentAmp:.88};
+  ?{slots:10,gap:[.65,1.45],radius:[.050,.095],amp:1.02,duration:[10,20],pigmentMax:3,pigmentGap:[4,8],pigmentChance:.32,pigmentAmp:.80}
+  :{slots:12,gap:[.45,1.1],radius:[.055,.105],amp:1.12,duration:[10,22],pigmentMax:3,pigmentGap:[3,6],pigmentChance:.40,pigmentAmp:.88};
 const motionProfile=testNumber===130
  ?{gain:.98,radius:.90,speed:.92,pixelScale:1.12,slots:3,weights:[1.1,1.0,1.7,1.0,1.2,.8,1.4,1.3],initial:[2,4,6]}
  :testNumber===131
@@ -31,7 +31,7 @@ const R=n=>Math.floor(random()*n),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),pick=
 const binary=v=>v===0?0:1,at=(x,y)=>binary(field[clamp(y,0,H-1)*W+clamp(x,0,W-1)]);
 function set(x,y,v){if(x>=0&&x<W&&y>=0&&y<H)field[y*W+x]=v;}
 function init(){
- field=new Uint8Array(W*H);active=[];agents=[];memory=[];colonies=[];fronts=[];microSlips=[];slipHistory=[];flowPockets=[];flowHistory=[];motionFields=[];feedbackFields=[];feedbackHistory=[];feedbackModeUse.fill(0);feedbackRecent=[];feedbackReady=false;feedbackEvents=feedbackTouched=feedbackMoved=feedbackActive=0;pigmentEvents=[];pigmentHistory=[];pigmentFamilyUse.fill(0);pigmentRecent=[];pigmentEventCount=pigmentTransitions=0;nextFeedback=age+range(.1,.5);nextPigment=age+range(6,11);nextMorph=nextFront=0;used.clear();previous=null;age=next=nextSense=nextFocus=0;nextSlip=testNumber>=127?range(3.5,6):range(4.5,7.5);nextFlow=range(2,4);flowEvents=flowCells=motionEvents=motionTouched=motionMoved=motionActive=0;focus=-1;
+ field=new Uint8Array(W*H);active=[];agents=[];memory=[];colonies=[];fronts=[];microSlips=[];slipHistory=[];flowPockets=[];flowHistory=[];motionFields=[];feedbackFields=[];feedbackHistory=[];feedbackModeUse.fill(0);feedbackRecent=[];feedbackReady=false;feedbackEvents=feedbackTouched=feedbackMoved=feedbackActive=0;pigmentEvents=[];pigmentHistory=[];pigmentFamilyUse.fill(0);pigmentRecent=[];pigmentEventCount=pigmentTransitions=0;nextFeedback=age+range(.1,.5);nextPigment=age+range(2.5,4.5);nextMorph=nextFront=0;used.clear();previous=null;age=next=nextSense=nextFocus=0;nextSlip=testNumber>=127?range(3.5,6):range(4.5,7.5);nextFlow=range(2,4);flowEvents=flowCells=motionEvents=motionTouched=motionMoved=motionActive=0;focus=-1;
  let a=new Int16Array(W),b=new Int16Array(H),c=new Int16Array(W),flip=R(2),base=range(.35,.62),sign=random()<.5?-1:1;
  function terrace(arr,size,center,slope){let v=size*center;for(let x=0;x<arr.length;){let len=3+R(Math.max(4,arr.length*.13));v=clamp(v*.44+(center+slope*(x/arr.length-.5))*size*.56+range(-size*.065,size*.065),size*.10,size*.90);for(let j=x;j<Math.min(arr.length,x+len);j++)arr[j]=Math.round(v);x+=len;}}
  terrace(a,H,base,sign*.48);terrace(b,W,range(.34,.67),-sign*.30);terrace(c,H,range(.65,.83),sign*.20);
@@ -53,7 +53,7 @@ function resize(){
  let k=Math.min(1,(quality?2300:1500)/canvas.width,(quality?1400:950)/canvas.height),density=Math.sqrt(7.2),nw=Math.max(30,Math.round(canvas.width*k*density/5.07)),nh=Math.max(24,Math.round(canvas.height*k*density/5.07));
  if(nw===W&&nh===H){draw();return}
  pendingPlan=null;let old=field,ow=W,oh=H;W=nw;H=nh;small.width=W;small.height=H;rgba=sc.createImageData(W,H);rgba32=new Uint32Array(rgba.data.buffer);renderField=new Uint8Array(W*H);allocateMotionBuffers();ink=new Uint8Array(W*H);inkOwner=new Uint8Array(W*H);inkSerial=0;inkCells=0;inkNext=age;territoryVisits.fill(-100);territoryBirths=0;
- if(!old)init();else{field=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++)field[y*W+x]=old[Math.min(oh-1,Math.floor(y*oh/H))*ow+Math.min(ow-1,Math.floor(x*ow/W))];active=[];colonies=[];fronts=[];microSlips=[];slipHistory=[];flowPockets=[];flowHistory=[];feedbackFields=[];feedbackHistory=[];feedbackReady=false;pigmentEvents=[];pigmentHistory=[];nextFeedback=age+range(.1,.5);nextPigment=age+range(6,11);nextSlip=age+(testNumber>=127?range(3.5,6):range(4.5,7.5));nextFlow=age+range(2,4);previous=null;}
+ if(!old)init();else{field=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++)field[y*W+x]=old[Math.min(oh-1,Math.floor(y*oh/H))*ow+Math.min(ow-1,Math.floor(x*ow/W))];active=[];colonies=[];fronts=[];microSlips=[];slipHistory=[];flowPockets=[];flowHistory=[];feedbackFields=[];feedbackHistory=[];feedbackReady=false;pigmentEvents=[];pigmentHistory=[];nextFeedback=age+range(.1,.5);nextPigment=age+range(2.5,4.5);nextSlip=age+(testNumber>=127?range(3.5,6):range(4.5,7.5));nextFlow=age+range(2,4);previous=null;}
  resetMotionFields();
  if(gpu){try{gpu.resize();}catch(e){disableGPU(e);}}
  draw();
@@ -438,7 +438,7 @@ function beginFeedbackField(){
   let overlap=0;for(const f of feedbackFields){let d=Math.hypot(x-f.x,y-f.y);overlap+=Math.max(0,1-d/(rx+f.rx));}
   if(overlap>1.05)continue;
   let edge=0;for(let j=0;j<12;j++){let a=clamp(x+Math.round(range(-rx,rx)),1,W-2),b=clamp(y+Math.round(range(-ry,ry)),1,H-2),k=b*W+a;edge+=(field[k]!==field[k+1])+(field[k]!==field[k+W]);}
-  const neglect=clamp((age-territoryVisits[tile])/22,0,1),score=neglect*1.6+Math.min(1,edge/6)*.65-overlap*1.2+random()*.65;
+  const neglect=clamp((age-territoryVisits[tile])/22,0,1),score=neglect*1.6+Math.min(1,edge/6)*1.10-overlap*1.2+random()*.65;
   if(!best||score>best.score)best={x,y,rx,ry,tile,score};
  }
  if(!best)return;
@@ -461,6 +461,7 @@ function updateFeedbackFields(dt){
  }
 }
 function feedbackVector(mode,a,b,phase,u,cell,grain,beat,out){
+ if(mode>=32)mode=[13,7,9,11,17,24,19,21][mode-32]??0;
  let x=0,y=0,g=.62,wave,band,step;
  switch(mode){
   case 0:wave=waveSin(b*.095+phase+u*8);x=Math.sign(wave)*(2+6*Math.abs(wave));g=.18+.82*smooth(-.3,.55,wave);break;
@@ -576,7 +577,7 @@ function beginPigmentEvent(c){
 function advancePigmentEvents(dt){
  if(!ink||age<inkNext)return;inkNext=age+.065;
  if(age>=nextPigment){nextPigment=age+range(feedbackProfile.pigmentGap[0],feedbackProfile.pigmentGap[1]);if(pigmentEvents.length<feedbackProfile.pigmentMax){
-  let tone=(pigmentEventCount%2),p=null;for(let j=0;j<24;j++){p=anchor(agents[R(agents.length)]);if(p)break;}
+  let tone=inkWhite<=inkBlack?0:1,p=null;for(let j=0;j<24;j++){p=anchor(agents[R(agents.length)]);if(p)break;}
   if(p)beginPigmentEvent({x:p.x,y:p.y,tone});
  }}
  const cap=Math.floor(field.length*.038);
@@ -810,7 +811,7 @@ function createGPU(){
  const v=uniforms(show,['stateTex','dim','viewSize','pal[0]']);
  const paletteFloats=new Float32Array(palette.flatMap(c=>c.map(x=>x/255)));
  let home=null,states=[],fbos=[],read=0,ready=false,tw=0,th=0;
- const regionData=new Float32Array(64),traitData=new Float32Array(64),geneData=new Float32Array(64);let atlasTex=null,atlasData=null,atlasW=0,atlasH=0;
+ const regionData=new Float32Array(64),traitData=new Float32Array(64),geneData=new Float32Array(64);let atlasTex=null,atlasData=null,atlasScores=null,atlasW=0,atlasH=0;
  const gpuModes=new WeakMap(),recentModes=[],uses=new Uint16Array(40);
  function choose(){
   let best=0,bestScore=-1;
@@ -825,7 +826,7 @@ function createGPU(){
   gpuCanvas.width=canvas.width;gpuCanvas.height=canvas.height;
   if(W===tw&&H===th&&home)return;
   if(home)gl.deleteTexture(home);if(atlasTex)gl.deleteTexture(atlasTex);for(const t of states)gl.deleteTexture(t);for(const f of fbos)gl.deleteFramebuffer(f);
-  tw=W;th=H;gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);atlasW=Math.ceil(W/32);atlasH=Math.ceil(H/32);atlasData=new Uint8Array(atlasW*atlasH*4);atlasTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,atlasW,atlasH,0,gl.RGBA,gl.UNSIGNED_BYTE,null);home=texture(gl.R8,gl.RED);states=[texture(gl.RGBA8,gl.RGBA),texture(gl.RGBA8,gl.RGBA)];fbos=states.map(t=>{const f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Feedback framebuffer incomplete');return f;});gl.bindFramebuffer(gl.FRAMEBUFFER,null);read=0;ready=false;
+  tw=W;th=H;gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);atlasW=Math.ceil(W/32);atlasH=Math.ceil(H/32);atlasData=new Uint8Array(atlasW*atlasH*4);atlasScores=new Float32Array(atlasData.length);atlasTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,atlasW,atlasH,0,gl.RGBA,gl.UNSIGNED_BYTE,null);home=texture(gl.R8,gl.RED);states=[texture(gl.RGBA8,gl.RGBA),texture(gl.RGBA8,gl.RGBA)];fbos=states.map(t=>{const f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Feedback framebuffer incomplete');return f;});gl.bindFramebuffer(gl.FRAMEBUFFER,null);read=0;ready=false;
  }
  function render(){
   if(gl.isContextLost())throw Error('WebGL context lost');
@@ -840,7 +841,8 @@ function createGPU(){
   for(const f of feedbackFields){
    const p=clamp((age-f.start)/f.duration,0,1),env=smooth(0,.09,p)*(1-smooth(.86,1,p));
    if(age<f.start||env<.01)continue;
-   add(f.x,f.y,f.rx*1.08,f.ry*1.04,f.angle,f.amp*env,f.phase,f.seed,f.modeA,f.modeB,f.modeC,p);
+   const pulse=.72+.28*(.5+.5*Math.sin(age*(.55+(f.seed%23)*.055)+f.phase));
+   add(f.x,f.y,f.rx*1.08,f.ry*1.04,f.angle,f.amp*env*pulse,f.phase,f.seed,f.modeA,f.modeB,f.modeC,p);
   }
   // The earlier moving fields become smaller persistent feedback organisms as well.
   // Their gene families are selected once and evolve over the lifetime of each region.
@@ -852,11 +854,17 @@ function createGPU(){
    add(f.x*W,f.y*H,r*1.25,r*.72,f.angle,env*Math.min(1,f.amp*.92),f.phase,g[3],g[0],g[1],g[2],p);
   }
   gpuSlots=n;gpuCoverage=Math.round(area*100);
-  atlasData.fill(0);
-  for(let y=0;y<atlasH;y++)for(let x=0;x<atlasW;x++){
-   const cx=x*32+16,cy=y*32+16,candidates=[];
-   for(let i=0;i<n;i++){const k=i*4,dx=cx-regionData[k],dy=cy-regionData[k+1],r=Math.max(regionData[k+2],regionData[k+3])*1.25+23;if(Math.abs(dx)>r||Math.abs(dy)>r)continue;const score=traitData[k+1]/(1+(dx*dx+dy*dy)/(r*r));candidates.push([i,score]);}
-   candidates.sort((a,b)=>b[1]-a[1]);for(let j=0;j<Math.min(4,candidates.length);j++)atlasData[(y*atlasW+x)*4+j]=candidates[j][0]+1;
+  atlasData.fill(0);atlasScores.fill(0);
+  // Only visit tiles within each region's bounding box. Keep the strongest
+  // four candidates without per-tile allocations or sorting.
+  for(let i=0;i<n;i++){
+   const k=i*4,cx=regionData[k],cy=regionData[k+1],r=Math.max(regionData[k+2],regionData[k+3])*1.25+23;
+   const x0=clamp(Math.floor((cx-r)/32),0,atlasW-1),x1=clamp(Math.floor((cx+r)/32),0,atlasW-1),y0=clamp(Math.floor((cy-r)/32),0,atlasH-1),y1=clamp(Math.floor((cy+r)/32),0,atlasH-1);
+   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+    const dx=x*32+16-cx,dy=y*32+16-cy;if(Math.abs(dx)>r||Math.abs(dy)>r)continue;
+    let score=traitData[k+1]/(1+(dx*dx+dy*dy)/(r*r)),id=i+1,off=(y*atlasW+x)*4;
+    for(let j=0;j<4;j++){const t=off+j;if(score>atlasScores[t]){const s=atlasScores[t],v=atlasData[t];atlasScores[t]=score;atlasData[t]=id;score=s;id=v;}if(!id)break;}
+   }
   }
   gl.activeTexture(gl.TEXTURE0+2);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,atlasW,atlasH,gl.RGBA,gl.UNSIGNED_BYTE,atlasData);
   gl.bindVertexArray(vao);gl.disable(gl.BLEND);gl.useProgram(sim);gl.viewport(0,0,W,H);
