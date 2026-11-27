@@ -64,7 +64,6 @@ function draw(){
  renderField.set(field);
  applyFlowPockets();
  if(!gpu){apply62CMotionFields();applyFeedbackFields();}
- applyPigmentEvents();
  // A rare, phase-coherent slip moves a few neighbouring contour cells out and back.
  // It borrows the earlier displacement behaviour without translating the composition.
  for(const s of microSlips){
@@ -76,6 +75,9 @@ function draw(){
    renderField[a]=renderField[b];renderField[b]=v;
   }
  }
+ // Apply material colour after all CPU displacement so it remains attached.
+ if(!gpu)for(let i=0;i<renderField.length;i++)if(renderField[i]>1)renderField[i]=field[i]===0?0:1;
+ applyPigmentEvents();
  if(gpu){try{gpu.render();return;}catch(e){disableGPU(e);}}
  let p=rgba32;
  for(let i=0;i<renderField.length;i++)p[i]=palettePacked[renderField[i]]||palettePacked[1];
