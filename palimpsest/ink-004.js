@@ -60,7 +60,7 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0){
   // Inherit direction from the most recent stroke bundle, but allow discontinuities and opposing marks.
   if(region.end&&random()<.53){p=[mix(p[0],region.end[0],.58),mix(p[1],region.end[1],.58)];a=region.a+R(-1.15,1.15);}
   if(!inside(p))p=region.anchor.slice();
-  let best={p,a,L,s:-Infinity};for(let j=0;j<8;j++){let q=j===0?p:[p[0]+R(-35,35),p[1]+R(-35,35)],aa=a+R(-.65,.65),ll=L*R(.78,1.2),s=score(q,aa,ll)+random()*.7;if(s>best.s)best={p:q,a:aa,L:ll,s};}
+  let best={p,a,L,s:-Infinity};for(let j=0;j<8;j++){let q=j===0?p:[p[0]+R(-35,35),p[1]+R(-35,35)],aa=a+R(-.65,.65),ll=L*R(.78,1.2),s=score(q,aa,ll)+random()*.7;let ex=q[0]+Math.cos(aa)*ll*.5,ey=q[1]+Math.sin(aa)*ll*.5;for(const tr of tracks){let other=regions[tr.id];if(other&&Math.hypot(ex-other.anchor[0],ey-other.anchor[1])<80)s-=.25;}if(s>best.s)best={p:q,a:aa,L:ll,s};}
   p=best.p;a=best.a;L=best.L;c=initial?c:chooseColor(...p);
   let path=trace(p[0],p[1],a,L,R(-1.1,1.1)),w=R(6,region.r*.25),ops=[],kind;
   let u=random();
@@ -74,10 +74,10 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0){
  }
 
  function clip(poly,nx,ny,d){let out=[];for(let i=0;i<poly.length;i++){let a=poly[i],b=poly[(i+1)%poly.length],u=a[0]*nx+a[1]*ny-d,v=b[0]*nx+b[1]*ny-d;if(u<=0)out.push(a);if((u<0&&v>0)||(u>0&&v<0)){let t=u/(u-v);out.push([mix(a[0],b[0],t),mix(a[1],b[1],t)]);}}return out;}
- function warp(p){let x=p[0],y=p[1],f=Math.sin(Math.PI*clamp(x/1000,0,1))*Math.sin(Math.PI*clamp(y/1000,0,1));return [x+f*(30*Math.sin(y*.012+field[0])+17*Math.cos((x+y)*.018)),y+f*(32*Math.sin(x*.011+field[1])+12*Math.sin((x-y)*.026))];}
+ function warp(p){let x=p[0],y=p[1],f=Math.sin(Math.PI*clamp(x/1000,0,1))*Math.sin(Math.PI*clamp(y/1000,0,1));return [x+f*(40*Math.sin(y*.012+field[0])+20*Math.cos((x+y)*.018)),y+f*(42*Math.sin(x*.011+field[1])+15*Math.sin((x-y)*.026))];}
  function edgePath(poly){let out=[];for(let i=0;i<poly.length;i++){let a=poly[i],b=poly[(i+1)%poly.length],n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/8));for(let j=0;j<n;j++)out.push(warp([mix(a[0],b[0],j/n),mix(a[1],b[1],j/n)]));}out.push(out[0]);return out;}
  function hatches(poly,spacing,a,c,width,warpIt=true){let out=[],dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx,vals=poly.map(p=>p[0]*nx+p[1]*ny);for(let k=Math.min(...vals)+spacing*.45;k<Math.max(...vals);k+=spacing*R(.86,1.14)){let cuts=[];for(let j=0;j<poly.length;j++){let p=poly[j],q=poly[(j+1)%poly.length],u=p[0]*nx+p[1]*ny,v=q[0]*nx+q[1]*ny;if((u<=k&&v>k)||(v<=k&&u>k)){let t=(k-u)/(v-u);cuts.push((mix(p[0],q[0],t))*dx+mix(p[1],q[1],t)*dy);}}cuts.sort((a,b)=>a-b);for(let j=0;j+1<cuts.length;j+=2){let l=cuts[j],h=cuts[j+1],p=[],n=Math.max(2,Math.ceil((h-l)/7));for(let z=0;z<=n;z++){let v=mix(l,h,z/n),q=[v*dx+k*nx,v*dy+k*ny];p.push(warpIt?warp(q):q);}out.push(operation(p,width*R(.8,1.18),c));}}return out;}
- function territory(poly,site,c){let out=[],other=tint(c),a=angle(...site),boundary=edgePath(poly),inner=poly.map(p=>[mix(site[0],p[0],.89),mix(site[1],p[1],.89)]);out.push(...hatches(poly,4.4,a,c,7.5));out.push(operation(boundary,2.5,other),operation(edgePath(inner),1.1,other));let style=Math.floor(R(0,5));
+ function territory(poly,site,c){let out=[],other=tint(c),a=angle(...site),boundary=edgePath(poly),inner=poly.map(p=>[mix(site[0],p[0],.89),mix(site[1],p[1],.89)]);out.push(...hatches(poly,4.4,a,c,7.5));if(random()<.47)out.push(operation(boundary,R(1.3,2.4),other));if(random()<.42)out.push(operation(edgePath(inner),R(.7,1.3),other));let style=Math.floor(R(0,5));
  if(style===0||style===1){out.push(...hatches(inner,R(3.2,5.5),a+R(-.3,.3),other,R(.6,1.0)));if(style===1)out.push(...hatches(inner,7.5,a+1.2,other,.6));}
  else if(style===2){for(let j=0;j<16;j++){let f=1-(j+1)/20;out.push(operation(edgePath(poly.map(p=>[mix(site[0],p[0],f),mix(site[1],p[1],f)])),R(.65,1.15),other));}}
  else if(style===3){let p=edgePath(inner);out.push(...dots(p,150,other,15));out.push(...hatches(inner,9,a+1.1,other,.8));}
@@ -93,12 +93,12 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0){
  for(let j=0;j<17;j++)sites.push([R(25,975),R(25,975)]);
  for(let i=0;i<sites.length;i++){let s=sites[i],poly=[[0,0],[1000,0],[1000,1000],[0,1000]];for(let j=0;j<sites.length;j++){if(j===i)continue;let q=sites[j],nx=q[0]-s[0],ny=q[1]-s[1],d=(q[0]*q[0]+q[1]*q[1]-s[0]*s[0]-s[1]*s[1])*.5;poly=clip(poly,nx,ny,d);if(poly.length<3)break;}if(poly.length<3)continue;let c=random()<.69?INK:WHITE;for(const o of territory(poly,s,c))paint(o);}
  // Broad, interlocking passageways cross territories and carry their own detail.
- for(let i=0;i<7;i++){let p=[R(-40,1040),R(-40,1040)],a=angle(...p)+R(-.7,.7),path=trace(p[0],p[1],a,R(360,680),R(-.7,.7));for(const o of ribbon(path,R(16,37),chooseColor(...p),pick(["rib","vein","engrave","grain"]),true))paint(o);}
+ for(let i=0;i<11;i++){let p=[R(-40,1040),R(-40,1040)],a=angle(...p)+R(-.7,.7),path=trace(p[0],p[1],a,R(360,680),R(-.7,.7));for(const o of ribbon(path,R(12,42),chooseColor(...p),pick(["rib","vein","engrave","grain"]),true))paint(o);}
  // A large central image cut into an existing network. The anatomy retains black fields.
  let head=pick(["profile","mask"]),a=R(-.23,.23),L=R(520,630),p=[R(160,225),R(455,565)];
  let pp=trace(p[0],p[1],a,L*.90,R(-.18,.18));for(const o of ribbon(pp,L*.30,INK,"grain",true))paint(o);
  for(const o of motif(head,p,a,L,WHITE))paint(o);
- for(const region of regions){region.end=region.anchor.slice();region.a=angle(...region.anchor);if(random()<.46){let p=region.anchor,a=angle(...p),L=R(90,175),c=chooseColor(...p);for(const o of motif(pick(["eye","shell","feather","arch","insect","bird"]),p,a,L,c))paint(o);}}
+ for(const region of regions){region.end=region.anchor.slice();region.a=angle(...region.anchor);if(random()<.66){let p=region.anchor,a=angle(...p),L=R(90,175),c=chooseColor(...p);for(const o of motif(pick(["eye","shell","feather","arch","insect","bird"]),p,a,L,c))paint(o);}}
  // Begin with 14 independently active regions, selected from different areas of the page.
  const order=regions.slice().sort((a,b)=>a.id-b.id);for(let i=order.length-1;i>0;i--){let j=Math.floor(random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}for(const r of order.slice(0,14))plan(r);
  }
