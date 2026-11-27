@@ -113,8 +113,8 @@ footer .controls input.precise-number{width:60px;min-width:0;flex:0 0 60px;paddi
 <header><span><a class="lab-brand" href="../"><img src="../media/lifeafterlogic-mark.svg" width="27" height="27" alt=""><span>lab</span></a> &nbsp; / &nbsp; 4D Splat Studio</span><div class="controls"><label>Quality <select id="tier"><option value="desktop">Desktop</option><option value="mobile">Mobile</option><option value="original">Full-resolution originals</option></select></label><label class="pick" for="file">Open folder</label><label class="pick" for="zipfiles">Open ZIPs</label><button id="showlist">Scene controls</button><button id="exportOpen">Render MP4 loop</button></div></header>
 <input id="file" type="file" webkitdirectory multiple><input id="zipfiles" type="file" accept=".zip" multiple>
 <div id="intro"><h1>4D Splat Studio</h1><p>Load multiple original full_vda ZIPs together. Arrange animated reconstructions as rings, helices, arcs, spheres, grids or loose spatial studies. Adjust each scene and its individual point size, then render a 360° MP4 loop locally.</p><div><label class="pick" for="file">Choose collection folder</label> <label class="pick" for="zipfiles">Choose ZIP files</label></div><div id="message" role="status"></div></div>
-<aside id="panel" hidden><div class="controls"><button id="all">Show all</button><button id="none">Hide all</button></div><div class="transform-tools"><strong>All splats / rotation</strong><label class="item-scale">X <input id="globalRX" type="range" min="-180" max="180" value="0" step="1"><output id="globalRXValue">0°</output></label><label class="item-scale">Y <input id="globalRY" type="range" min="-180" max="180" value="0" step="1"><output id="globalRYValue">0°</output></label><div class="controls"><button id="resetTransforms">Reset transforms</button><label>Align ring <select id="alignRing"><option value="on" selected>On</option><option value="off">Off</option></select></label><label>Drag plane <select id="dragPlane"><option value="screen">Screen</option><option value="xy">World XY</option><option value="xz">World XZ</option><option value="yz">World YZ</option></select></label></div><p id="grabHint">Grab off · orbit the camera normally.</p></div><div class="transform-tools"><strong>Depth reveal / rotation</strong><label class="item-scale">Boost <input id="depthReveal" type="range" min="0" max="3" step=".1" value="1.5" aria-label="Maximum depth reveal boost"><output>1.5</output></label><p>Extra depth as each splat passes the front of the loop (bottom of a vertical wheel). 0 disables the effect. Individual and global depth remain the baseline.</p></div><p>Scale, dots, depth and rotation are independent for each scene. Adjust a scene's Depth to override the global cutoff; Custom · reset restores the global setting. Use Move to select a splat, then drag in the viewport. Shift-drag or scroll in Grab mode changes depth. Click a scene name to isolate it.</p><div id="list"></div><div id="errors" role="status"></div></aside>
-<div id="exportDialog" hidden><section id="exportCard"><h2>Render a 360° loop</h2><p>Your current composition completes one full revolution on a pure black background, without UI. Individual positions and rotations are preserved. Every enabled 4D sequence plays at its source frame rate. Source motion wraps at the end of each clip, so a perfectly seamless motion loop depends on the clip's first and last frames matching. MP4 encoding happens locally; your ZIPs are never uploaded.</p><div class="export-grid"><label>Frame size<select id="exportSize"><option value="1920x1080">1920 × 1080 / landscape</option><option value="1080x1080">1080 × 1080 / square</option><option value="1080x1920">1080 × 1920 / portrait</option></select></label><label>Loop duration<select id="exportDuration"><option value="12">12 seconds</option><option value="18" selected>18 seconds</option><option value="24">24 seconds</option><option value="30">30 seconds</option></select></label></div><div class="export-actions"><button id="closeExport">Close</button><button id="startExport">Render MP4</button></div><progress id="exportProgress" max="100" value="0"></progress><div id="exportStatus">Ready when your scenes are loaded.</div></section></div>
+<aside id="panel" hidden><div class="controls"><button id="all">Show all</button><button id="none">Hide all</button></div><div class="transform-tools"><strong>All splats / rotation</strong><label class="item-scale">X <input id="globalRX" type="range" min="-180" max="180" value="0" step="1"><output id="globalRXValue">0°</output></label><label class="item-scale">Y <input id="globalRY" type="range" min="-180" max="180" value="0" step="1"><output id="globalRYValue">0°</output></label><div class="controls"><button id="resetTransforms">Reset transforms</button><label>Align ring <select id="alignRing"><option value="on" selected>On</option><option value="off">Off</option></select></label><label>Drag plane <select id="dragPlane"><option value="screen">Screen</option><option value="xy">World XY</option><option value="xz">World XZ</option><option value="yz">World YZ</option></select></label></div><p id="grabHint">Grab off · orbit the camera normally.</p></div><div class="transform-tools"><strong>Depth reveal / rotation</strong><label class="item-scale">Boost <input id="depthReveal" type="range" min="0" max="3" step=".1" value="1.5" aria-label="Maximum depth reveal boost"><output>1.5</output></label><label class="item-scale">Width ° <input id="revealWidth" type="range" min="30" max="120" step="5" value="85" aria-label="Depth reveal half-width in degrees"><output>85°</output></label><p>Smoothly reveals extra geometry as each splat approaches the front of the loop (bottom of a vertical wheel). Width controls how early the reveal begins. The extra geometry fades in and out; individual and global depth remain the baseline.</p></div><p>Scale, dots, depth and rotation are independent for each scene. Adjust a scene's Depth to override the global cutoff; Custom · reset restores the global setting. Use Move to select a splat, then drag in the viewport. Shift-drag or scroll in Grab mode changes depth. Click a scene name to isolate it.</p><div id="list"></div><div id="errors" role="status"></div></aside>
+<div id="exportDialog" hidden><section id="exportCard"><h2>Render a 360° loop</h2><p>Your current composition completes one full revolution on a pure black background, without UI. Individual positions, rotations, dot sizes and depth reveal are preserved. Every enabled 4D sequence plays at its source frame rate. Source motion wraps at the end of each clip, so a perfectly seamless motion loop depends on the clip's first and last frames matching. MP4 encoding happens locally; your ZIPs are never uploaded.</p><div class="export-grid"><label>Frame size<select id="exportSize"><option value="1920x1080">1920 × 1080 / landscape</option><option value="1080x1080">1080 × 1080 / square</option><option value="1080x1920">1080 × 1920 / portrait</option></select></label><label>Loop duration<select id="exportDuration"><option value="12">12 seconds</option><option value="18" selected>18 seconds</option><option value="24">24 seconds</option><option value="30">30 seconds</option><option value="60">60 seconds</option></select></label></div><div class="export-actions"><button id="closeExport">Close</button><button id="startExport">Render MP4</button></div><progress id="exportProgress" max="100" value="0"></progress><div id="exportStatus">Ready when your scenes are loaded.</div></section></div>
 <footer><div class="controls"><button id="play">Pause</button><button id="orbit">Spin on</button><button id="grab" aria-pressed="false">Grab: off</button><button id="undo" title="Ctrl / Cmd + Z" disabled>Undo</button><button id="redo" title="Ctrl / Cmd + Shift + Z" disabled>Redo</button><label>Detail <select id="detail"><option value="auto">Auto</option><option value="original">Original</option><option value="fine">Fine ×4</option></select></label><label>Layout <select id="layout"><option value="ring" selected>Ring</option><option value="helix">Helix</option><option value="arc">Arc</option><option value="sphere">Sphere</option><option value="grid">Grid</option><option value="space">Scatter</option><option value="line">Line</option></select></label><label>Orientation <select id="orientation"><option value="horizontal">Horizontal</option><option value="vertical">Vertical / front</option><option value="side">Vertical / side</option><option value="tilted">Tilted</option></select></label><label>Ring Ø <input id="ringDiameter" type="range" min="0" max="100" step=".1" value="12"><output id="ringDiameterValue">12.0</output></label><label>Dot scale <input id="dotSize" type="range" min=".25" max="3.5" step=".05" value="1"><output id="dotSizeValue">1.00×</output></label><label>Spin speed <input id="speed" type="range" min=".005" max=".16" step=".005" value=".07"></label><label>Playback <select id="rate"><option value="auto">Auto</option><option value="source">Source</option><option value="12">12 fps</option><option value="18">18 fps</option></select></label><label>Global depth <input id="depth" type="range" min="1.5" max="12" step=".1" value="4"></label><button id="reset">Reset view</button></div><span id="status">Awaiting ZIPs</span></footer>
 <script type="module">
 import * as THREE from 'three';import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
@@ -130,8 +130,8 @@ uniform sampler2D depthTex,colorTex;
 uniform int gridW,gridH,stride,cols,samples;
 uniform vec4 intr;
 uniform vec2 logRange;
-uniform float qmax,cutoff,sizeScale,pixelScale,worldScale;
-out vec3 vColor;flat out float valid;
+uniform float qmax,cutoff,baseCutoff,sizeScale,pixelScale,maxPointSize;
+out vec3 vColor;flat out float valid;flat out float revealAlpha;
 struct S {vec3 p;vec3 c;float z;};
 S readP(ivec2 xy){
  vec2 b=texelFetch(depthTex,xy,0).rg;float q=dot(floor(b*255.+.5),vec2(1.,256.));
@@ -147,9 +147,15 @@ void main(){
  if(sub==2){if(xy.y+stride>=gridH)valid=0.;else{S d=readP(xy+ivec2(0,stride));if(joined(p,d))p=mid(p,d);else valid=0.;}}
  if(sub==3){if(xy.x+stride>=gridW||xy.y+stride>=gridH)valid=0.;else{S r=readP(xy+ivec2(stride,0)),d=readP(xy+ivec2(0,stride)),q=readP(xy+ivec2(stride,stride));if(joined(p,r)&&joined(p,d)&&joined(r,q)&&joined(d,q))p=mid(mid(p,r),mid(d,q));else valid=0.;}}
  vec4 mv=modelViewMatrix*vec4(p.p,1.);gl_Position=valid>.5?projectionMatrix*mv:vec4(2.,2.,2.,1.);
- gl_PointSize=clamp(p.z/intr.x*pixelScale*worldScale/max(.01,-mv.z)*sizeScale*float(stride)*(samples==4?1.05:1.65),1.,32.);vColor=p.c;
+ // modelViewMatrix includes both cloud normalisation and each scene's scale.
+ float objectScale=length(modelViewMatrix[0].xyz);
+ float naturalSize=p.z/intr.x*pixelScale*objectScale/max(.01,-mv.z)*float(stride)*(samples==4?1.05:1.65);
+ // Apply the dot control after the base pixel floor, so the slider still
+ // changes sparse / distant points instead of silently saturating at 1px.
+ revealAlpha=p.z<=baseCutoff?1.:smoothstep(0.,.35,cutoff-p.z);
+ gl_PointSize=clamp(max(1.,naturalSize)*sizeScale*sqrt(max(.02,revealAlpha)),1.,maxPointSize);vColor=p.c;
 }`;
-const fragmentShader=`in vec3 vColor;flat in float valid;out vec4 outColor;void main(){if(valid<.5)discard;vec2 q=(gl_PointCoord-.5)*2.;float r=dot(q,q);if(r>1.)discard;outColor=vec4(vColor,1.-smoothstep(.58,1.,r));}`;
+const fragmentShader=`in vec3 vColor;flat in float valid;flat in float revealAlpha;out vec4 outColor;void main(){if(valid<.5||revealAlpha<.005)discard;vec2 q=(gl_PointCoord-.5)*2.;float r=dot(q,q);if(r>1.)discard;outColor=vec4(vColor,(1.-smoothstep(.58,1.,r))*revealAlpha);}`;
 
 const workerSource="function unpack(raw,w,h,count,qmax){\n const dv=new DataView(raw),u8=new Uint8Array(raw);\n if(raw.byteLength<8||u8[0]!==76||u8[1]!==65||u8[2]!==76||u8[3]!==49||dv.getUint32(4,true)!==count)throw Error('Invalid LAL1 chunk');\n const frames=[];let pos=8,prev=null,n=w*h;\n for(let i=0;i<count;i++){\n  if(pos+4+2*n>raw.byteLength)throw Error('Truncated depth');\n  const len=dv.getUint32(pos,true);pos+=4;if(len<1||pos+2*n+len>raw.byteLength)throw Error('Truncated colour');\n  const q=new Uint16Array(n);\n  for(let y=0;y<h;y++){let sum=0;for(let x=0;x<w;x++){const j=y*w+x;sum=(sum+dv.getUint16(pos+2*j,true))&65535;q[j]=(sum+(prev?prev[j]:0))&65535;if(q[j]>qmax)throw Error('Invalid depth sample');}}\n  pos+=2*n;frames.push({q,jpg:u8.slice(pos,pos+len)});pos+=len;prev=q;\n }\n if(pos!==raw.byteLength)throw Error('Trailing chunk bytes');return frames;\n}\nonmessage=async e=>{const {id,file,w,h,count,qmax}=e.data;try{\n const raw=await new Response(file.stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer();\n const frames=unpack(raw,w,h,count,qmax);postMessage({id,frames},frames.flatMap(f=>[f.q.buffer,f.jpg.buffer]));\n }catch(err){postMessage({id,error:String(err.message||err)});}};\n";
 let worker,jobId=0,jobs=new Map(),generation=0,states=[],selectedFiles=[],playing=true,orbit=true,exporting=false,loading=false,last=0,report=0,ticks=0,fps=60,cursor=0,chunkActive=0,bitmapActive=0,frameBudget=1800000;
@@ -167,7 +173,7 @@ function toBytes(q){return new Uint8Array(q.buffer,q.byteOffset,q.byteLength);}
 function visible(){return states.filter(s=>s.enabled&&!s.error);}
 function requestedDepth(s){return s.depthOverride??Number($('depth').value);}
 function getCutoff(s){return Math.max(requestedDepth(s),s.minDepth*1.1);}
-function updateSceneDepth(s){if(s.mat)s.mat.uniforms.cutoff.value=getCutoff(s);}
+function updateSceneDepth(s){if(s.mat){const base=getCutoff(s);s.mat.uniforms.baseCutoff.value=base;s.mat.uniforms.cutoff.value=base;}}
 function syncSceneDepth(s){if(!s.depthField)return;s.depthField.value=String(requestedDepth(s));syncNumber(s.depthField);if(s.depthMode){s.depthMode.textContent=s.depthOverride==null?'Global':'Custom · reset';s.depthMode.disabled=!!s.error||s.depthOverride==null;}}
 function estimateBounds(s,q){
  const m=s.m,{fx,fy,cx,cy}=m.intrinsics,d=m.depth_encoding,lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];let min=Infinity;for(let y=0;y<m.height;y+=4)for(let x=0;x<m.width;x+=4){const z=Math.exp(d.log_min+q[y*m.width+x]/d.quantization_max*(d.log_max-d.log_min));min=Math.min(min,z);}
@@ -219,13 +225,13 @@ function mount(s,q,rgb,referenceFrames=[q]){
  // Shared dummy geometry per dimensions; positions are calculated in the vertex shader.
  s.geo.setAttribute('position',geometryFor(n));
  s.d=texture(toBytes(q),m.width,m.height,THREE.RGFormat);s.c=texture(rgb,m.width,m.height,THREE.RGBAFormat);
- s.mat=new THREE.ShaderMaterial({glslVersion:THREE.GLSL3,vertexShader,fragmentShader,uniforms:{depthTex:{value:s.d},colorTex:{value:s.c},gridW:{value:m.width},gridH:{value:m.height},cols:{value:m.width},stride:{value:1},samples:{value:1},intr:{value:new THREE.Vector4(k.fx,k.fy,k.cx,k.cy)},logRange:{value:new THREE.Vector2(d.log_min,d.log_max)},qmax:{value:d.quantization_max},cutoff:{value:getCutoff(s)},sizeScale:{value:Number($('dotSize').value)*(s.dotScale||1)},pixelScale:{value:pixelScale()},worldScale:{value:scale}},transparent:false,depthWrite:true,depthTest:true,alphaToCoverage:true});
+ s.mat=new THREE.ShaderMaterial({glslVersion:THREE.GLSL3,vertexShader,fragmentShader,uniforms:{depthTex:{value:s.d},colorTex:{value:s.c},gridW:{value:m.width},gridH:{value:m.height},cols:{value:m.width},stride:{value:1},samples:{value:1},intr:{value:new THREE.Vector4(k.fx,k.fy,k.cx,k.cy)},logRange:{value:new THREE.Vector2(d.log_min,d.log_max)},qmax:{value:d.quantization_max},cutoff:{value:getCutoff(s)},baseCutoff:{value:getCutoff(s)},sizeScale:{value:Number($('dotSize').value)*(s.dotScale||1)},pixelScale:{value:pixelScale()},maxPointSize:{value:Math.min(64,renderer.getContext().getParameter(renderer.getContext().ALIASED_POINT_SIZE_RANGE)[1])}},transparent:false,depthWrite:true,depthTest:true,alphaToCoverage:true});
  s.cloud=new THREE.Points(s.geo,s.mat);s.cloud.frustumCulled=false;s.cloud.scale.setScalar(scale);s.cloud.position.set(...b.center.map(x=>-x*scale));s.root.add(s.cloud);s.root.visible=s.enabled;applyAlignment(s);applyDetail();layout(false);
 }
 // Composition history is independent of animation time and decoded GPU data.
 const undoStack=[],redoStack=[],historyLimit=100;
 let committed=null,restoring=false,wheelTimer=0;
-const historyControls=['layout','orientation','ringDiameter','dotSize','speed','depth','globalRX','globalRY','detail','rate','dragPlane','alignRing','depthReveal'];
+const historyControls=['layout','orientation','ringDiameter','dotSize','speed','depth','globalRX','globalRY','detail','rate','dragPlane','alignRing','depthReveal','revealWidth'];
 function snapshot(){
  return {controls:Object.fromEntries(historyControls.map(id=>[id,$(id).value])),manual:$('ringDiameter').dataset.manual||'',scenes:states.map(s=>({enabled:s.enabled,userScale:s.userScale||1,dotScale:s.dotScale||1,depthOverride:s.depthOverride??null,rx:s.rx||0,ry:s.ry||0,offset:s.offset?s.offset.toArray():[0,0,0]}))};
 }
@@ -274,7 +280,7 @@ function restoreEdit(saved){
    if(!s.offset)s.offset=new THREE.Vector3();s.offset.fromArray(v.offset);
    if(!s.enabled)s.chunks.clear();
    if(s.root)s.root.scale.setScalar(s.userScale);
-   applyDotScale(s);if(s.mat)s.mat.uniforms.cutoff.value=getCutoff(s);
+   applyDotScale(s);updateSceneDepth(s);
   });
   if(selectedScene&&!selectedScene.enabled)selectedScene=null;
   syncGlobalNumbers();applyDetail();layout(false);updateList();updateGrabUI();
@@ -332,9 +338,9 @@ function faceVerticalCaptures(){
  // The alignment centre is deliberately based on the static cutoff, not this
  // animated value, so pieces don't shift or bounce as more points appear.
  const revealInverse=new THREE.Quaternion(),revealFocus=new THREE.Vector3(),revealDown=new THREE.Vector3();
- function revealWeight(dot){const t=Math.max(0,Math.min(1,dot));return t*t*(3-2*t);}
+ function revealWeight(dot,width=85){const edge=Math.cos(width*Math.PI/180),peak=Math.cos(Math.min(18,width*.25)*Math.PI/180);const t=Math.max(0,Math.min(1,(dot-edge)/(peak-edge)));return t*t*t*(t*(6*t-15)+10);}
  function updateDepthReveal(){
-  const boost=Number($('depthReveal').value);
+  const boost=Number($('depthReveal').value),width=Number($('revealWidth').value);
   if(!boost){for(const s of states)if(s.mat&&s.root?.visible)updateSceneDepth(s);return;}
   revealInverse.copy(world.quaternion).multiply(layoutRoot.quaternion).invert();
   if(isVertical()){
@@ -353,7 +359,7 @@ function faceVerticalCaptures(){
    // Use the assigned phase when the ring diameter is zero. Manual
    // offsets do not change the sequence of reveals.
    const a=s.revealPhase||0,dot=r>1e-5?(x*fx+z*fz)/r:Math.sin(a)*fx+Math.cos(a)*fz;
-   s.mat.uniforms.cutoff.value=getCutoff(s)+boost*revealWeight(dot);
+   const base=getCutoff(s);s.mat.uniforms.baseCutoff.value=base;s.mat.uniforms.cutoff.value=base+boost*revealWeight(dot,width);
   }
  }
  function setSpin(angle){
@@ -560,11 +566,12 @@ async function renderMp4Loop(){
   if(camera.aspect<oldAspect){const factor=oldAspect/camera.aspect;camera.position.copy(oldTarget).add(oldPosition.clone().sub(oldTarget).multiplyScalar(factor));}
   camera.lookAt(oldTarget);camera.updateMatrixWorld();
   for(const sceneState of active)await ensureFrameReady(sceneState,0);
-  for(const s of active)if(s.mat)s.mat.uniforms.pixelScale.value=pixelScale();
+  for(const s of active)if(s.mat){s.mat.uniforms.pixelScale.value=pixelScale();applyDotScale(s);}
   setSpin(oldRotation);
   for(let frame=0;frame<total;frame++){
    const timestamp=frame/fps,angle=(frame/total)*Math.PI*2;
    await Promise.all(active.map(s=>ensureFrameReady(s,Math.floor(timestamp*s.m.fps)%s.m.num_frames)));
+   for(const s of active)if(s.mat)applyDotScale(s);
    setSpin(oldRotation+angle);updateDepthReveal();renderer.render(scene,camera);
    recordCtx.drawImage(renderer.domElement,0,0,width,height);
    await videoSource.add(timestamp,1/fps,{keyFrame:frame===0});
@@ -777,7 +784,7 @@ function animate(now){requestAnimationFrame(animate);if(document.hidden)return;c
  if($('detail').value==='auto'&&n>1){const nextBudget=fps<24?Math.max(350000,frameBudget*.8):fps>48?Math.min(1800000,frameBudget*1.08):frameBudget;if(nextBudget!==frameBudget){frameBudget=nextBudget;applyDetail();}}
  }}
 for(const range of document.querySelectorAll('footer input[type=range], .transform-tools input[type=range]'))addNumber(range);
-$('depthReveal').oninput=updateDepthReveal;
+$('depthReveal').oninput=updateDepthReveal;$('revealWidth').oninput=updateDepthReveal;
 $('undo').onclick=undoEdit;$('redo').onclick=redoEdit;
 document.addEventListener('pointerdown',()=>{if(wheelTimer)commitEdit();},true);
 document.addEventListener('keydown',event=>{
