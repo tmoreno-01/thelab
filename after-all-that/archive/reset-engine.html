@@ -350,7 +350,7 @@ function advanceFronts(){
 // Tiny echoes of the earlier displacement language. The source is always a real,
 // currently visible contour; the effect is temporary, coherent and spatially isolated.
 function beginSlip(){
- if(![124,125,126,127,128,129,130,131,132,136,137,138].includes(testNumber)||age<nextSlip||microSlips.length)return;
+ if(resetStudy||![124,125,126,127,128,129,130,131,132,136,137,138].includes(testNumber)||age<nextSlip||microSlips.length)return;
  const cfg=testNumber>=130
   ?testNumber===130?{gap:[13,20],length:[5,7],duration:[1.05,1.5],twoCell:.03}
    :testNumber===131?{gap:[10,16],length:[6,8],duration:[.95,1.4],twoCell:.08}
@@ -470,7 +470,7 @@ function beginFeedbackField(){
  territoryVisits[tile]=age;territoryBirths++;feedbackEvents++;
 }
 function updateFeedbackFields(dt){
- if(testNumber<136)return;
+ if(resetStudy||testNumber<136)return;
  feedbackFields=feedbackFields.filter(f=>age<f.start+f.duration);
  if(age>=nextFeedback){beginFeedbackField();if(age<4&&gpu&&feedbackFields.length<Math.ceil(feedbackProfile.slots/2))nextFeedback=age+.18;}
  feedbackActive=0;
