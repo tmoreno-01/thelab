@@ -106,15 +106,16 @@ footer .controls input.precise-number{width:60px;min-width:0;flex:0 0 60px;paddi
 .offset-fields label{display:flex;flex-direction:column;align-items:stretch;gap:4px;font-size:10px;color:#aaa;min-width:0}
 .offset-fields input.precise-number{width:100%;max-width:none;flex:auto}
 #undo:disabled,#redo:disabled{opacity:.4}
+.item-scale .depth-mode{flex:0 0 auto;white-space:nowrap;font-size:9px;padding:4px 5px;border:1px solid #444;border-radius:4px;background:#151515;text-align:center}.item-scale .depth-mode:disabled{opacity:.55;border-color:transparent}.item-scale:has(.depth-mode){gap:5px;padding-left:0}.item-scale:has(.depth-mode) input.precise-number{width:52px;flex:0 0 52px}
 </style>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.157.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.157.0/examples/jsm/"}}</script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"></head>
 <body>
 <header><span><a class="lab-brand" href="../"><img src="../media/lifeafterlogic-mark.svg" width="27" height="27" alt=""><span>lab</span></a> &nbsp; / &nbsp; 4D Splat Studio</span><div class="controls"><label>Quality <select id="tier"><option value="desktop">Desktop</option><option value="mobile">Mobile</option><option value="original">Full-resolution originals</option></select></label><label class="pick" for="file">Open folder</label><label class="pick" for="zipfiles">Open ZIPs</label><button id="showlist">Scene controls</button><button id="exportOpen">Render MP4 loop</button></div></header>
 <input id="file" type="file" webkitdirectory multiple><input id="zipfiles" type="file" accept=".zip" multiple>
 <div id="intro"><h1>4D Splat Studio</h1><p>Load multiple original full_vda ZIPs together. Arrange animated reconstructions as rings, helices, arcs, spheres, grids or loose spatial studies. Adjust each scene and its individual point size, then render a 360° MP4 loop locally.</p><div><label class="pick" for="file">Choose collection folder</label> <label class="pick" for="zipfiles">Choose ZIP files</label></div><div id="message" role="status"></div></div>
-<aside id="panel" hidden><div class="controls"><button id="all">Show all</button><button id="none">Hide all</button></div><div class="transform-tools"><strong>All splats / rotation</strong><label class="item-scale">X <input id="globalRX" type="range" min="-180" max="180" value="0" step="1"><output id="globalRXValue">0°</output></label><label class="item-scale">Y <input id="globalRY" type="range" min="-180" max="180" value="0" step="1"><output id="globalRYValue">0°</output></label><div class="controls"><button id="resetTransforms">Reset transforms</button><label>Align ring <select id="alignRing"><option value="on" selected>On</option><option value="off">Off</option></select></label><label>Drag plane <select id="dragPlane"><option value="screen">Screen</option><option value="xy">World XY</option><option value="xz">World XZ</option><option value="yz">World YZ</option></select></label></div><p id="grabHint">Grab off · orbit the camera normally.</p></div><p>Scale, dots and rotation are independent for each scene. Use Move to select a splat, then drag in the viewport. Shift-drag or scroll in Grab mode changes depth. Click a scene name to isolate it.</p><div id="list"></div><div id="errors" role="status"></div></aside>
+<aside id="panel" hidden><div class="controls"><button id="all">Show all</button><button id="none">Hide all</button></div><div class="transform-tools"><strong>All splats / rotation</strong><label class="item-scale">X <input id="globalRX" type="range" min="-180" max="180" value="0" step="1"><output id="globalRXValue">0°</output></label><label class="item-scale">Y <input id="globalRY" type="range" min="-180" max="180" value="0" step="1"><output id="globalRYValue">0°</output></label><div class="controls"><button id="resetTransforms">Reset transforms</button><label>Align ring <select id="alignRing"><option value="on" selected>On</option><option value="off">Off</option></select></label><label>Drag plane <select id="dragPlane"><option value="screen">Screen</option><option value="xy">World XY</option><option value="xz">World XZ</option><option value="yz">World YZ</option></select></label></div><p id="grabHint">Grab off · orbit the camera normally.</p></div><p>Scale, dots, depth and rotation are independent for each scene. Adjust a scene's Depth to override the global cutoff; Custom · reset restores the global setting. Use Move to select a splat, then drag in the viewport. Shift-drag or scroll in Grab mode changes depth. Click a scene name to isolate it.</p><div id="list"></div><div id="errors" role="status"></div></aside>
 <div id="exportDialog" hidden><section id="exportCard"><h2>Render a 360° loop</h2><p>Your current composition completes one full revolution on a pure black background, without UI. Individual positions and rotations are preserved. Every enabled 4D sequence plays at its source frame rate. Source motion wraps at the end of each clip, so a perfectly seamless motion loop depends on the clip's first and last frames matching. MP4 encoding happens locally; your ZIPs are never uploaded.</p><div class="export-grid"><label>Frame size<select id="exportSize"><option value="1920x1080">1920 × 1080 / landscape</option><option value="1080x1080">1080 × 1080 / square</option><option value="1080x1920">1080 × 1920 / portrait</option></select></label><label>Loop duration<select id="exportDuration"><option value="12">12 seconds</option><option value="18" selected>18 seconds</option><option value="24">24 seconds</option><option value="30">30 seconds</option></select></label></div><div class="export-actions"><button id="closeExport">Close</button><button id="startExport">Render MP4</button></div><progress id="exportProgress" max="100" value="0"></progress><div id="exportStatus">Ready when your scenes are loaded.</div></section></div>
-<footer><div class="controls"><button id="play">Pause</button><button id="orbit">Spin on</button><button id="grab" aria-pressed="false">Grab: off</button><button id="undo" title="Ctrl / Cmd + Z" disabled>Undo</button><button id="redo" title="Ctrl / Cmd + Shift + Z" disabled>Redo</button><label>Detail <select id="detail"><option value="auto">Auto</option><option value="original">Original</option><option value="fine">Fine ×4</option></select></label><label>Layout <select id="layout"><option value="ring" selected>Ring</option><option value="helix">Helix</option><option value="arc">Arc</option><option value="sphere">Sphere</option><option value="grid">Grid</option><option value="space">Scatter</option><option value="line">Line</option></select></label><label>Orientation <select id="orientation"><option value="horizontal">Horizontal</option><option value="vertical">Vertical / front</option><option value="side">Vertical / side</option><option value="tilted">Tilted</option></select></label><label>Ring Ø <input id="ringDiameter" type="range" min="0" max="100" step=".1" value="12"><output id="ringDiameterValue">12.0</output></label><label>Dot scale <input id="dotSize" type="range" min=".25" max="3.5" step=".05" value="1"><output id="dotSizeValue">1.00×</output></label><label>Spin speed <input id="speed" type="range" min=".005" max=".16" step=".005" value=".07"></label><label>Playback <select id="rate"><option value="auto">Auto</option><option value="source">Source</option><option value="12">12 fps</option><option value="18">18 fps</option></select></label><label>Depth <input id="depth" type="range" min="1.5" max="12" step=".1" value="4"></label><button id="reset">Reset view</button></div><span id="status">Awaiting ZIPs</span></footer>
+<footer><div class="controls"><button id="play">Pause</button><button id="orbit">Spin on</button><button id="grab" aria-pressed="false">Grab: off</button><button id="undo" title="Ctrl / Cmd + Z" disabled>Undo</button><button id="redo" title="Ctrl / Cmd + Shift + Z" disabled>Redo</button><label>Detail <select id="detail"><option value="auto">Auto</option><option value="original">Original</option><option value="fine">Fine ×4</option></select></label><label>Layout <select id="layout"><option value="ring" selected>Ring</option><option value="helix">Helix</option><option value="arc">Arc</option><option value="sphere">Sphere</option><option value="grid">Grid</option><option value="space">Scatter</option><option value="line">Line</option></select></label><label>Orientation <select id="orientation"><option value="horizontal">Horizontal</option><option value="vertical">Vertical / front</option><option value="side">Vertical / side</option><option value="tilted">Tilted</option></select></label><label>Ring Ø <input id="ringDiameter" type="range" min="0" max="100" step=".1" value="12"><output id="ringDiameterValue">12.0</output></label><label>Dot scale <input id="dotSize" type="range" min=".25" max="3.5" step=".05" value="1"><output id="dotSizeValue">1.00×</output></label><label>Spin speed <input id="speed" type="range" min=".005" max=".16" step=".005" value=".07"></label><label>Playback <select id="rate"><option value="auto">Auto</option><option value="source">Source</option><option value="12">12 fps</option><option value="18">18 fps</option></select></label><label>Global depth <input id="depth" type="range" min="1.5" max="12" step=".1" value="4"></label><button id="reset">Reset view</button></div><span id="status">Awaiting ZIPs</span></footer>
 <script type="module">
 import * as THREE from 'three';import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const $=id=>document.getElementById(id);
@@ -164,7 +165,10 @@ function fail(s,e){if(s.gen!==generation)return;s.error=String(e.message||e);s.e
 function texture(data,w,h,format){const t=new THREE.DataTexture(data,w,h,format,THREE.UnsignedByteType);t.minFilter=t.magFilter=THREE.NearestFilter;t.generateMipmaps=false;t.unpackAlignment=1;t.needsUpdate=true;return t;}
 function toBytes(q){return new Uint8Array(q.buffer,q.byteOffset,q.byteLength);}
 function visible(){return states.filter(s=>s.enabled&&!s.error);}
-function getCutoff(s){return Math.max(Number($('depth').value),s.minDepth*1.1);}
+function requestedDepth(s){return s.depthOverride??Number($('depth').value);}
+function getCutoff(s){return Math.max(requestedDepth(s),s.minDepth*1.1);}
+function updateSceneDepth(s){if(s.mat)s.mat.uniforms.cutoff.value=getCutoff(s);}
+function syncSceneDepth(s){if(!s.depthField)return;s.depthField.value=String(requestedDepth(s));syncNumber(s.depthField);if(s.depthMode){s.depthMode.textContent=s.depthOverride==null?'Global':'Custom · reset';s.depthMode.disabled=!!s.error||s.depthOverride==null;}}
 function estimateBounds(s,q){
  const m=s.m,{fx,fy,cx,cy}=m.intrinsics,d=m.depth_encoding,lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];let min=Infinity;for(let y=0;y<m.height;y+=4)for(let x=0;x<m.width;x+=4){const z=Math.exp(d.log_min+q[y*m.width+x]/d.quantization_max*(d.log_max-d.log_min));min=Math.min(min,z);}
  s.minDepth=min;const cut=getCutoff(s);
@@ -223,7 +227,7 @@ const undoStack=[],redoStack=[],historyLimit=100;
 let committed=null,restoring=false,wheelTimer=0;
 const historyControls=['layout','orientation','ringDiameter','dotSize','speed','depth','globalRX','globalRY','detail','rate','dragPlane','alignRing'];
 function snapshot(){
- return {controls:Object.fromEntries(historyControls.map(id=>[id,$(id).value])),manual:$('ringDiameter').dataset.manual||'',scenes:states.map(s=>({enabled:s.enabled,userScale:s.userScale||1,dotScale:s.dotScale||1,rx:s.rx||0,ry:s.ry||0,offset:s.offset?s.offset.toArray():[0,0,0]}))};
+ return {controls:Object.fromEntries(historyControls.map(id=>[id,$(id).value])),manual:$('ringDiameter').dataset.manual||'',scenes:states.map(s=>({enabled:s.enabled,userScale:s.userScale||1,dotScale:s.dotScale||1,depthOverride:s.depthOverride??null,rx:s.rx||0,ry:s.ry||0,offset:s.offset?s.offset.toArray():[0,0,0]}))};
 }
 function updateHistoryUI(){$('undo').disabled=!undoStack.length||exporting||loading;$('redo').disabled=!redoStack.length||exporting||loading;}
 function commitEdit(){
@@ -266,7 +270,7 @@ function restoreEdit(saved){
   for(const [id,value] of Object.entries(saved.controls))$(id).value=value;
   if(saved.manual)$('ringDiameter').dataset.manual=saved.manual;else delete $('ringDiameter').dataset.manual;
   states.forEach((s,i)=>{
-   const v=saved.scenes[i];s.enabled=v.enabled&&!s.error;s.userScale=v.userScale;s.dotScale=v.dotScale;s.rx=v.rx;s.ry=v.ry;
+   const v=saved.scenes[i];s.enabled=v.enabled&&!s.error;s.userScale=v.userScale;s.dotScale=v.dotScale;s.depthOverride=v.depthOverride??null;s.rx=v.rx;s.ry=v.ry;
    if(!s.offset)s.offset=new THREE.Vector3();s.offset.fromArray(v.offset);
    if(!s.enabled)s.chunks.clear();
    if(s.root)s.root.scale.setScalar(s.userScale);
@@ -387,6 +391,15 @@ function updateList(){
   const dotValue=document.createElement('output');dotValue.textContent=(s.dotScale||1).toFixed(2)+'×';
   dotSlider.oninput=()=>{s.dotScale=Number(dotSlider.value);dotValue.textContent=s.dotScale.toFixed(2)+'×';applyDotScale(s);};
   dotRow.append(dotCaption,dotSlider,dotValue);
+  const depthRow=document.createElement('label');depthRow.className='item-scale';
+  const depthCaption=document.createElement('span');depthCaption.textContent='Depth';
+  const depthSlider=document.createElement('input');depthSlider.type='range';depthSlider.min='.1';depthSlider.max='12';depthSlider.step='.1';depthSlider.value=String(requestedDepth(s));depthSlider.disabled=!!s.error;depthSlider.setAttribute('aria-label',s.name+' depth cutoff');s.depthField=depthSlider;
+  const depthValue=document.createElement('output');depthValue.textContent=depthSlider.value;
+  const depthMode=document.createElement('button');depthMode.type='button';depthMode.className='depth-mode';depthMode.title='Return this splat to the global depth cutoff';s.depthMode=depthMode;
+  depthSlider.oninput=()=>{s.depthOverride=Number(depthSlider.value);depthValue.textContent=depthSlider.value;updateSceneDepth(s);depthMode.textContent='Custom · reset';depthMode.disabled=false;};
+  depthSlider.onchange=()=>{applyAlignment(s);commitEdit();};
+  depthMode.onclick=e=>{e.preventDefault();s.depthOverride=null;syncSceneDepth(s);depthValue.textContent=depthSlider.value;updateSceneDepth(s);applyAlignment(s);commitEdit();};
+  depthRow.append(depthCaption,depthSlider,depthValue,depthMode);syncSceneDepth(s);
   function rotationRow(axis){
    const key=axis==='X'?'rx':'ry',label=document.createElement('label');label.className='item-scale';
    const name=document.createElement('span');name.textContent='Rotate '+axis;
@@ -406,7 +419,7 @@ function updateList(){
    input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();input.blur();}};
    s.offsetFields.push(input);label.append(input);offsets.append(label);
   }
-  row.append(top,scaleRow,dotRow,rotationRow('X'),rotationRow('Y'),offsets,reset);list.append(row);
+  row.append(top,scaleRow,dotRow,depthRow,rotationRow('X'),rotationRow('Y'),offsets,reset);list.append(row);
   for(const range of row.querySelectorAll('input[type=range]'))addNumber(range);
  }
  $('errors').textContent=states.filter(s=>s.error).map(s=>s.name+': '+s.error).join('\n');
@@ -716,7 +729,7 @@ $('layout').onchange=()=>{layout();commitEdit();};$('orientation').onchange=()=>
 $('ringDiameter').oninput=()=>{$('ringDiameter').dataset.manual='1';$('ringDiameterValue').textContent=Number($('ringDiameter').value).toFixed(1);layout(false);};
 $('dotSize').oninput=()=>{$('dotSizeValue').textContent=Number($('dotSize').value).toFixed(2)+'×';for(const s of states)applyDotScale(s);};
 // Per-scene scale is controlled in the scene list.
-$('depth').oninput=()=>{for(const s of states)if(s.mat)s.mat.uniforms.cutoff.value=getCutoff(s);};
+$('depth').oninput=()=>{for(const s of states)if(s.depthOverride==null){updateSceneDepth(s);syncSceneDepth(s);}};
 $('depth').onchange=()=>{layout(false);commitEdit();};
 addEventListener('resize',()=>{if(exporting)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);for(const s of states)if(s.mat)s.mat.uniforms.pixelScale.value=pixelScale();});
 document.addEventListener('visibilitychange',()=>last=0);
