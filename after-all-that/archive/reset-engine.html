@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lifeafterlogic / Structural Evolution</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efeee9}canvas{display:block;width:100%;height:100%;image-rendering:pixelated}#err{position:fixed;left:10px;bottom:10px;color:#777;font:10px monospace;pointer-events:none}</style></head><body><canvas id="art"></canvas><div id="err"></div><script>
 "use strict";
-const q=new URLSearchParams(location.search),study=q.get('study')||'pressure',requestedStudy=Number(study),resetStudy=requestedStudy>=148&&requestedStudy<=150,testNumber=({139:136,140:137,141:138,142:136,143:137,144:138,145:136,146:137,147:138,148:136,149:137,150:138}[requestedStudy]||requestedStudy),mode=study==='reorganisation'?1:(study==='fault'||[124,125,126,127,128,129,130,131,132,136,137,138].includes(testNumber))?2:0;
-document.title='lifeafterlogic / reset / '+({148:'148 — Signal Crawl',149:'149 — Distributed Intelligence',150:'150 — Restless Matter',139:'139 — Local Feedback / Optimised',140:'140 — Chromatic Feedback / Optimised',141:'141 — Unstable Feedback / Optimised',142:'142 — Recursive Tissue',143:'143 — Mutable Syntax',144:'144 — Unstable Ecology',145:'145 — Distributed Instinct',146:'146 — Mutual Disturbance',147:'147 — Restless Matter'}[requestedStudy]||({124:'124 — Slip Memory',125:'125 — Phase Slip',126:'126 — Residual Current',127:'127 — Local Current',128:'128 — Counterflow',129:'129 — Phase Inheritance',130:'130 — Local Matter',131:'131 — Unstable Matter',132:'132 — Phase Turbulence',136:'136 — Local Feedback',137:'137 — Chromatic Feedback',138:'138 — Unstable Feedback'}[testNumber]||['121 — Pressure Memory','122 — Reorganisation','123 — Living Fault'][mode]));
+const q=new URLSearchParams(location.search),study=q.get('study')||'pressure',requestedStudy=Number(study),resetStudy=requestedStudy>=148&&requestedStudy<=153,testNumber=({139:136,140:137,141:138,142:136,143:137,144:138,145:136,146:137,147:138,148:136,149:137,150:138,151:136,152:137,153:138}[requestedStudy]||requestedStudy),mode=study==='reorganisation'?1:(study==='fault'||[124,125,126,127,128,129,130,131,132,136,137,138].includes(testNumber))?2:0;
+document.title='lifeafterlogic / reset / '+({148:'148 — Signal Crawl',149:'149 — Distributed Intelligence',150:'150 — Restless Matter',151:'151 — Chromatic Wake',152:'152 — Inherited Current',153:'153 — Structural Bloom',139:'139 — Local Feedback / Optimised',140:'140 — Chromatic Feedback / Optimised',141:'141 — Unstable Feedback / Optimised',142:'142 — Recursive Tissue',143:'143 — Mutable Syntax',144:'144 — Unstable Ecology',145:'145 — Distributed Instinct',146:'146 — Mutual Disturbance',147:'147 — Restless Matter'}[requestedStudy]||({124:'124 — Slip Memory',125:'125 — Phase Slip',126:'126 — Residual Current',127:'127 — Local Current',128:'128 — Counterflow',129:'129 — Phase Inheritance',130:'130 — Local Matter',131:'131 — Unstable Matter',132:'132 — Phase Turbulence',136:'136 — Local Feedback',137:'137 — Chromatic Feedback',138:'138 — Unstable Feedback'}[testNumber]||['121 — Pressure Memory','122 — Reorganisation','123 — Living Fault'][mode]));
 const canvas=document.getElementById('art'),ctx=canvas.getContext('2d',{alpha:false}),small=document.createElement('canvas'),sc=small.getContext('2d',{alpha:false});
 const palette=[[239,238,232],[19,20,21],[41,75,204],[201,43,30],[201,140,22],[14,119,109],[91,161,199],[222,94,82],[194,203,83],[145,112,181],[76,150,133],[216,169,104]];
 const resetFadePalette=Array.from({length:12},()=>[[],[]]);
@@ -16,12 +16,18 @@ for(let i=0;i<=8192;i++)waveTable[i]=Math.sin(i/waveFactor);
 function waveSin(v){let t=v*waveFactor,b=Math.floor(t),i=b&8191;return waveTable[i]+(waveTable[i+1]-waveTable[i])*(t-b);}
 function waveCos(v){return waveSin(v+Math.PI*.5);}
 function fastHypot(x,y){return Math.sqrt(x*x+y*y);}
-const mapInterval=resetStudy?(requestedStudy===148?.12:requestedStudy===149?.10:.085):requestedStudy===145?.083:requestedStudy===146?.075:.066;
+const mapInterval=resetStudy?([148,151].includes(requestedStudy)?.12:[149,152].includes(requestedStudy)?.10:.085):requestedStudy===145?.083:requestedStudy===146?.075:.066;
 const resetProfile=requestedStudy===148
- ?{agents:10,trail:19,cell:[3,5],step:[.085,.145],modes:6,modeTime:[2.8,5.2],trailLife:1.65,incidentGap:[2.0,3.0],incidentCap:2,incidentRadius:[5,9],incidentLife:[1.4,2.6],interaction:.08,feedbackArea:.055,colours:[2,6,10],colourCycle:24,colourLife:8.5,colourCap:.032}
+ ?{agents:10,trail:19,cell:[3,5],step:[.085,.145],modes:6,modeTime:[2.8,5.2],trailLife:1.65,incidentGap:[2.0,3.0],incidentCap:2,incidentRadius:[5,9],incidentLife:[1.4,2.6],interaction:.08,feedbackArea:.055,colours:[2,6,10],colourCycle:24,colourLife:8.5,colourCap:.032,colourShoulder:1}
  :requestedStudy===149
-  ?{agents:14,trail:23,cell:[3,5],step:[.072,.132],modes:8,modeTime:[2.1,4.3],trailLife:1.85,incidentGap:[1.25,2.05],incidentCap:3,incidentRadius:[5,10],incidentLife:[1.6,3.0],interaction:.18,feedbackArea:.075,colours:[3,7,9],colourCycle:21,colourLife:10,colourCap:.045}
-  :{agents:17,trail:27,cell:[2,5],step:[.058,.112],modes:8,modeTime:[1.65,3.7],trailLife:2.05,incidentGap:[.82,1.48],incidentCap:4,incidentRadius:[6,12],incidentLife:[1.8,3.4],interaction:.30,feedbackArea:.10,colours:[4,8,5],colourCycle:18,colourLife:12,colourCap:.055};
+  ?{agents:14,trail:23,cell:[3,5],step:[.072,.132],modes:8,modeTime:[2.1,4.3],trailLife:1.85,incidentGap:[1.25,2.05],incidentCap:3,incidentRadius:[5,10],incidentLife:[1.6,3.0],interaction:.18,feedbackArea:.075,colours:[3,7,9],colourCycle:21,colourLife:10,colourCap:.045,colourShoulder:1}
+  :requestedStudy===150
+   ?{agents:17,trail:27,cell:[2,5],step:[.058,.112],modes:8,modeTime:[1.65,3.7],trailLife:2.05,incidentGap:[.82,1.48],incidentCap:4,incidentRadius:[6,12],incidentLife:[1.8,3.4],interaction:.30,feedbackArea:.10,colours:[4,8,5],colourCycle:18,colourLife:12,colourCap:.055,colourShoulder:1}
+   :requestedStudy===151
+    ?{agents:10,trail:20,cell:[3,5],step:[.085,.145],modes:6,modeTime:[2.8,5.2],trailLife:1.7,incidentGap:[2.2,3.2],incidentCap:2,incidentRadius:[5,9],incidentLife:[1.4,2.6],interaction:.08,feedbackArea:.055,colours:[2,6,10],colourCycle:30,colourLife:6.5,colourCap:.025,colourShoulder:0}
+    :requestedStudy===152
+     ?{agents:14,trail:24,cell:[3,5],step:[.072,.132],modes:8,modeTime:[2.1,4.3],trailLife:1.9,incidentGap:[1.3,2.1],incidentCap:3,incidentRadius:[5,10],incidentLife:[1.6,3.0],interaction:.20,feedbackArea:.075,colours:[3,7,9],colourCycle:28,colourLife:10.5,colourCap:.04,colourShoulder:1,inheritNearby:true}
+     :{agents:17,trail:28,cell:[2,5],step:[.058,.112],modes:8,modeTime:[1.65,3.7],trailLife:2.1,incidentGap:[.9,1.55],incidentCap:4,incidentRadius:[6,12],incidentLife:[1.8,3.4],interaction:.32,feedbackArea:.10,colours:[4,8,5],colourCycle:24,colourLife:14,colourCap:.065,colourShoulder:2};
 let pendingPlan=null,motionOps=null,motionOpCount=0,gpu=null,gpuFailure='',gpuSlots=0,gpuTick=0,gpuCoverage=0,territoryBirths=0;let territoryVisits=new Float32Array(48),ink=null,inkOwner=null,inkSerial=0,inkNext=0,inkCells=0,inkGrown=0,inkRetired=0,inkWhite=0,inkBlack=0;
 const pigmentFamilies=[[2,6,10],[3,7,9],[4,8,5],[9,6,2],[5,10,8]];
 const palettePacked=palette.map(c=>(c[0]|(c[1]<<8)|(c[2]<<16)|(255<<24))>>>0);
@@ -921,7 +927,18 @@ function resetMarkHeat(x,y,cell,mode){
   resetHeat[i]=Math.min(255,resetHeat[i]+add);
  }
 }
-function resetAgentColour(agent){return resetProfile.colours[(agent.id+Math.floor(agent.steps/resetProfile.colourCycle))%resetProfile.colours.length];}
+function resetAgentColour(agent){
+ if(resetProfile.inheritNearby&&resetColour){
+  let inherited=0,best=25;
+  for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){
+   const x=agent.x+dx,y=agent.y+dy;if(x<1||x>=W-1||y<1||y>=H-1)continue;
+   const colour=resetColour[y*W+x],d=dx*dx+dy*dy;
+   if(colour&&d<best){best=d;inherited=colour;}
+  }
+  if(inherited)return inherited;
+ }
+ return resetProfile.colours[(agent.id+Math.floor(agent.steps/resetProfile.colourCycle))%resetProfile.colours.length];
+}
 function resetBeginIncident(){
  resetNextIncident=age+range(resetProfile.incidentGap[0],resetProfile.incidentGap[1]);
  resetIncidents=resetIncidents.filter(e=>age<e.born+e.life);
@@ -1010,7 +1027,8 @@ function resetWritePixel(x,y,sx,sy,weight,salt,colour,perpX,perpY){
   if(inherited)resetColourTransfers++;
   // A one-cell shoulder keeps the chromatic trace attached to the same
   // structural band instead of producing isolated coloured pixels.
-  if(weight>.58&&perpX!==undefined)for(const side of [-1,1]){
+  if(weight>.58&&perpX!==undefined)for(let side=-resetProfile.colourShoulder;side<=resetProfile.colourShoulder;side++){
+   if(!side)continue;
    const hx=x+perpX*side,hy=y+perpY*side;
    if(hx<1||hx>=W-1||hy<1||hy>=H-1)continue;
    const hi=hy*W+hx;
