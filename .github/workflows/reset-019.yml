@@ -46,7 +46,18 @@ jobs:
                 await p.close();
               }
               const p=await b.newPage({viewport:{width:1200,height:800}});
+              let failedOnce=false;
+              await p.route('**/autogenesis.html',async route=>{
+                if(!failedOnce){failedOnce=true;await route.fulfill({status:500,contentType:'text/html',body:'<html><body>Temporary hosting error</body></html>'});}
+                else await route.continue();
+              });
               await p.goto(root+'index.html#round-7');
+              await p.waitForFunction(()=>[...document.querySelectorAll('.tile iframe')].every(f=>{try{return f.contentWindow.__resetDiagnostics?.().study===19&&!f.hasAttribute('data-pending')}catch{return false}}),null,{timeout:30000});
+              assert.equal(failedOnce,true);
+              const seedBefore=await p.locator('.tile').first().getAttribute('data-seed');
+              await p.locator('.tile .reseed').first().click();
+              assert.notEqual(await p.locator('.tile').first().getAttribute('data-seed'),seedBefore);
+              await p.waitForFunction(()=>{let tile=document.querySelector('.tile'),f=tile.querySelector('iframe');return !f.hasAttribute('data-pending')&&String(f.contentWindow.__resetDiagnostics?.().seed)===tile.dataset.seed},null,{timeout:30000});
               assert.deepEqual(await p.locator('.tile').evaluateAll(t=>t.map(e=>e.dataset.number)),['19','19','19']);
               await p.locator('[data-round="5"]').click();
               assert.deepEqual(await p.locator('.tile').evaluateAll(t=>t.map(e=>e.dataset.number)),['16','17','18']);
