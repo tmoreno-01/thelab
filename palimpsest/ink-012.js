@@ -190,7 +190,7 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
   originSeed=s>>>0;frame=0;reveal=0;microAt=0;marks=0;births=0;readyState=false;images=[];ctx.clearRect(0,0,N,H);
   onStatus("012 / composing a new specimen plate");
   const layers=build(originSeed);
-  return Promise.all(layers.map(loadSvg)).then(loaded=>{images=loaded;readyState=true;ctx.clearRect(0,0,N,H);ctx.drawImage(images[0],0,0,N,H);reveal=1;marks=1;onStatus("012 / specimen plate ready");}).catch(err=>{onStatus("012 / "+err.message);throw err;});
+  return Promise.all(layers.map(loadSvg)).then(loaded=>{images=loaded;readyState=true;ctx.clearRect(0,0,N,H);ctx.drawImage(images[0],0,0,N,H);reveal=1;marks=1;if(root.matchMedia&&root.matchMedia("(prefers-reduced-motion: reduce)").matches){for(let i=1;i<7;i++)ctx.drawImage(images[i],0,0,N,H);for(let i=7;i<9;i++)ctx.drawImage(images[i],0,0,N,H);reveal=7;microAt=2;births=2;marks=1032;}onStatus("012 / specimen plate ready");}).catch(err=>{onStatus("012 / "+err.message);throw err;});
  }
  ready=prepare(originSeed);
  function step(){
