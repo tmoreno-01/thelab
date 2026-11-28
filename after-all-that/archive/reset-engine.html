@@ -30,10 +30,10 @@ const resetProfile=requestedStudy===148
      :requestedStudy===153
       ?{agents:17,trail:28,cell:[2,5],step:[.058,.112],modes:8,modeTime:[1.65,3.7],trailLife:2.1,incidentGap:[.9,1.55],incidentCap:4,incidentRadius:[6,12],incidentLife:[1.8,3.4],interaction:.32,feedbackArea:.10,colours:[4,8,5],colourCycle:24,colourLife:14,colourCap:.065,colourShoulder:2}
       :requestedStudy===154
-       ?{agents:14,trail:23,cell:[3,5],step:[.075,.135],modes:10,modeTime:[2.3,4.8],trailLife:1.8,incidentGap:[1.65,2.5],incidentCap:3,incidentRadius:[5,8],incidentLife:[1.3,2.4],interaction:.12,feedbackArea:.085,colours:[2,6,10],colourCycle:34,colourLife:5.8,colourCap:.006,colourShoulder:0,regionCols:12,regionRows:8,regionMemory:4}
+       ?{agents:14,trail:23,cell:[3,5],step:[.075,.135],modes:10,modeTime:[2.3,4.8],trailLife:1.8,incidentGap:[1.65,2.5],incidentCap:3,incidentRadius:[5,8],incidentLife:[1.3,2.4],interaction:.12,feedbackArea:.085,colours:[2,6,10],colourCycle:34,colourLife:5.8,colourCap:.0035,colourShoulder:0,regionCols:12,regionRows:8,regionMemory:4}
        :requestedStudy===155
-        ?{agents:18,trail:27,cell:[2,5],step:[.065,.12],modes:10,modeTime:[1.9,4.1],trailLife:1.95,incidentGap:[1.05,1.75],incidentCap:4,incidentRadius:[5,10],incidentLife:[1.5,2.8],interaction:.22,feedbackArea:.105,colours:[3,7,9],colourCycle:30,colourLife:7,colourCap:.009,colourShoulder:0,regionCols:13,regionRows:9,regionMemory:5}
-        :{agents:22,trail:30,cell:[2,4],step:[.052,.105],modes:10,modeTime:[1.55,3.5],trailLife:2.15,incidentGap:[.72,1.3],incidentCap:5,incidentRadius:[6,11],incidentLife:[1.7,3.1],interaction:.30,feedbackArea:.12,colours:[4,8,5],colourCycle:27,colourLife:8.2,colourCap:.012,colourShoulder:1,regionCols:14,regionRows:10,regionMemory:6};;
+        ?{agents:18,trail:27,cell:[2,5],step:[.065,.12],modes:10,modeTime:[1.9,4.1],trailLife:1.95,incidentGap:[1.05,1.75],incidentCap:4,incidentRadius:[5,10],incidentLife:[1.5,2.8],interaction:.22,feedbackArea:.105,colours:[3,7,9],colourCycle:30,colourLife:7,colourCap:.0045,colourShoulder:0,regionCols:13,regionRows:9,regionMemory:5}
+        :{agents:22,trail:30,cell:[2,4],step:[.052,.105],modes:10,modeTime:[1.55,3.5],trailLife:2.15,incidentGap:[.72,1.3],incidentCap:5,incidentRadius:[6,11],incidentLife:[1.7,3.1],interaction:.30,feedbackArea:.12,colours:[4,8,5],colourCycle:27,colourLife:8.2,colourCap:.006,colourShoulder:1,regionCols:14,regionRows:10,regionMemory:6};;
 let pendingPlan=null,motionOps=null,motionOpCount=0,gpu=null,gpuFailure='',gpuSlots=0,gpuTick=0,gpuCoverage=0,territoryBirths=0;let territoryVisits=new Float32Array(48),ink=null,inkOwner=null,inkSerial=0,inkNext=0,inkCells=0,inkGrown=0,inkRetired=0,inkWhite=0,inkBlack=0;
 const pigmentFamilies=[[2,6,10],[3,7,9],[4,8,5],[9,6,2],[5,10,8]];
 const palettePacked=palette.map(c=>(c[0]|(c[1]<<8)|(c[2]<<16)|(255<<24))>>>0);
@@ -590,6 +590,7 @@ function applyFeedbackFields(){
    let v=feedbackPrevious[m.src[k]];
    if(flag===1){const other=feedbackPrevious[m.alt[k]];if(paletteLum[v]<paletteLum[other])v=other;}
    else if(flag===2&&field[i]===1)v=feedbackPrevious[m.alt[k]];
+   if(resetHD&&v>1&&!resetColour[i])v=field[i];
    if(renderField[i]!==v)feedbackMoved++;renderField[i]=v;
   }
  }
@@ -777,6 +778,7 @@ function apply62CMotionFields(){
   const dst=motionOps.dst[k],src=motionOps.src[k],flags=motionOps.flags[k];
   if(src>=0){renderField[dst]=motionSource[src];motionMoved++;}
   if(flags&1)renderField[dst]=paletteLum[field[dst]]>127?1:0;
+  if(resetHD&&renderField[dst]>1&&!resetColour[dst])renderField[dst]=field[dst];
   // Chromatic state is supplied exclusively by connected material growth.
  }
 }
@@ -894,7 +896,7 @@ function initResetSystem(){
  resetHeatClock=0;resetStamp=0;resetNextIncident=age+.4;resetEvents=resetMoved=resetSteps=resetInteractions=resetColourCells=resetColourBirths=resetColourTransfers=0;
  if(!resetStudy){resetHeat=resetVisitedAt=resetLastMode=resetSource=resetWriteStamp=resetColour=resetColourTouched=resetColourListed=null;resetColourIndices=[];return;}
  resetHeat=new Uint8Array(W*H);resetVisitedAt=new Float32Array(64*40);resetVisitedAt.fill(-1000);
- const regionCols=resetProfile.regionCols||10,regionRows=resetProfile.regionRows||7;
+ const regionCols=resetHD?(resetProfile.regionCols||10):0,regionRows=resetHD?(resetProfile.regionRows||7):0;
  for(let ry=0;ry<regionRows;ry++)for(let rx=0;rx<regionCols;rx++){
   const id=ry*regionCols+rx,x0=Math.floor(rx*W/regionCols),x1=Math.max(x0+1,Math.floor((rx+1)*W/regionCols)),y0=Math.floor(ry*H/regionRows),y1=Math.max(y0+1,Math.floor((ry+1)*H/regionRows));
   resetRegions.push({id,rx,ry,x0,x1,y0,y1,mode:-1,previous:-1,recent:[],last:-1000,cooldown:age+range(0,1.2),activity:0,events:0,phase:range(0,Math.PI*2)});
@@ -964,6 +966,25 @@ function resetAgentColour(agent){
   if(inherited)return inherited;
  }
  return resetProfile.colours[(agent.id+Math.floor(agent.steps/resetProfile.colourCycle))%resetProfile.colours.length];
+}
+function resetBeginIncidentLegacy(){
+ resetNextIncident=age+range(resetProfile.incidentGap[0],resetProfile.incidentGap[1]);
+ resetIncidents=resetIncidents.filter(e=>age<e.born+e.life);
+ if(resetIncidents.length>=resetProfile.incidentCap)return;
+ let best=null;
+ for(let k=0;k<72;k++){
+  const x=clamp(Math.round(range(W*.05,W*.95)),4,W-5),y=clamp(Math.round(range(H*.05,H*.95)),4,H-5),tile=resetTile(x,y);
+  const neglect=clamp((age-resetVisitedAt[tile])/32,0,1),edge=resetEdgeAt(x,y)/4;
+  let near=0;for(const a of resetAgents)if(Math.hypot(a.x-x,a.y-y)<Math.min(W,H)*.075)near+=.55;
+  for(const e of resetIncidents)if(Math.hypot(e.x-x,e.y-y)<e.radius*2)near+=.8;
+  const score=neglect*.8+edge*.8-near+random()*.42;
+  if(!best||score>best.score)best={x,y,tile,score};
+ }
+ if(!best)return;
+ const mode=1+R(Math.max(1,resetProfile.modes-1));
+ let host=resetAgents[0],nearest=Infinity;for(const a of resetAgents){const d=(a.x-best.x)**2+(a.y-best.y)**2;if(d<nearest){nearest=d;host=a;}}
+ resetIncidents.push({x:best.x,y:best.y,dir:R(4),mode,born:age,life:range(resetProfile.incidentLife[0],resetProfile.incidentLife[1]),radius:range(resetProfile.incidentRadius[0],resetProfile.incidentRadius[1]),phase:range(0,Math.PI*2),seed:1+R(1000000),width:1+R(3),colour:host?resetAgentColour(host):resetProfile.colours[0]});
+ resetVisitedAt[best.tile]=age;resetLastMode[best.tile]=mode;resetEvents++;
 }
 function resetRegionMode(region){
  const modes=resetProfile.modes,weights=new Float32Array(modes);let total=0;
@@ -1035,7 +1056,7 @@ function updateResetAgents(dt){
  if(resetHeatClock>.30){
   resetHeatClock=0;
   for(let i=0;i<resetHeat.length;i++)if(resetHeat[i])resetHeat[i]=Math.max(0,resetHeat[i]-7);
-  resetUpdateRegions(.30);
+  if(resetHD)resetUpdateRegions(.30);
  }
  for(const a of resetAgents){
   for(let i=0;i<a.fatigue.length;i++)a.fatigue[i]*=.996;
@@ -1072,7 +1093,7 @@ function updateResetAgents(dt){
   }
   a.nextInteract=b.nextInteract=age+range(1.8,4.2);
  }
- if(age>=resetNextIncident)resetBeginIncident();
+ if(age>=resetNextIncident){if(resetHD)resetBeginIncident();else resetBeginIncidentLegacy();}
  resetIncidents=resetIncidents.filter(e=>age<e.born+e.life);
 }
 function resetStoreColour(i,colour){
@@ -1232,7 +1253,7 @@ function createGPU(){
   }
   // The earlier moving fields become smaller persistent feedback organisms as well.
   // Their gene families are selected once and evolve over the lifetime of each region.
-  if(!resetStudy)for(const f of motionFields){
+  if(!resetStudy||resetHD)for(const f of motionFields){
    const p=clamp((age-f.start)/f.duration,0,1),env=age<f.start?0:Math.sin(Math.PI*p)**1.1;
    if(env<.015)continue;
    let g=gpuModes.get(f);if(!g){g=[choose(),choose(),choose(),1+R(1000000)];gpuModes.set(f,g);}
@@ -1254,7 +1275,7 @@ function createGPU(){
   }
   gl.activeTexture(gl.TEXTURE0+2);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,atlasW,atlasH,gl.RGBA,gl.UNSIGNED_BYTE,atlasData);
   gl.bindVertexArray(vao);gl.disable(gl.BLEND);gl.useProgram(sim);gl.viewport(0,0,W,H);
-  gl.uniform2i(u.dim,W,H);gl.uniform1i(u.tick,gpuTick);gl.uniform1f(u.seconds,age);gl.uniform1f(u.globalGain,resetStudy?(requestedStudy===148?.58:requestedStudy===149?.68:.78):requestedStudy===145?1.12:requestedStudy===146?1.32:1.52);
+  gl.uniform2i(u.dim,W,H);gl.uniform1i(u.tick,gpuTick);gl.uniform1f(u.seconds,age);gl.uniform1f(u.globalGain,resetStudy?(requestedStudy===154?.52:requestedStudy===155?.62:requestedStudy===156?.70:requestedStudy===148?.58:requestedStudy===149?.68:.78):requestedStudy===145?1.12:requestedStudy===146?1.32:1.52);
   gl.uniform4fv(u['regions[0]'],regionData);gl.uniform4fv(u['traits[0]'],traitData);gl.uniform4fv(u['genes[0]'],geneData);
   bind(home,0,u.homeTex);bind(atlasTex,2,u.atlas);gl.uniform2i(u.atlasDim,atlasW,atlasH);
   if(!ready){gl.uniform1i(u.regionCount,0);gl.bindFramebuffer(gl.FRAMEBUFFER,fbos[0]);bind(home,1,u.prev);gl.drawArrays(gl.TRIANGLES,0,3);ready=true;read=0;}
