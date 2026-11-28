@@ -177,7 +177,7 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
  function remember(){try{memory=readMemory();memory.unshift({seed:originSeed,created:Date.now()});memory=memory.slice(0,24);localStorage.setItem(KEY,JSON.stringify(memory));return true;}catch(e){return false;}}
  return {get ready(){return ready;},step,reset,remember,get frame(){return frame;},get seconds(){return frame/FPS;},get seed(){return originSeed;},get finished(){return readyState&&reveal>=7&&microAt>=2;},get stats(){memory=readMemory();return{marks,births,lineages:5,colourStrokes,sources:["ROOT SYSTEM","FOLDED WING","COILED CHAMBER","LISTENING SEED","IMPOSSIBLE CITY"],palette:"GRAPHITE / BONE / VERDIGRIS",memory:memory.length};}};
 }
-function preview(seed=12012026){return build(seed).map(s=>s.replace(/^<svg[^>]*>/,"").replace(/<\/svg>$/,"")).join("")}
+function preview(seed=12012026){const inner=build(seed).map(s=>s.replace(/^<svg[^>]*>/,"").replace(/<\/svg>$/,"")).join("");return svg(inner);}
 function getMemoryCount(){try{return JSON.parse(localStorage.getItem(KEY)||"[]").length;}catch(e){return 0;}}
 root.Palimpsest012={create,FPS,SIZE:[N,H],getMemoryCount,preview,build};
 })(globalThis);
