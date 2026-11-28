@@ -1681,7 +1681,7 @@ function localFeedbackSortPatch(p,hist,weight){
     for(let k=0;k<run;k++){
      const u=(x+k-p.cx)/(p.w*.5),dx=Math.round(waveSin(ny*4.4+p.phase+age)*p.shift*.20);
      const sx=clamp(x+k+dx,p.x0+1,p.x1-2),sy=clamp(y+Math.round(waveCos(u*3+p.phase)*2),p.y0+1,p.y1-2);
-     values.push(hist[sy*W+sx]);
+     const sourceIndex=sy*W+sx;values.push(motionNoise(x+k,y,p.seed+beat+k*29)<.32?localFeedbackBase[sourceIndex]:hist[sourceIndex]);
     }
     const ascending=((beat+Math.floor(y/p.band)+p.seed)&1)===0;
     values.sort((a,b)=>ascending?(paletteLum[a]||0)-(paletteLum[b]||0):(paletteLum[b]||0)-(paletteLum[a]||0));
@@ -1745,14 +1745,13 @@ function applyLocalFeedbackPatches(){
      const i=y*W+x,gx=localFeedbackBase[i+1]-localFeedbackBase[i-1],gy=localFeedbackBase[i+W]-localFeedbackBase[i-W],m=Math.max(1,Math.hypot(gx,gy));
      dx=-gy/m*(2+strength*p.shift*.45);dy=gx/m*(2+strength*p.shift*.45);
     }else{
-     const zoom=1+.085*waveSin(phase+radial*6),fold=waveSin(angle*3+phase)*p.shift*.10;
+     const zoom=1+.16*waveSin(phase+radial*6),fold=waveSin(angle*3+phase)*p.shift*.18;
      sx=cx+(x-cx)*zoom+Math.cos(angle)*fold;sy=cy+(y-cy)*zoom+Math.sin(angle)*fold;dx=sx-x;dy=sy-y;
     }
     sx=clamp(Math.round(x+dx),p.x0+1,p.x1-2);sy=clamp(Math.round(y+dy),p.y0+1,p.y1-2);
     const sourceLag=historyFrames[lag]||hist,src=sy*W+sx,baseIndex=sy*W+sx;
-    let value=sourceLag[src];
+    let value=grain<.42?localFeedbackBase[src]:sourceLag[src];
     if(older&&grain>.87)value=older[baseIndex];
-    else if(grain<.10)value=localFeedbackBase[baseIndex];
     const dst=y*W+x,original=localFeedbackBase[dst];
     if(value===original){
      const mag=Math.hypot(dx,dy),ux=mag>.4?dx/mag:Math.cos(p.heading),uy=mag>.4?dy/mag:Math.sin(p.heading),px=-uy,py=ux;
