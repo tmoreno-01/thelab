@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lifeafterlogic / Structural Evolution</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efeee9}canvas{display:block;width:100%;height:100%;image-rendering:pixelated}#err{position:fixed;left:10px;bottom:10px;color:#777;font:10px monospace;pointer-events:none}</style></head><body><canvas id="art"></canvas><div id="err"></div><script>
 "use strict";
-const q=new URLSearchParams(location.search),study=q.get('study')||'pressure',requestedStudy=Number(study),cargoStudy=requestedStudy>=168&&requestedStudy<=170,resetStudy=requestedStudy>=148&&requestedStudy<=170,resetHD=requestedStudy>=154&&requestedStudy<=170,kineticStudy=requestedStudy>=157&&requestedStudy<=170,localPatchStudy=requestedStudy>=160&&requestedStudy<=162,localFeedbackStudy=(requestedStudy>=163&&requestedStudy<=165)||cargoStudy,serpentineStudy=requestedStudy>=166&&requestedStudy<=167,testNumber=({139:136,140:137,141:138,142:136,143:137,144:138,145:136,146:137,147:138,148:136,149:137,150:138,151:136,152:137,153:138}[requestedStudy]||requestedStudy),mode=study==='reorganisation'?1:(study==='fault'||[124,125,126,127,128,129,130,131,132,136,137,138].includes(testNumber))?2:0;
-document.title='lifeafterlogic / reset / '+({148:'148 — Signal Crawl',149:'149 — Distributed Intelligence',150:'150 — Restless Matter',151:'151 — Chromatic Wake',152:'152 — Inherited Current',153:'153 — Structural Bloom',154:'154 — Signal Ecology',155:'155 — Distributed Disturbance',156:'156 — Living Faultfield',157:'157 — Kinetic Menagerie',158:'158 — Chemotactic Polyphony',159:'159 — Elastic Excitable Matter',160:'160 — Local Sorting',161:'161 — Displaced Strata',162:'162 — Recursive Feedback',163:'163 — Recursive Drift',164:'164 — Signal Afterimage',165:'165 — Feedback Organism',166:'166 — Path Memory',167:'167 — Chromatic Current',168:'168 — Patchwork Signals',169:'169 — Chromatic Inheritance',170:'170 — Residual Grammar',139:'139 — Local Feedback / Optimised',140:'140 — Chromatic Feedback / Optimised',141:'141 — Unstable Feedback / Optimised',142:'142 — Recursive Tissue',143:'143 — Mutable Syntax',144:'144 — Unstable Ecology',145:'145 — Distributed Instinct',146:'146 — Mutual Disturbance',147:'147 — Restless Matter'}[requestedStudy]||({124:'124 — Slip Memory',125:'125 — Phase Slip',126:'126 — Residual Current',127:'127 — Local Current',128:'128 — Counterflow',129:'129 — Phase Inheritance',130:'130 — Local Matter',131:'131 — Unstable Matter',132:'132 — Phase Turbulence',136:'136 — Local Feedback',137:'137 — Chromatic Feedback',138:'138 — Unstable Feedback'}[testNumber]||['121 — Pressure Memory','122 — Reorganisation','123 — Living Fault'][mode]));
+const q=new URLSearchParams(location.search),study=q.get('study')||'pressure',requestedStudy=Number(study),v02Study=requestedStudy>=171&&requestedStudy<=173,chromaticStudy=requestedStudy>=168&&requestedStudy<=173,resetStudy=requestedStudy>=148&&requestedStudy<=173,resetHD=requestedStudy>=154&&requestedStudy<=173,kineticStudy=requestedStudy>=157&&requestedStudy<=173,localPatchStudy=(requestedStudy>=160&&requestedStudy<=162)||requestedStudy===172,localFeedbackStudy=(requestedStudy>=163&&requestedStudy<=165)||(requestedStudy>=168&&requestedStudy<=173),serpentineStudy=(requestedStudy>=166&&requestedStudy<=167)||requestedStudy===173,testNumber=({139:136,140:137,141:138,142:136,143:137,144:138,145:136,146:137,147:138,148:136,149:137,150:138,151:136,152:137,153:138}[requestedStudy]||requestedStudy),mode=study==='reorganisation'?1:(study==='fault'||[124,125,126,127,128,129,130,131,132,136,137,138].includes(testNumber))?2:0;
+document.title='lifeafterlogic / reset / '+({148:'148 — Signal Crawl',149:'149 — Distributed Intelligence',150:'150 — Restless Matter',151:'151 — Chromatic Wake',152:'152 — Inherited Current',153:'153 — Structural Bloom',154:'154 — Signal Ecology',155:'155 — Distributed Disturbance',156:'156 — Living Faultfield',157:'157 — Kinetic Menagerie',158:'158 — Chemotactic Polyphony',159:'159 — Elastic Excitable Matter',160:'160 — Local Sorting',161:'161 — Displaced Strata',162:'162 — Recursive Feedback',163:'163 — Recursive Drift',164:'164 — Signal Afterimage',165:'165 — Feedback Organism',166:'166 — Path Memory',167:'167 — Chromatic Current',168:'168 — Patchwork Signals',169:'169 — Chromatic Inheritance',170:'170 — Residual Grammar',171:'171 — Grid Ecology',172:'172 — Signal Fracture',173:'173 — Living Syntax',139:'139 — Local Feedback / Optimised',140:'140 — Chromatic Feedback / Optimised',141:'141 — Unstable Feedback / Optimised',142:'142 — Recursive Tissue',143:'143 — Mutable Syntax',144:'144 — Unstable Ecology',145:'145 — Distributed Instinct',146:'146 — Mutual Disturbance',147:'147 — Restless Matter'}[requestedStudy]||({124:'124 — Slip Memory',125:'125 — Phase Slip',126:'126 — Residual Current',127:'127 — Local Current',128:'128 — Counterflow',129:'129 — Phase Inheritance',130:'130 — Local Matter',131:'131 — Unstable Matter',132:'132 — Phase Turbulence',136:'136 — Local Feedback',137:'137 — Chromatic Feedback',138:'138 — Unstable Feedback'}[testNumber]||['121 — Pressure Memory','122 — Reorganisation','123 — Living Fault'][mode]));
 const canvas=document.getElementById('art'),ctx=canvas.getContext('2d',{alpha:false}),small=document.createElement('canvas'),sc=small.getContext('2d',{alpha:false});
 const palette=[[239,238,232],[19,20,21],[41,75,204],[201,43,30],[201,140,22],[14,119,109],[91,161,199],[222,94,82],[194,203,83],[145,112,181],[76,150,133],[216,169,104]];
 const resetFadePalette=Array.from({length:12},()=>[[],[]]);
@@ -16,7 +16,7 @@ for(let i=0;i<=8192;i++)waveTable[i]=Math.sin(i/waveFactor);
 function waveSin(v){let t=v*waveFactor,b=Math.floor(t),i=b&8191;return waveTable[i]+(waveTable[i+1]-waveTable[i])*(t-b);}
 function waveCos(v){return waveSin(v+Math.PI*.5);}
 function fastHypot(x,y){return Math.sqrt(x*x+y*y);}
-const mapInterval=resetStudy?([148,151,154,157,160,163,166,168].includes(requestedStudy)?.12:[149,152,155,158,161,164,167,169,170].includes(requestedStudy)?.10:.085):requestedStudy===145?.083:requestedStudy===146?.075:.066;
+const mapInterval=resetStudy?([148,151,154,157,160,163,166,168,171].includes(requestedStudy)?.12:[149,152,155,158,161,164,167,169,170,172,173].includes(requestedStudy)?.10:.085):requestedStudy===145?.083:requestedStudy===146?.075:.066;
 const resetProfile=requestedStudy===148
  ?{agents:10,trail:19,cell:[3,5],step:[.085,.145],modes:6,modeTime:[2.8,5.2],trailLife:1.65,incidentGap:[2.0,3.0],incidentCap:2,incidentRadius:[5,9],incidentLife:[1.4,2.6],interaction:.08,feedbackArea:.055,colours:[2,6,10],colourCycle:24,colourLife:8.5,colourCap:.032,colourShoulder:1}
  :requestedStudy===149
@@ -64,6 +64,12 @@ const resetProfile=requestedStudy===148
                    ?{agents:13,trail:22,cell:[2,4],step:[.060,.114],modes:10,modeTime:[1.35,3.0],trailLife:2.35,incidentGap:[1.15,1.95],incidentCap:4,incidentRadius:[5,9],incidentLife:[1.6,2.9],interaction:.23,feedbackArea:.045,colours:[2,6,10],colourCycle:56,colourLife:32,colourCap:.018,colourShoulder:1,regionCols:14,regionRows:10,regionMemory:6,inheritNearby:true,colourStart:1.8,colourReveal:6.2}
                   :requestedStudy===170
                    ?{agents:15,trail:24,cell:[2,4],step:[.052,.104],modes:10,modeTime:[1.05,2.55],trailLife:2.55,incidentGap:[.92,1.62],incidentCap:4,incidentRadius:[5,10],incidentLife:[1.8,3.1],interaction:.29,feedbackArea:.052,colours:[2,6,10],colourCycle:48,colourLife:36,colourCap:.021,colourShoulder:2,regionCols:15,regionRows:11,regionMemory:7,inheritNearby:true,colourStart:1.1,colourReveal:5.2}
+                   :requestedStudy===171
+                    ?{agents:14,trail:24,cell:[2,4],step:[.052,.105],modes:10,modeTime:[1.0,2.4],trailLife:2.45,incidentGap:[.82,1.55],incidentCap:5,incidentRadius:[5,11],incidentLife:[1.7,3.0],interaction:.26,feedbackArea:.055,colours:[2,6,10],colourCycle:42,colourLife:42,colourCap:.052,colourShoulder:1,regionCols:16,regionRows:12,regionMemory:7,inheritNearby:true,colourStart:1.6,colourReveal:5.8}
+                    :requestedStudy===172
+                     ?{agents:17,trail:28,cell:[2,4],step:[.048,.096],modes:10,modeTime:[.82,2.1],trailLife:2.7,incidentGap:[.68,1.3],incidentCap:6,incidentRadius:[6,12],incidentLife:[1.8,3.4],interaction:.34,feedbackArea:.065,colours:[2,6,10],colourCycle:34,colourLife:46,colourCap:.058,colourShoulder:2,regionCols:17,regionRows:12,regionMemory:8,inheritNearby:true,colourStart:1.3,colourReveal:4.8}
+                     :requestedStudy===173
+                      ?{agents:19,trail:30,cell:[2,4],step:[.044,.09],modes:10,modeTime:[.72,1.8],trailLife:2.9,incidentGap:[.58,1.15],incidentCap:7,incidentRadius:[6,13],incidentLife:[2.0,3.6],interaction:.38,feedbackArea:.075,colours:[2,6,10],colourCycle:28,colourLife:50,colourCap:.062,colourShoulder:2,regionCols:18,regionRows:13,regionMemory:8,inheritNearby:true,colourStart:.9,colourReveal:4.2}
 :{agents:6,trail:12,cell:[2,4],step:[.08,.14],modes:10,modeTime:[2.4,4.8],trailLife:1.5,incidentGap:[2.0,3.0],incidentCap:2,incidentRadius:[4,7],incidentLife:[1.2,2.0],interaction:.08,feedbackArea:.06,colours:[4,8,5],colourCycle:40,colourLife:4.8,colourCap:.007,colourShoulder:0,regionCols:12,regionRows:8,regionMemory:4};
 let pendingPlan=null,motionOps=null,motionOpCount=0,gpu=null,gpuFailure='',gpuSlots=0,gpuTick=0,gpuCoverage=0,territoryBirths=0;let territoryVisits=new Float32Array(48),ink=null,inkOwner=null,inkSerial=0,inkNext=0,inkCells=0,inkGrown=0,inkRetired=0,inkWhite=0,inkBlack=0;
 const pigmentFamilies=[[2,6,10],[3,7,9],[4,8,5],[9,6,2],[5,10,8]];
@@ -127,6 +133,12 @@ const motionProfile=requestedStudy===157
           ?{gain:.47,radius:.58,speed:.86,pixelScale:1.06,slots:3,weights:[1.1,1.05,1.15,1.0,1.1,.9,1.15,1.08],initial:[6,2,1]}
          :requestedStudy===170
           ?{gain:.53,radius:.62,speed:.94,pixelScale:1.10,slots:3,weights:[1.15,1.08,1.2,1.05,1.12,.92,1.2,1.12],initial:[2,6,7]}
+         :requestedStudy===171
+          ?{gain:.60,radius:.74,speed:.92,pixelScale:1.12,slots:3,weights:[1.1,1.1,1.6,1.0,1.25,.9,1.4,1.25],initial:[2,6,1]}
+         :requestedStudy===172
+          ?{gain:.70,radius:.82,speed:1.02,pixelScale:1.18,slots:4,weights:[1.2,1.15,1.8,1.05,1.35,.88,1.55,1.4],initial:[6,2,7,1]}
+         :requestedStudy===173
+          ?{gain:.76,radius:.88,speed:1.08,pixelScale:1.22,slots:4,weights:[1.25,1.18,1.9,1.05,1.45,.86,1.65,1.52],initial:[2,6,7,0]}
          :requestedStudy===154
  ?{gain:.48,radius:.72,speed:.88,pixelScale:1.05,slots:2,weights:[1.1,1.0,1.5,1.0,1.2,.8,1.2,1.1],initial:[2,6]}
  :requestedStudy===155
@@ -152,11 +164,19 @@ const kineticProfile=requestedStudy===157||requestedStudy===160||requestedStudy=
    ?{agents:60,behaviours:17,species:6,zones:14,trail:13,modeTime:[2.5,6.2],speed:[.07,.18],chem:true,chemW:144,chemH:90,chains:0,chainMax:0,chainLength:10,excitable:false,exciteW:0,exciteH:0,branch:.018,trailLife:[2.0,4.6],density:1.04}
   :requestedStudy===170
    ?{agents:66,behaviours:18,species:7,zones:15,trail:14,modeTime:[2.2,5.8],speed:[.07,.19],chem:false,chemW:0,chemH:0,chains:12,chainMax:20,chainLength:11,excitable:true,exciteW:128,exciteH:80,branch:.028,trailLife:[2.1,4.8],density:1.08}
+  :requestedStudy===171
+   ?{agents:68,behaviours:18,species:6,zones:14,trail:14,modeTime:[2.5,6.2],speed:[.065,.17],chem:true,chemW:160,chemH:100,chains:8,chainMax:18,chainLength:10,excitable:true,exciteW:128,exciteH:80,branch:.020,trailLife:[2.0,4.5],density:1.04}
+  :requestedStudy===172
+   ?{agents:78,behaviours:19,species:7,zones:16,trail:15,modeTime:[2.0,5.2],speed:[.07,.19],chem:true,chemW:168,chemH:108,chains:10,chainMax:20,chainLength:11,excitable:true,exciteW:136,exciteH:86,branch:.026,trailLife:[2.1,4.8],density:1.08}
+  :requestedStudy===173
+   ?{agents:86,behaviours:20,species:7,zones:18,trail:16,modeTime:[1.7,4.8],speed:[.07,.20],chem:true,chemW:176,chemH:112,chains:13,chainMax:22,chainLength:12,excitable:true,exciteW:144,exciteH:92,branch:.032,trailLife:[2.2,5.0],density:1.1}
   :{agents:46,behaviours:16,species:5,zones:10,trail:11,modeTime:[2.8,7.2],speed:[.065,.16],chem:false,chemW:0,chemH:0,chains:10,chainMax:18,chainLength:10,excitable:true,exciteW:120,exciteH:76,branch:.025,trailLife:[2.0,4.5],density:1.0};
 const localPatchProfile=requestedStudy===160
  ?{coverage:.20,gap:[.22,.38],life:[3.2,5.1],area:[.020,.040],modes:[0,1],modeTime:[1.0,1.8],strength:.78,maxPatches:12,rowStep:2,pixelStep:2,maxRun:30,shift:[4,12],block:[9,17]}
  :requestedStudy===161
   ?{coverage:.20,gap:[.20,.34],life:[3.0,4.8],area:[.020,.043],modes:[1,2,4],modeTime:[.85,1.6],strength:.82,maxPatches:12,rowStep:2,pixelStep:2,maxRun:26,shift:[6,16],block:[8,16]}
+  :requestedStudy===172
+   ?{coverage:.17,gap:[.16,.30],life:[2.8,4.8],area:[.010,.022],modes:[0,1,2,3,4],modeTime:[.72,1.45],strength:.94,maxPatches:16,rowStep:2,pixelStep:2,maxRun:42,shift:[8,21],block:[6,14]}
   :{coverage:.20,gap:[.24,.40],life:[3.5,5.5],area:[.020,.042],modes:[0,2,3,4],modeTime:[1.0,1.9],strength:.80,maxPatches:12,rowStep:2,pixelStep:2,maxRun:32,shift:[5,15],block:[9,18]};
 
 const localFeedbackProfile=requestedStudy===163
@@ -169,15 +189,24 @@ const localFeedbackProfile=requestedStudy===163
    ?{coverage:.125,maxPatches:15,area:[.0045,.0095],life:[3.0,5.5],gap:[.19,.36],modes:[0,1,2,3,4,5,6,7,9,10],modeTime:[.85,1.85],lag:[1,3],strength:.88,shift:[4,12],step:2,edgeBias:.70,drift:.19}
   :requestedStudy===170
    ?{coverage:.145,maxPatches:17,area:[.005,.011],life:[3.1,6.0],gap:[.15,.30],modes:[0,1,2,3,4,5,6,7,8,9,10,11],modeTime:[.65,1.5],lag:[1,4],strength:.94,shift:[5,15],step:2,edgeBias:.62,drift:.25}
+  :requestedStudy===171
+   ?{coverage:.16,maxPatches:18,area:[.0045,.012],life:[3.0,6.0],gap:[.12,.24],modes:[0,1,2,3,4,5,6,7,8,9,10,11],modeTime:[.72,1.55],lag:[1,4],strength:.92,shift:[5,17],step:2,edgeBias:.78,drift:.20}
+  :requestedStudy===172
+   ?{coverage:.19,maxPatches:22,area:[.005,.014],life:[2.8,5.7],gap:[.09,.20],modes:[0,1,2,3,4,5,6,7,8,9,10,11],modeTime:[.58,1.35],lag:[1,4],strength:1.02,shift:[7,22],step:2,edgeBias:.70,drift:.25}
+  :requestedStudy===173
+   ?{coverage:.22,maxPatches:26,area:[.0055,.016],life:[2.6,5.4],gap:[.075,.17],modes:[0,1,2,3,4,5,6,7,8,9,10,11],modeTime:[.48,1.18],lag:[1,4],strength:1.08,shift:[8,26],step:2,edgeBias:.64,drift:.29}
   :{coverage:.23,maxPatches:16,area:[.007,.025],life:[3.2,6.8],gap:[.15,.30],modes:[0,2,3,4,5,6,7,8],modeTime:[.8,1.8],lag:[1,3],strength:.98,shift:[5,16],step:1,edgeBias:.60,drift:.24};
-const serpentineProfile=requestedStudy===166
- ?{first:[2.8,4.2],interval:[8.5,12.5],steps:[30,40],step:[2,3],tempo:[.068,.096],trail:[1.9,2.5],maxTrail:42,strength:.76,turnColour:.58,colourChance:.10,run:[3,8],width:.24,displace:[1,3]}
- :{first:[2.5,3.9],interval:[7.8,11.5],steps:[32,42],step:[2,4],tempo:[.064,.092],trail:[2.0,2.6],maxTrail:44,strength:.79,turnColour:.66,colourChance:.14,run:[3,7],width:.28,displace:[1,3]};
+const serpentineProfile=requestedStudy===173
+ ?{first:[1.6,2.8],interval:[6.5,9.8],steps:[34,46],step:[2,4],tempo:[.052,.082],trail:[2.0,2.8],maxTrail:52,strength:.86,turnColour:.72,colourChance:.22,run:[2,7],width:.36,displace:[1,4]}
+ :requestedStudy===166
+  ?{first:[2.8,4.2],interval:[8.5,12.5],steps:[30,40],step:[2,3],tempo:[.068,.096],trail:[1.9,2.5],maxTrail:42,strength:.76,turnColour:.58,colourChance:.10,run:[3,8],width:.24,displace:[1,3]}
+  :{first:[2.5,3.9],interval:[7.8,11.5],steps:[32,42],step:[2,4],tempo:[.064,.092],trail:[2.0,2.6],maxTrail:44,strength:.79,turnColour:.66,colourChance:.14,run:[3,7],width:.28,displace:[1,3]};
 let W=0,H=0,field,rgba,rgba32=null,active=[],agents=[],memory=[],used=new Set(),last=0,lastDraw=0,age=0,next=0,nextSense=0,paused=false,quality=!q.has('preview'),seed=(q.has('seed')?Number(q.get('seed'))>>>0:crypto.getRandomValues(new Uint32Array(1))[0])||1;
+let v02Chromatic=false;
 let trials=0,accepted=0,finished=0,colourBirths=0,inherited=0,refusals=0,changes=0,previous=null,focus=-1,nextFocus=0,colonies=[],morphChanges=0,flowChanges=0,colonyCount=0,nextMorph=0,fronts=[],nextFront=0,frontCount=0,frontEdits=0,microSlips=[],nextSlip=0,slipHistory=[],slipEvents=0,slipPairs=0,renderField=null,flowPockets=[],nextFlow=0,flowHistory=[],flowEvents=0,flowCells=0,motionFields=[],motionSource=null,motionX=null,motionY=null,motionStrength=null,motionMemory=null,motionErase=null,motionColour=null,motionHue=null,motionIndices=null,motionIndexCount=0,motionMapReady=false,nextMotionMap=0,motionEvents=0,motionTouched=0,motionMoved=0,motionActive=0,feedbackFields=[],feedbackHistory=[],feedbackModeUse=new Uint16Array(40),feedbackRecent=[],nextFeedback=0,feedbackPrevious=null,feedbackReady=false,feedbackEvents=0,feedbackTouched=0,feedbackMoved=0,feedbackActive=0,resetAgents=[],resetIncidents=[],resetRegions=[],resetHeat=null,resetVisitedAt=null,resetLastMode=null,resetSource=null,resetWriteStamp=null,resetStamp=0,resetHeatClock=0,resetModeUse=new Uint16Array(10),resetModeRecent=[],resetNextIncident=0,resetEvents=0,resetMoved=0,resetSteps=0,resetInteractions=0,resetColour=null,resetColourTouched=null,resetColourListed=null,resetColourIndices=[],resetColourCells=0,resetColourBirths=0,resetColourTransfers=0,pigmentEvents=[],pigmentHistory=[],pigmentFamilyUse=new Uint16Array(5),pigmentRecent=[],nextPigment=0,pigmentEventCount=0,pigmentTransitions=0,kineticAgents=[],kineticChains=[],kineticZones=[],kineticPheromone=[],kineticPheromoneNext=[],kineticGrayU=null,kineticGrayV=null,kineticGrayUNext=null,kineticGrayVNext=null,kineticExcite=null,kineticExciteNext=null,kineticW=0,kineticH=0,kineticClock=0,kineticChemClock=0,kineticExciteClock=0,kineticNextChem=0,kineticNextExcite=0,kineticNextBranch=0,kineticSteps=0,kineticDeposits=0,kineticBranches=0,kineticModeChanges=0,kineticChemSteps=0,kineticExciteSteps=0,kineticChainSegments=0,kineticRenderNodes=0,localPatches=[],localPatchNext=0,localPatchEvents=0,localPatchWrites=0,localFeedbackPatches=[],localFeedbackMemory=[],localFeedbackNext=0,localFeedbackEvents=0,localFeedbackWrites=0,localFeedbackHistory=[],localFeedbackHistoryHead=-1,localFeedbackHistoryReady=false,localFeedbackBase=null;
 let serpentineAgents=[],serpentineMemory=null,serpentineNext=0,serpentineEvents=0,serpentineSteps=0,serpentineWrites=0,serpentineActive=0;
 
-if(cargoStudy){
+if(chromaticStudy){
  const hsl=(h,s,l)=>{
   h=((h%1)+1)%1;
   const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};
@@ -185,10 +214,28 @@ if(cargoStudy){
   if(s===0){r=g=b=l;}else{const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);}
   return [Math.round(r*255),Math.round(g*255),Math.round(b*255)];
  };
- const hue=(seed%360)/360;
- const specs=[[0,.78,.52],[.025,.55,.68],[-.04,.68,.40],[.48,.62,.57],[.11,.66,.60],[.52,.48,.72],[.15,.50,.74],[.54,.62,.40],[.50,.70,.48],[.08,.36,.43]];
- for(let i=0;i<specs.length;i++)palette[i+2]=hsl(hue+specs[i][0],specs[i][1],specs[i][2]);
- resetProfile.colours=[2,6,10];
+ if(v02Study){
+  v02Chromatic=random()<.72;
+  palette[0]=[2,3,5];palette[1]=[246,246,242];
+  if(v02Chromatic){
+   const baseHue=random(),harmony=R(3),spread=harmony===0?.5:harmony===1?1/3:.42;
+   const hues=[baseHue,baseHue+spread+(random()-.5)*.035,baseHue+spread*.48+(random()-.5)*.045];
+   const sat=range(.72,.94),light=range(.47,.59);
+   const A=hsl(hues[0],sat,light),B=hsl(hues[1],range(.72,.96),range(.48,.61)),C=hsl(hues[2],range(.70,.95),range(.47,.60));
+   const tint=(c,k)=>c.map(v=>Math.round(v+(255-v)*k));
+   const shade=(c,k)=>c.map(v=>Math.round(v*(1-k)));
+   const colours=[A,tint(A,.28),shade(A,.32),shade(B,.22),B,tint(B,.25),shade(C,.24),tint(C,.20),C,tint(C,.32)];
+   for(let i=0;i<10;i++)palette[i+2]=colours[i];
+  }else{
+   for(let i=2;i<12;i++){const v=range(150,238)|0;palette[i]=[v,v,v];}
+  }
+  resetProfile.colours=[2,6,10];
+ }else{
+  const hue=(seed%360)/360;
+  const specs=[[0,.78,.52],[.025,.55,.68],[-.04,.68,.40],[.48,.62,.57],[.11,.66,.60],[.52,.48,.72],[.15,.50,.74],[.54,.62,.40],[.50,.70,.48],[.08,.36,.43]];
+  for(let i=0;i<specs.length;i++)palette[i+2]=hsl(hue+specs[i][0],specs[i][1],specs[i][2]);
+  resetProfile.colours=[2,6,10];
+ }
  for(let colour=2;colour<12;colour++)for(let tone=0;tone<2;tone++){
   const indices=resetFadePalette[colour][tone];
   for(let j=0;j<indices.length;j++){
@@ -206,8 +253,177 @@ function random(){seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return (seed>>>0)
 const R=n=>Math.floor(random()*n),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),pick=a=>a[R(a.length)],range=(a,b)=>a+random()*(b-a);
 const binary=v=>v===0?0:1,at=(x,y)=>binary(field[clamp(y,0,H-1)*W+clamp(x,0,W-1)]);
 function set(x,y,v){if(x>=0&&x<W&&y>=0&&y<H)field[y*W+x]=v;}
+function v02Rect(x,y,w,h,tone=1,prob=1){
+ const x0=clamp(Math.floor(x),0,W),x1=clamp(Math.ceil(x+w),0,W),y0=clamp(Math.floor(y),0,H),y1=clamp(Math.ceil(y+h),0,H);
+ if(x1<=x0||y1<=y0)return;
+ if(prob>=.999){for(let yy=y0;yy<y1;yy++)field.fill(tone,yy*W+x0,yy*W+x1);}
+ else for(let yy=y0;yy<y1;yy++)for(let xx=x0;xx<x1;xx++)if(random()<prob)field[yy*W+xx]=tone;
+}
+function v02Frame(x,y,w,h,t=1,th=1){
+ if(w<2||h<2)return;
+ for(let k=0;k<th;k++){v02Rect(x+k,y+k,w-2*k,1,t);v02Rect(x+k,y+h-1-k,w-2*k,1,t);v02Rect(x+k,y+k,1,h-2*k,t);v02Rect(x+w-1-k,y+k,1,h-2*k,t);}
+}
+function v02Dots(x,y,w,h,stepX,stepY,prob=.78,size=1){
+ for(let yy=y;yy<y+h;yy+=stepY)for(let xx=x;xx<x+w;xx+=stepX){
+  if(random()>prob)continue;
+  const jx=Math.floor(range(-.7,.7)*stepX),jy=Math.floor(range(-.7,.7)*stepY);
+  v02Rect(xx+jx,yy+jy,size,size,1);
+ }
+}
+function v02Hatch(x,y,w,h,spacing=5,prob=.85,reverse=false){
+ for(let d=-h;d<w;d+=spacing){
+  if(random()>.94)continue;
+  for(let k=0;k<h;k++){
+   const xx=x+d+k,yy=reverse?y+k:y+h-1-k;
+   if(xx>=x&&xx<x+w&&yy>=y&&yy<y+h&&random()<prob)set(xx,yy,1);
+  }
+ }
+}
+function v02Matrix(x,y,w,h,cw,ch,style=0){
+ const gapX=Math.max(2,Math.floor(cw*.22)),gapY=Math.max(2,Math.floor(ch*.22));
+ for(let yy=y;yy<y+h-ch;yy+=ch+gapY)for(let xx=x;xx<x+w-cw;xx+=cw+gapX){
+  const n=random();if(n<(style===2?.20:.11))continue;
+  const ww=Math.max(2,cw-Math.floor(random()*Math.max(1,cw*.24))),hh=Math.max(2,ch-Math.floor(random()*Math.max(1,ch*.24)));
+  if(style===1&&n>.78)v02Rect(xx,yy,ww,hh,1);
+  else if(style===2&&n>.72)v02Frame(xx,yy,ww,hh,1,1);
+  else{
+   v02Frame(xx,yy,ww,hh,1,1);
+   if(random()<.12)v02Rect(xx+1,yy+1,Math.max(1,ww-2),Math.max(1,hh-2),1);
+   if(random()<.09)v02Rect(xx+ww*.35,yy+hh*.35,Math.max(1,ww*.3),Math.max(1,hh*.3),1);
+  }
+ }
+}
+function v02Bars(x,y,w,h,axis,spacing,prob=.76){
+ if(axis==='h'){
+  for(let yy=y;yy<y+h;yy+=spacing){const th=Math.max(1,Math.floor(range(1,Math.max(2,spacing*.45))));let xx=x;
+   while(xx<x+w){const len=Math.floor(range(Math.max(3,w*.025),Math.max(4,w*.24)));if(random()<prob)v02Rect(xx,yy,len,th,1);xx+=len+Math.floor(range(2,Math.max(3,spacing*1.8)));}}
+ }else{
+  for(let xx=x;xx<x+w;xx+=spacing){const th=Math.max(1,Math.floor(range(1,Math.max(2,spacing*.4))));let yy=y;
+   while(yy<y+h){const len=Math.floor(range(Math.max(3,h*.025),Math.max(4,h*.24)));if(random()<prob)v02Rect(xx,yy,th,len,1);yy+=len+Math.floor(range(2,Math.max(3,spacing*1.8)));}}
+ }
+}
+function v02Stipple(x,y,w,h,density=.08,clustered=true){
+ const count=Math.floor(w*h*density);
+ for(let i=0;i<count;i++){
+  let px,py;
+  if(clustered&&random()<.68){const cx=range(x,x+w),cy=range(y,y+h),spread=range(.04,.18);px=cx+(random()-.5)*w*spread;py=cy+(random()-.5)*h*spread;}
+  else{px=range(x,x+w);py=range(y,y+h);}
+  const xx=Math.floor(px),yy=Math.floor(py);if(xx>=x&&xx<x+w&&yy>=y&&yy<y+h)set(xx,yy,1);
+ }
+}
+function v02Circuit(x,y,w,h){
+ const count=4+R(9);
+ for(let i=0;i<count;i++){
+  let px=Math.floor(range(x+2,x+w-2)),py=Math.floor(range(y+2,y+h-2)),dir=R(4),len=3+R(Math.max(4,Math.floor(Math.min(w,h)*.35)));
+  for(let k=0;k<len;k++){
+   set(px,py,1);
+   if(random()<.17){v02Rect(px-1,py-1,3,3,1);dir=(dir+(random()<.5?1:3))&3;}
+   const d=[[1,0],[0,1],[-1,0],[0,-1]][dir];px+=d[0];py+=d[1];
+   if(px<x+1||px>=x+w-1||py<y+1||py>=y+h-1)break;
+  }
+ }
+}
+function v02Panel(x,y,w,h,motif){
+ const m=Math.min(w,h),inset=Math.max(2,Math.floor(m*.045)),ix=x+inset,iy=y+inset,iw=Math.max(2,w-inset*2),ih=Math.max(2,h-inset*2);
+ if(motif===0){v02Matrix(ix,iy,iw,ih,range(4,9)|0,range(5,11)|0,2);if(random()<.55)v02Bars(ix,iy,iw,ih,'h',range(4,10)|0,.58);}
+ else if(motif===1){v02Dots(ix,iy,iw,ih,range(3,7)|0,range(3,7)|0,range(.52,.94),1);if(random()<.45)v02Frame(x,y,w,h);}
+ else if(motif===2){v02Bars(ix,iy,iw,ih,'h',range(3,8)|0,range(.55,.92));}
+ else if(motif===3){v02Bars(ix,iy,iw,ih,'v',range(3,8)|0,range(.55,.92));}
+ else if(motif===4){v02Hatch(ix,iy,iw,ih,range(3,8)|0,range(.68,.96),random()<.5);}
+ else if(motif===5){v02Stipple(ix,iy,iw,ih,range(.045,.16),true);}
+ else if(motif===6){v02Frame(x,y,w,h,1,1+R(2));v02Frame(ix+2,iy+2,Math.max(2,iw-4),Math.max(2,ih-4),1,1);v02Circuit(ix,iy,iw,ih);}
+ else if(motif===7){v02Matrix(ix,iy,iw,ih,range(3,6)|0,range(4,8)|0,1);v02Stipple(ix,iy,iw,ih,.025,false);}
+ else if(motif===8){v02Bars(ix,iy,iw,ih,random()<.5?'h':'v',range(2,5)|0,.86);v02Hatch(ix,iy,iw,ih,range(5,10)|0,.48);}
+ else{v02Stipple(ix,iy,iw,ih,.10,true);v02Frame(x,y,w,h);v02Bars(ix,iy,iw,ih,'h',range(6,12)|0,.44);}
+ if(random()<.24){const bx=Math.floor(range(ix,ix+iw*.72)),by=Math.floor(range(iy,iy+ih*.72)),bw=Math.max(2,Math.floor(range(iw*.08,iw*.3))),bh=Math.max(2,Math.floor(range(ih*.06,ih*.24)));v02Rect(bx,by,bw,bh,1,range(.52,.96));}
+}
+function initV02Architecture(){
+ field.fill(0);
+ const variant=requestedStudy-171,cols=5+R(4),rows=5+R(4),xCuts=[0],yCuts=[0];
+ let total=0,weights=[];for(let i=0;i<cols;i++){weights.push(range(.58,1.48));total+=weights[i];}
+ for(let i=0,acc=0;i<cols;i++){acc+=weights[i];xCuts.push(Math.round(W*acc/total));}
+ total=0;weights=[];for(let i=0;i<rows;i++){weights.push(range(.62,1.42));total+=weights[i];}
+ for(let i=0,acc=0;i<rows;i++){acc+=weights[i];yCuts.push(Math.round(H*acc/total));}
+ for(let ry=0;ry<rows;ry++)for(let rx=0;rx<cols;rx++){
+  const x=xCuts[rx],y=yCuts[ry],w=xCuts[rx+1]-x,h=yCuts[ry+1]-y,margin=Math.max(2,Math.floor(Math.min(w,h)*range(.035,.10)));
+  if(w<8||h<8)continue;
+  if(random()<.18)v02Frame(x+1,y+1,w-2,h-2,1,1);
+  if(random()<.78)v02Panel(x+margin,y+margin,Math.max(4,w-2*margin),Math.max(4,h-2*margin),R(10));
+  if(random()<.22){const yy=y+Math.floor(range(h*.2,h*.8));v02Rect(x+margin,yy,Math.floor(range(w*.25,w*.9)),1+R(3),1);}
+ }
+ const verticalCount=variant===0?7+R(6):variant===1?4+R(6):6+R(8);
+ for(let i=0;i<verticalCount;i++){
+  const x=Math.floor(range(0,W)),w=Math.max(1,Math.floor(range(1,W*.025))),y=Math.floor(range(-H*.05,H*.28)),h=Math.floor(range(H*.38,H*.95));
+  if(random()<.5)v02Rect(x,y,w,h,1,range(.42,.88));
+  else v02Bars(x,y,w+range(3,18),h,'v',range(2,7)|0,.88);
+  if(random()<.62){const xx=clamp(x+Math.floor(range(-12,12)),0,W-2);v02Frame(xx,clamp(y+Math.floor(range(0,h*.72)),0,H-2),Math.max(3,Math.floor(range(5,28))),Math.max(3,Math.floor(range(8,42))),1,1);}
+ }
+ const horizontalCount=variant===0?10+R(8):variant===1?16+R(12):12+R(12);
+ for(let i=0;i<horizontalCount;i++){
+  const y=Math.floor(range(0,H)),h=Math.max(1,Math.floor(range(1,H*.018))),x=Math.floor(range(-W*.03,W*.42)),w=Math.floor(range(W*.12,W*.78));
+  v02Rect(x,y,w,h,1,range(.52,.96));
+  if(random()<.72){const gapX=Math.floor(range(x+w*.25,x+w*.85));v02Rect(gapX,y-1,Math.floor(range(3,w*.16)),h+2,0);}
+  if(random()<.42){const yy=clamp(y+Math.floor(range(-8,8)),0,H-1);v02Bars(x,yy,w,Math.max(4,Math.floor(range(5,22))),'h',range(2,6)|0,.82);}
+ }
+ const frames=variant===0?22+R(18):variant===1?18+R(16):28+R(20);
+ for(let i=0;i<frames;i++){
+  const w=Math.floor(range(W*.025,W*.19)),h=Math.floor(range(H*.025,H*.17)),x=Math.floor(range(0,W-w)),y=Math.floor(range(0,H-h));
+  v02Frame(x,y,w,h,1,1+R(2));
+  if(random()<.55)v02Hatch(x+2,y+2,Math.max(1,w-4),Math.max(1,h-4),range(4,10)|0,.82,random()<.5);
+  if(random()<.38)v02Bars(x+2,y+2,Math.max(1,w-4),Math.max(1,h-4),random()<.5?'h':'v',range(3,7)|0,.78);
+ }
+ const clusters=variant===0?15+R(12):variant===1?22+R(16):28+R(20);
+ for(let i=0;i<clusters;i++){
+  const w=Math.floor(range(W*.035,W*.18)),h=Math.floor(range(H*.025,H*.13)),x=Math.floor(range(0,W-w)),y=Math.floor(range(0,H-h));
+  v02Stipple(x,y,w,h,range(.055,.19),true);
+  if(random()<.52)v02Matrix(x,y,w,h,range(3,7)|0,range(3,8)|0,1);
+ }
+ const fragments=variant===0?110+R(70):variant===1?160+R(90):190+R(100);
+ for(let i=0;i<fragments;i++){
+  const w=Math.floor(range(2,W*.055)),h=Math.floor(range(1,H*.025)),x=Math.floor(range(0,W-w)),y=Math.floor(range(0,H-h));
+  if(random()<.66)v02Rect(x,y,w,h,1,range(.50,1));
+  else v02Frame(x,y,Math.max(3,w),Math.max(3,h),1,1);
+ }
+ for(let i=0;i<10+R(12);i++){
+  const x=Math.floor(range(0,W*.94)),y=Math.floor(range(0,H*.94)),w=Math.floor(range(W*.025,W*.12)),h=Math.floor(range(H*.025,H*.10));
+  v02Panel(x,y,w,h,R(10));
+ }
+ if(variant===1||variant===2){
+  for(let i=0;i<14+R(12);i++){
+   const x=Math.floor(range(0,W*.9)),y=Math.floor(range(0,H*.9)),w=Math.floor(range(W*.035,W*.14)),h=Math.floor(range(H*.012,H*.055));
+   const shift=Math.floor(range(-8,8));v02Rect(x+shift,y,w,h,1,range(.56,.92));
+   if(random()<.5)v02Rect(x,y+Math.floor(h*.55),w,1,0);
+  }
+ }
+ for(let i=0;i<80+R(90);i++){
+  const x=Math.floor(range(0,W)),y=Math.floor(range(0,H)),len=Math.floor(range(2,Math.max(3,W*.035)));
+  if(random()<.5)v02Rect(x,y,len,1+R(2),1,range(.45,1));
+  else v02Rect(x,y,1+R(2),len,1,range(.45,1));
+ }
+}
+function initV02Pigment(){
+ if(!v02Study||!v02Chromatic)return;
+ const blocks=3+R(4);
+ for(let b=0;b<blocks;b++){
+  const vertical=random()<.28,x=Math.floor(range(W*.04,W*.88)),y=Math.floor(range(H*.04,H*.90));
+  const w=Math.max(3,Math.floor(vertical?range(W*.012,W*.032):range(W*.045,W*.12)));
+  const h=Math.max(3,Math.floor(vertical?range(H*.08,H*.20):range(H*.012,H*.042)));
+  const colour=resetProfile.colours[b%resetProfile.colours.length],delay=range(resetProfile.colourStart,resetProfile.colourStart+resetProfile.colourReveal*1.15);
+  for(let yy=y;yy<Math.min(H-1,y+h);yy++)for(let xx=x;xx<Math.min(W-1,x+w);xx++){
+   if(random()<.08)continue;
+   const i=yy*W+xx;field[i]=1;
+   if(resetStoreColour(i,colour))resetColourTouched[i]=delay+range(0,.65);
+  }
+  if(random()<.62){
+   const yy=Math.min(H-2,y+h+Math.floor(range(2,8))),xx=Math.min(W-2,x+Math.floor(w*.12)),ww=Math.max(2,Math.floor(w*range(.35,.85)));
+   for(let k=0;k<ww;k++){const i=yy*W+xx+k;field[i]=1;if(resetStoreColour(i,resetProfile.colours[(b+1)%3]))resetColourTouched[i]=delay+range(.2,1.1);}
+  }
+ }
+}
+
 function init(){
  field=new Uint8Array(W*H);active=[];agents=[];memory=[];colonies=[];fronts=[];microSlips=[];slipHistory=[];flowPockets=[];flowHistory=[];motionFields=[];feedbackFields=[];feedbackHistory=[];feedbackModeUse.fill(0);feedbackRecent=[];feedbackReady=false;feedbackEvents=feedbackTouched=feedbackMoved=feedbackActive=0;pigmentEvents=[];pigmentHistory=[];pigmentFamilyUse.fill(0);pigmentRecent=[];pigmentEventCount=pigmentTransitions=0;nextFeedback=age+range(.1,.5);nextPigment=age+range(2.5,4.5);nextMorph=nextFront=0;used.clear();previous=null;age=next=nextSense=nextFocus=0;nextSlip=testNumber>=127?range(3.5,6):range(4.5,7.5);nextFlow=range(2,4);flowEvents=flowCells=motionEvents=motionTouched=motionMoved=motionActive=0;focus=-1;
+ if(v02Study){initV02Architecture();}else{
  let a=new Int16Array(W),b=new Int16Array(H),c=new Int16Array(W),flip=R(2),base=range(.35,.62),sign=random()<.5?-1:1;
  function terrace(arr,size,center,slope){let v=size*center;for(let x=0;x<arr.length;){let len=3+R(Math.max(4,arr.length*.13));v=clamp(v*.44+(center+slope*(x/arr.length-.5))*size*.56+range(-size*.065,size*.065),size*.10,size*.90);for(let j=x;j<Math.min(arr.length,x+len);j++)arr[j]=Math.round(v);x+=len;}}
  terrace(a,H,base,sign*.48);terrace(b,W,range(.34,.67),-sign*.30);terrace(c,H,range(.65,.83),sign*.20);
@@ -221,8 +437,11 @@ function init(){
   let y=R(H),x=b[y],depth=3+R(Math.max(3,W*.07)),len=4+R(Math.max(5,H*.26)),dir=pick([-1,1]),v=1-at(clamp(x+dir*depth,0,W-1),y);
   for(let j=0;j<depth;j+=2+R(2))for(let k=0;k<len-Math.floor(j*.5);k++)set(x+dir*j,y+k-Math.floor(len*.3),v);
  }
+
+ }
  for(let j=0;j<30;j++)agents.push({id:j,next:range(0,10),reward:new Float32Array(13),count:new Uint16Array(13),recent:[],energy:range(.4,1),signature:[],repeat:0,goal:R(3),edge:0,change:0});
  initResetSystem();
+ if(v02Study)initV02Pigment();
 }
 function resize(){
  let r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=Math.max(2,Math.round(r.width*d));canvas.height=Math.max(2,Math.round(r.height*d));
@@ -1073,12 +1292,12 @@ function serpentineFindStart(){
  return best||resetFindStart(1000+serpentineEvents);
 }
 function serpentineCreateAgent(){
- const p=serpentineFindStart(),family=resetProfile.colours.slice(),colourIndex=R(family.length);
+ const p=serpentineFindStart(),family=v02Study&&!v02Chromatic?[]:resetProfile.colours.slice(),colourIndex=R(family.length);
  serpentineEvents++;
  return {id:serpentineEvents,x:p.x,y:p.y,dir:R(4),stepSize:Math.floor(range(serpentineProfile.step[0],serpentineProfile.step[1]+1)),step:3,interval:range(serpentineProfile.tempo[0],serpentineProfile.tempo[1]),
   next:age+range(.12,.32),maxSteps:Math.floor(range(serpentineProfile.steps[0],serpentineProfile.steps[1]+1)),steps:0,run:0,maxRun:Math.floor(range(serpentineProfile.run[0],serpentineProfile.run[1]+1)),
   turns:0,stuck:0,tone:binary(field[p.y*W+p.x]),trail:[],born:age,expires:Infinity,finished:false,
-  phase:range(0,Math.PI*2),seed:1+R(1000000),strength:serpentineProfile.strength*range(.90,1.08),family,colourIndex,colour:family[colourIndex],energy:range(.78,1.12)};
+  phase:range(0,Math.PI*2),seed:1+R(1000000),strength:serpentineProfile.strength*range(.90,1.08),family,colourIndex,colour:family[colourIndex]||0,energy:range(.78,1.12)};
 }
 function serpentineChooseDirection(a){
  const dirs=[a.dir,(a.dir+1)&3,(a.dir+3)&3];if(a.stuck>0)dirs.push((a.dir+2)&3);
@@ -1220,7 +1439,13 @@ function resetAgentColour(agent){
   }
   if(inherited)return inherited;
  }
- if(cargoStudy){
+ if(v02Study){
+  if(!v02Chromatic||age<resetProfile.colourStart)return 0;
+  const stagger=(agent.id%7)*.24+(seed%17)*.014;
+  const stage=clamp(Math.floor((age-resetProfile.colourStart+stagger)/resetProfile.colourReveal),0,2);
+  return resetProfile.colours[(agent.id+stage)%resetProfile.colours.length];
+ }
+ if(chromaticStudy){
   const stagger=(agent.id%6)*.52+(seed%13)*.018;
   const stage=clamp(Math.floor((age-resetProfile.colourStart+stagger)/resetProfile.colourReveal),0,2);
   return resetProfile.colours[stage];
@@ -2000,8 +2225,8 @@ function resetWritePixel(x,y,sx,sy,weight,salt,colour,perpX,perpY){
  if(resetWriteStamp[dst]===resetStamp||field[dst]===field[src])return;
  if(motionNoise(x>>1,y>>1,salt)>.18+.82*clamp(weight,0,1))return;
  resetWriteStamp[dst]=resetStamp;
- const inherited=resetColour[src]||0;
- let nextColour=inherited||(weight>.34?colour:0);
+ const inherited=resetColour[src]&&(!v02Study||age>=resetColourTouched[src])?resetColour[src]:0;
+ let nextColour=inherited||(weight>.34&&(!v02Study||v02Chromatic)?colour:0);
  if(nextColour&&!resetColour[dst]&&resetColourCells>=Math.floor(field.length*resetProfile.colourCap))nextColour=0;
  renderField[dst]=nextColour||resetSource[src];
  if(nextColour){
@@ -2026,6 +2251,7 @@ function applyResetMaterial(){
   const i=resetColourIndices[j],colour=resetColour[i];
   if(!colour){resetColourListed[i]=0;continue;}
   const lived=age-resetColourTouched[i];
+  if(v02Study&&lived<0){resetColourIndices[write++]=i;continue;}
   if(lived>=resetProfile.colourLife){resetColour[i]=0;resetColourCells--;resetColourListed[i]=0;continue;}
   const tone=field[i]===0?0:1,fade=resetFadePalette[colour][tone];
   renderField[i]=lived<resetProfile.colourLife*.55?colour:lived<resetProfile.colourLife*.78?fade[0]:fade[1];
@@ -2111,10 +2337,10 @@ function createGPU(){
  const paletteFloats=new Float32Array(palette.flatMap(c=>c.map(x=>x/255)));
  let home=null,states=[],fbos=[],read=0,ready=false,tw=0,th=0;
  const regionData=new Float32Array(64),traitData=new Float32Array(64),geneData=new Float32Array(64);let atlasTex=null,atlasData=null,atlasScores=null,atlasW=0,atlasH=0;
- const modeCount=cargoStudy?48:40,gpuModes=new WeakMap(),recentModes=[],uses=new Uint16Array(modeCount);
+ const modeCount=chromaticStudy?48:40,gpuModes=new WeakMap(),recentModes=[],uses=new Uint16Array(modeCount);
  function choose(){
   let best=0,bestScore=-1;
-  for(let k=0;k<8;k++){const m=R(modeCount),bias=cargoStudy&&m>=40?1.38:1,score=random()*bias/(1+uses[m]*.25)*(recentModes.includes(m)?.15:1);if(score>bestScore){best=m;bestScore=score;}}
+  for(let k=0;k<8;k++){const m=R(modeCount),bias=chromaticStudy&&m>=40?1.38:1,score=random()*bias/(1+uses[m]*.25)*(recentModes.includes(m)?.15:1);if(score>bestScore){best=m;bestScore=score;}}
   uses[best]++;recentModes.push(best);if(recentModes.length>10)recentModes.shift();return best;
  }
  function texture(internal,format){
