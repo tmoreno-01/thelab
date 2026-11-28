@@ -22,4 +22,4 @@ This applies to all LifeAfterLogic Lab experiments: existing projects when they 
 
 ## Current example
 
-`stochastic-ink/` follows this structure: v.01 and v.02 are preserved as playable archives, with v.03 as the current fibrous-ink and membrane-rendering iteration.
+`stochastic-ink/` follows this structure: v.01, v.02 and v.03 are preserved as playable archives, with v.04 as the current WebGL2 micro-particle and connected-filament iteration.
