@@ -266,12 +266,24 @@ void main(){
 <script id="particle-vertex" type="x-shader/x-vertex">
 #version 300 es
 precision highp float;
-uniform float uTime,uAspect,uSeed,uDensity,uSpread,uAudio,uBass,uMids,uHighs,uDrift,uSwirl,uParticleScale;
+uniform float uTime,uAspect,uSeed,uDensity,uSpread,uAudio,uBass,uMids,uHighs,uDrift,uSwirl,uParticleScale,uLineMode;
 out float vAlpha;
 out float vTone;
 float hash1(float x){return fract(sin(x*127.1+uSeed*19.19)*43758.5453123);}
 void main(){
-  float id=float(gl_VertexID),family=floor(id/128.0),local=mod(id,128.0)/127.0;
+  int familyIndex,stepIndex;
+  float local;
+  if(uLineMode>0.5){
+    int segment=gl_VertexID/2;
+    familyIndex=segment/127;
+    stepIndex=segment%127;
+    local=(float(stepIndex)+float(gl_VertexID%2))/127.0;
+  }else{
+    familyIndex=gl_VertexID/8;
+    stepIndex=gl_VertexID%8;
+    local=float(stepIndex)/7.0;
+  }
+  float family=float(familyIndex);
   float base=family*0.754877666+uSeed*0.03171;
   float h0=hash1(base+1.7),h1=hash1(base+8.2),h2=hash1(base+15.9);
   float h3=hash1(base+22.4),h4=hash1(base+39.1),h5=hash1(base+51.8);
@@ -286,14 +298,20 @@ void main(){
   float curvature=sin(local*4.3+h2*6.283+t*0.065)*0.22+sin(local*9.1+h3*6.283-t*0.045)*0.09;
   angle+=curvature*smoothstep(0.0,0.24,local);
   if(group>0.83&&group<0.91)angle+=sin(local*6.283+h4*6.283+t*0.075)*0.22;
+
   vec2 direction=vec2(cos(angle),sin(angle));
   float totalLength=pow(local,1.08)*(0.74+h2*0.82)*uSpread;
   if(group>0.91)totalLength=pow(h2,1.62)*0.52;
-  float stepLength=totalLength/9.0;
-  vec2 centre=vec2(0.045*sin(t*0.15+uSeed)+0.028*sin(t*0.067+uSeed*1.7)+0.014*bass,
-                   -0.045+0.043*cos(t*0.12+uSeed*0.83)-0.010*bass);
+  float target=local*9.0;
+  float stepLength=(0.74+h2*0.82)*uSpread/9.0;
+  if(group>0.91)stepLength=pow(h2,1.62)*0.52/9.0;
+  vec2 centre=vec2(
+    0.045*sin(t*0.15+uSeed)+0.028*sin(t*0.067+uSeed*1.7)+0.014*bass,
+    -0.045+0.043*cos(t*0.12+uSeed*0.83)-0.010*bass
+  );
   vec2 pos=centre;
   for(int k=0;k<9;k++){
+    if(float(k)>=target)break;
     float s=(float(k)+0.5)/9.0;
     float nA=sin(pos.y*5.3+pos.x*2.1+t*0.11+h3*6.283);
     float nB=cos(pos.x*4.7-pos.y*3.0-t*0.09+h4*6.283);
@@ -301,20 +319,25 @@ void main(){
     vec2 tangent=vec2(-direction.y,direction.x);
     float bend=sin(s*4.7+h5*6.283+t*0.045);
     direction=normalize(direction+curl*(0.16+uDensity*0.018)+tangent*(0.055*bend));
-    pos+=direction*stepLength;
+    float portion=min(1.0,target-float(k));
+    pos+=direction*stepLength*portion;
   }
   vec2 side=vec2(-direction.y,direction.x);
-  float across=(h3-0.5)*(0.0015+totalLength*0.026)+sin(local*7.5+h5*6.283+t*0.07)*0.018*totalLength;
+  float across=(h3-0.5)*(0.0015+totalLength*0.026);
+  across+=sin(local*7.5+h5*6.283+t*0.07)*0.018*totalLength;
   pos+=side*across;
   pos+=vec2(sin(pos.y*5.7+t*0.06+h4*6.283),cos(pos.x*6.3-t*0.05+h5*6.283))*0.010*totalLength;
+
   float haze=group>0.91?1.0:0.0;
   float strandFade=exp(-totalLength*(0.48/max(uSpread,0.25)));
-  float groupOpacity=group<0.83?0.050:(group<0.91?0.046:0.016);
-  vAlpha=groupOpacity*strandFade*(0.62+h4*0.82)*(0.78+uDensity*0.15)*(0.90+bass*0.20+mids*0.12)*(1.0-haze*0.20);
+  float groupOpacity=group<0.83?0.047:(group<0.91?0.043:0.014);
+  float pointBoost=uLineMode>0.5?0.78:1.0;
+  vAlpha=groupOpacity*strandFade*(0.62+h4*0.82)*(0.78+uDensity*0.15)
+         *(0.90+bass*0.20+mids*0.12)*(1.0-haze*0.20)*pointBoost;
   vTone=mix(0.10,0.38,h5);
   if(totalLength<0.14)vTone=mix(0.025,0.13,h5);
   gl_Position=vec4(pos.x/max(uAspect,0.1),pos.y,0.0,1.0);
-  gl_PointSize=clamp((0.66+h3*0.92)*uParticleScale,0.55,1.9);
+  gl_PointSize=clamp((0.62+h3*0.82)*uParticleScale,0.55,1.7);
 }
 </script>
 <script id="particle-fragment" type="x-shader/x-fragment">
@@ -401,7 +424,7 @@ function initRenderer(){
     vao=gl.createVertexArray();gl.bindVertexArray(vao);
     gl.disable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.disable(gl.SCISSOR_TEST);gl.clearColor(1,1,1,1);
     fieldUniforms=cacheUniforms(fieldProgram,["uResolution","uTime","uAspect","uSeed","uChaos","uDensity","uSpread","uCore","uLineWeight","uInk","uWash","uWeb","uAudio","uBass","uMids","uHighs","uSwirl","uDrift","uStability"]);
-    particleUniforms=cacheUniforms(particleProgram,["uTime","uAspect","uSeed","uDensity","uSpread","uAudio","uBass","uMids","uHighs","uDrift","uSwirl","uParticleScale"]);
+    particleUniforms=cacheUniforms(particleProgram,["uTime","uAspect","uSeed","uDensity","uSpread","uAudio","uBass","uMids","uHighs","uDrift","uSwirl","uParticleScale","uLineMode"]);
     resizeRenderer();overlay.classList.add("hidden");
     status("WebGL2 active · "+fmt(particleCount)+" micro-particles",true);
     running=true;lastFrame=performance.now()/1000;
@@ -444,7 +467,10 @@ function renderFrame(ms){
     set1(particleUniforms.uDensity,settings.density);set1(particleUniforms.uSpread,settings.spread);set1(particleUniforms.uAudio,settings.audio);
     set1(particleUniforms.uBass,audioSmooth.low);set1(particleUniforms.uMids,audioSmooth.mid);set1(particleUniforms.uHighs,audioSmooth.high);
     set1(particleUniforms.uDrift,settings.drift);set1(particleUniforms.uSwirl,settings.swirl);
-    set1(particleUniforms.uParticleScale,1.0+settings.filament*.18);gl.drawArrays(gl.POINTS,0,particleCount);
+    set1(particleUniforms.uParticleScale,1.0+settings.filament*.18);
+    const familyCount=Math.floor(particleCount/128);
+    set1(particleUniforms.uLineMode,1.0);gl.lineWidth(1.0);gl.drawArrays(gl.LINES,0,familyCount*127*2);
+    set1(particleUniforms.uLineMode,0.0);gl.drawArrays(gl.POINTS,0,familyCount*8);
     gl.disable(gl.BLEND);requestAnimationFrame(renderFrame);
   }catch(error){console.error(error);running=false;startFallback(error.message||"GPU rendering error");}
 }
