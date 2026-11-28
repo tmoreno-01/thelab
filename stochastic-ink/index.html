@@ -309,15 +309,18 @@ void main(){
   for(int k=0;k<9;k++){
     if(float(k)>=target)break;
     float s=(float(k)+0.5)/9.0;
-    float nA=sin(pos.y*5.3+pos.x*2.1+t*0.11+h3*6.283);
-    float nB=cos(pos.x*4.7-pos.y*3.0-t*0.09+h4*6.283);
+    float nA=sin(pos.y*5.3+pos.x*2.1+t*0.11+h3*6.283)
+             +0.35*sin(pos.x*12.3-pos.y*7.1+t*0.17+h5*6.283);
+    float nB=cos(pos.x*4.7-pos.y*3.0-t*0.09+h4*6.283)
+             +0.35*cos(pos.y*10.8+pos.x*6.5-t*0.13+h2*6.283);
     vec2 curl=normalize(vec2(nA,nB)+vec2(0.0001));
     vec2 tangent=vec2(-direction.y,direction.x);
     float bend=sin(s*4.7+h5*6.283+t*0.045);
-    float loopBend=(group>0.83&&group<0.91)?0.22:0.055;
-    direction=normalize(direction+curl*(0.16+uDensity*0.018)+tangent*(loopBend*bend));
+    float loopBend=(group>0.83&&group<0.91)?0.42:0.11;
+    direction=normalize(direction+curl*(0.28+uDensity*0.03)+tangent*(loopBend*bend));
     float portion=min(1.0,target-float(k));
     pos+=direction*stepLength*portion;
+    pos+=vec2((h0-0.5)*0.016,(h1-0.5)*0.020)*(float(k)+1.0)/9.0;
   }
   vec2 side=vec2(-direction.y,direction.x);
   float across=(h3-0.5)*(0.0015+totalLength*0.026);
