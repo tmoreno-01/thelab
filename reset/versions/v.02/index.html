@@ -83,28 +83,29 @@ main{max-width:1800px;margin:auto;padding:28px 24px 54px}
    <button type="button" class="history-item" data-round="3" aria-pressed="false"><span class="history-no">010–012</span><span class="history-name">ROUND 004</span></button>
    <button type="button" class="history-item" data-round="4" aria-pressed="false"><span class="history-no">013–015</span><span class="history-name">ROUND 005</span></button>
    <button type="button" class="history-item" data-round="5" aria-pressed="false"><span class="history-no">016–018</span><span class="history-name">ROUND 006</span></button>
-   <button type="button" class="history-item" data-round="6" aria-pressed="true"><span class="history-no">019</span><span class="history-name">AUTOGENESIS</span></button>
+   <button type="button" class="history-item" data-round="6" aria-pressed="false"><span class="history-no">019</span><span class="history-name">RESERVED</span></button>
+   <button type="button" class="history-item" data-round="7" aria-pressed="true"><span class="history-no">020–022</span><span class="history-name">LATEST</span></button>
   </div>
  </nav>
 </main>
 <script>
-const names=["Patchwork Signals","Chromatic Inheritance","Residual Grammar","Grid Ecology","Signal Fracture","Living Syntax","Lattice Drift","Patch Relay","Signal Weather","Relay Spine","Cluster Grammar","Signal Weather","Coherent Weather","Relay Bloom","Quiet Pressure","Axial Drift","Fracture Atlas","Common Current","Autogenesis"];
+const names=["Patchwork Signals","Chromatic Inheritance","Residual Grammar","Grid Ecology","Signal Fracture","Living Syntax","Lattice Drift","Patch Relay","Signal Weather","Relay Spine","Cluster Grammar","Signal Weather","Coherent Weather","Relay Bloom","Quiet Pressure","Axial Drift","Fracture Atlas","Common Current","Autogenesis","Polyphony","Excitable Matter","Living Syntax II"];
 const tiles=[...document.querySelectorAll('.tile')],loaded=new WeakSet(),buttons=[...document.querySelectorAll('[data-round]')];
 const number=n=>String(n).padStart(3,'0');
-let current=6;
+let current=7;
 const layouts019=['columns','strata','territories','continuous','woven','archipelago','faultline','monolith','register','crossroads','constellation','interlace'];
 function newSeed(tile){tile.dataset.seed=String(crypto.getRandomValues(new Uint32Array(1))[0]);const used=tiles.filter(t=>t!==tile).map(t=>t.dataset.layout);const pool=layouts019.filter(l=>!used.includes(l)&&l!==tile.dataset.layout);tile.dataset.layout=pool[Math.floor(Math.random()*pool.length)];}
-function sourceFor(tile,preview=true){const n=Number(tile.dataset.number),old=n<=12;if(n===19){if(!tile.dataset.seed)newSeed(tile);return './autogenesis.html#study=19&seed='+tile.dataset.seed+'&layout='+tile.dataset.layout+(preview?'&preview=1':'');}return './'+(old?'source':n<=15?'living':'axial')+'.html?study='+(old?n+167:n)+(preview?'&preview=1':'')+'&refresh='+Date.now();}
+function sourceFor(tile,preview=true){const n=Number(tile.dataset.number),old=n<=12;if(n>=19){if(!tile.dataset.seed)newSeed(tile);return './'+(n===19?'autogenesis':'polyphony')+'.html#study='+n+'&seed='+tile.dataset.seed+'&layout='+tile.dataset.layout+(preview?'&preview=1':'');}return './'+(old?'source':n<=15?'living':'axial')+'.html?study='+(old?n+167:n)+(preview?'&preview=1':'')+'&refresh='+Date.now();}
 function previewStatus(tile,label){let status=tile.querySelector('.preview-status');if(!status){status=document.createElement('div');status.className='preview-status';status.setAttribute('role','status');tile.querySelector('.screen').append(status);}status.textContent=label||'';status.hidden=!label;}
 function navigate(tile,preview=true,attempt=0){
- const oldFrame=tile.querySelector('iframe'),is019=Number(tile.dataset.number)===19;
+ const oldFrame=tile.querySelector('iframe'),is019=Number(tile.dataset.number)>=19;
  const frame=oldFrame.cloneNode(false);frame.removeAttribute('src');frame.removeAttribute('data-pending');
  const url=sourceFor(tile,preview);let settled=false;
  const valid=()=>tile.querySelector('iframe')===frame;
  if(is019){frame.dataset.pending='';previewStatus(tile,attempt?'Retrying preview…':'Loading preview…');}
  else previewStatus(tile,'');
  function retry(){if(settled||!valid())return;settled=true;if(attempt<3){previewStatus(tile,'Retrying preview…');setTimeout(()=>{if(valid())navigate(tile,preview,attempt+1)},400*(attempt+1));}else previewStatus(tile,'Preview unavailable — select New seed to retry');}
- function ready(){if(settled||!valid())return;let ok=false;try{const d=frame.contentWindow.__resetDiagnostics?.();ok=!!d&&d.study===19&&String(d.seed)===tile.dataset.seed&&d.layout===tile.dataset.layout;}catch(e){}
+ function ready(){if(settled||!valid())return;let ok=false;try{const d=frame.contentWindow.__resetDiagnostics?.();ok=!!d&&d.study===Number(tile.dataset.number)&&String(d.seed)===tile.dataset.seed&&d.layout===tile.dataset.layout;}catch(e){}
  if(ok){settled=true;delete frame.dataset.pending;previewStatus(tile,'');syncTile(tile);}else retry();}
  frame.addEventListener('load',()=>{if(!valid())return;syncTile(tile);if(is019)setTimeout(ready,650);});
  frame.addEventListener('error',()=>{if(is019)retry();});
@@ -118,22 +119,22 @@ function isVisible(tile){if(document.hidden)return false;if(document.fullscreenE
 function syncTile(tile){const full=document.fullscreenElement===tile;message(tile,'study-visibility',{visible:isVisible(tile)});message(tile,'study-quality',{fullscreen:full,full});}
 function syncAll(){for(const tile of tiles)syncTile(tile);}
 function selectRound(round,write=true){
- current=Math.max(0,Math.min(6,round));const start=current*3+1;
- document.querySelector('.intro h1').textContent='RESET / v.02 — '+(current===6?'019 — AUTOGENESIS':number(start)+'–'+number(start+2));
- document.querySelector('.intro p').textContent=current===6?'Three independent seeds of one engine · cellular growth · structural choreography':current===5?'Six compositional grammars · angular movement · living pigment':'Preserved studies · fresh seed on every load';
+ current=Math.max(0,Math.min(7,round));const start=current===7?20:current*3+1;
+ document.querySelector('.intro h1').textContent='RESET / v.02 — '+(current===6?'019 — AUTOGENESIS / RESERVED':number(start)+'–'+number(start+2));
+ document.querySelector('.intro p').textContent=current===7?'Independent motion families · cellular shockwaves · structural counterpoint':current===6?'Reserved benchmark · three independent seeds':current===5?'Six compositional grammars · angular movement · living pigment':'Preserved studies · fresh seed on every load';
  document.querySelector('.grid').setAttribute('aria-label',current===6?'RESET 019 — three seeds':'RESET studies '+number(start)+' to '+number(start+2));
  buttons.forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.round)===current)));
- tiles.forEach((tile,i)=>{const n=current===6?19:start+i,name=names[n-1];tile.dataset.number=n;if(current===6)newSeed(tile);tile.dataset.study=n<=12?n+167:n;tile.setAttribute('aria-label','Open study '+number(n)+' '+name+' fullscreen');tile.querySelector('.number span').textContent=number(n)+' — '+name.toUpperCase()+(current===6?' / SEED '+(i+1):'');const frame=tile.querySelector('iframe');frame.title='RESET '+number(n)+' — '+name;if(loaded.has(frame)||isVisible(tile))navigate(tile,true);});
+ tiles.forEach((tile,i)=>{const n=current===6?19:start+i,name=names[n-1];tile.dataset.number=n;if(current>=6)newSeed(tile);tile.dataset.study=n<=12?n+167:n;tile.setAttribute('aria-label','Open study '+number(n)+' '+name+' fullscreen');tile.querySelector('.number span').textContent=number(n)+' — '+name.toUpperCase()+(current===6?' / SEED '+(i+1):'');const frame=tile.querySelector('iframe');frame.title='RESET '+number(n)+' — '+name;if(loaded.has(frame)||isVisible(tile))navigate(tile,true);});
  if(write)history.replaceState(null,'','#round-'+(current+1));
 }
 const observer=new IntersectionObserver(entries=>{for(const entry of entries){const tile=entry.target;if(entry.isIntersecting)loadFrame(tile);syncTile(tile);}},{threshold:.04});
-const initial=location.hash.match(/^#round-([1-7])$/);selectRound(initial?Number(initial[1])-1:6,false);
+const initial=location.hash.match(/^#round-([1-8])$/);selectRound(initial?Number(initial[1])-1:7,false);
 buttons.forEach(b=>b.addEventListener('click',()=>selectRound(Number(b.dataset.round))));
 tiles.forEach(tile=>{
  observer.observe(tile);
  const open=()=>{loadFrame(tile);if(typeof tile.requestFullscreen==='function'){try{const result=tile.requestFullscreen();if(result?.catch)result.catch(()=>{location.href=sourceFor(tile,false);});}catch(e){location.href=sourceFor(tile,false);}}else location.href=sourceFor(tile,false);};
  tile.addEventListener('click',open);
- tile.querySelector('.reseed').addEventListener('click',e=>{e.stopPropagation();if(Number(tile.dataset.number)===19)newSeed(tile);navigate(tile,document.fullscreenElement!==tile);});
+ tile.querySelector('.reseed').addEventListener('click',e=>{e.stopPropagation();if(Number(tile.dataset.number)>=19)newSeed(tile);navigate(tile,document.fullscreenElement!==tile);});
  tile.addEventListener('keydown',e=>{if(e.target===tile&&(e.key==='Enter'||e.key===' ')){e.preventDefault();open();}});
 });
 document.addEventListener('fullscreenchange',syncAll);document.addEventListener('visibilitychange',syncAll);window.addEventListener('resize',syncAll);
