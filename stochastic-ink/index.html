@@ -452,7 +452,7 @@ let audioContext=null,audioSource=null,analyser=null,mediaDestination=null,frequ
 let audioSmooth={bass:0,mid:0,high:0,rms:0,pulse:0},lastBass=0,lastRms=0;
 let audioUrl=null,recorder=null,recordingChunks=[];
 let frameTime=0,lastFrame=0,running=false,fallbackMode=false,frameCounter=0;
-const settings={turbulence:1.35,vortex:1.20,spread:1.10,ink:1.35,trail:.962,size:1.0,audio:2.8,drift:1.0};
+const settings={turbulence:1.35,vortex:1.20,spread:1.10,ink:1.35,trail:.994,size:1.0,audio:2.8,drift:1.0};
 const fmt=n=>Number(n).toLocaleString("en-GB");
 function status(message,ok){
   $("gpuStatus").textContent=message;
