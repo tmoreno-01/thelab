@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RESET — v.02</title>
+<title>RESET — v.02 / Three studies</title>
 <style>
 *{box-sizing:border-box}
 html{background:#fff;color:#111;font:13px Arial,sans-serif}
@@ -23,8 +23,12 @@ main{max-width:1800px;margin:auto;padding:26px 24px 48px}
 .screen{position:relative;overflow:hidden;aspect-ratio:16/10;background:#efeee9;border:1px solid #e8e7e1}
 .screen iframe{display:block;width:100%;height:100%;border:0;pointer-events:none}
 .tile:focus-visible .screen{outline:2px solid #111;outline-offset:3px}
-.number{display:flex;align-items:center;justify-content:space-between;padding:9px 1px 0;color:#111;font-size:11px;letter-spacing:.12em}
-.number span:last-child{color:#aaa;font-size:9px;letter-spacing:.08em}
+.number{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 1px 0;color:#111;font-size:10px;letter-spacing:.10em}
+.number span:last-child{color:#aaa;font-size:9px;letter-spacing:.08em;white-space:nowrap}
+.reseed{border:0;background:transparent;padding:0;color:#aaa;font:inherit;font-size:9px;letter-spacing:.08em;white-space:nowrap;cursor:pointer}
+.reseed:hover{color:#111}
+.archive{margin:24px 0 0;font-size:10px;color:#999}
+.archive a{color:#666}
 .tile:fullscreen{width:100vw;height:100vh;background:#efeee9;padding:16px;display:flex;flex-direction:column;gap:10px}
 .tile:fullscreen .screen{flex:1;min-height:0;aspect-ratio:auto;border:0}
 .tile:fullscreen .number{padding:0;flex:0 0 auto}
@@ -39,27 +43,28 @@ main{max-width:1800px;margin:auto;padding:26px 24px 48px}
 </header>
 <main>
 <div class="intro">
-<h1>Cargo-influenced motion studies</h1>
-<p>Select a study to expand it</p>
+<h1>New visual system</h1>
+<p>Every refresh creates a new composition and seed</p>
 </div>
 <section class="grid" aria-label="Three RESET experiments">
-<article class="tile" tabindex="0" role="button" aria-label="Open experiment 001 fullscreen" data-study="168">
+<article class="tile" tabindex="0" role="button" aria-label="Open Grid Ecology fullscreen" data-study="171">
 <div class="screen"><iframe title="RESET experiment 001" loading="lazy" allowfullscreen></iframe></div>
-<div class="number"><span>001</span><span>FULLSCREEN ↗</span></div>
+<div class="number"><span>001 — GRID ECOLOGY</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
 </article>
-<article class="tile" tabindex="0" role="button" aria-label="Open experiment 002 fullscreen" data-study="169">
+<article class="tile" tabindex="0" role="button" aria-label="Open Signal Fracture fullscreen" data-study="172">
 <div class="screen"><iframe title="RESET experiment 002" loading="lazy" allowfullscreen></iframe></div>
-<div class="number"><span>002</span><span>FULLSCREEN ↗</span></div>
+<div class="number"><span>002 — SIGNAL FRACTURE</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
 </article>
-<article class="tile" tabindex="0" role="button" aria-label="Open experiment 003 fullscreen" data-study="170">
+<article class="tile" tabindex="0" role="button" aria-label="Open Living Syntax fullscreen" data-study="173">
 <div class="screen"><iframe title="RESET experiment 003" loading="lazy" allowfullscreen></iframe></div>
-<div class="number"><span>003</span><span>FULLSCREEN ↗</span></div>
+<div class="number"><span>003 — LIVING SYNTAX</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
 </article>
 </section>
+<p class="archive"><a href="./archive.html">Previous studies ↗</a></p>
 </main>
 <script>const tiles=[...document.querySelectorAll('.tile')];
 const loaded=new WeakSet();
-function sourceFor(tile,preview=true){return './source.html?study='+tile.dataset.study+(preview?'&preview=1':'');}
+function sourceFor(tile,preview=true){return './source.html?study='+tile.dataset.study+(preview?'&preview=1':'')+'&refresh='+Date.now();}
 function loadFrame(tile){
  const frame=tile.querySelector('iframe');
  if(!loaded.has(frame)){
@@ -104,6 +109,7 @@ tiles.forEach(tile=>{
   }else location.href=sourceFor(tile,false);
  };
  tile.addEventListener('click',open);
+ tile.querySelector('.reseed').addEventListener('click',e=>{e.stopPropagation();const full=document.fullscreenElement===tile;const frame=loadFrame(tile);frame.src=sourceFor(tile,!full);});
  tile.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
 });
 document.addEventListener('fullscreenchange',syncAll);
