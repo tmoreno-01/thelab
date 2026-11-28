@@ -3,46 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RESET — lab</title>
+<meta name="theme-color" content="#ffffff">
+<title>RESET — LifeAfterLogic Lab</title>
 <style>
-*{box-sizing:border-box}
-html{background:#fff;color:#111;font:13px Arial,sans-serif}
-body{margin:0;min-height:100vh}
-a{color:inherit;text-decoration:none}
-a:hover{text-decoration:underline}
-header{display:flex;align-items:center;gap:18px;padding:14px 24px;border-bottom:1px solid #eee}
-header a{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:bold}
-header img{width:26px;height:26px}
-header span{color:#777;font-size:12px}
-main{max-width:1400px;margin:auto;padding:34px 24px 60px}
-.kicker{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#999;margin:0 0 12px}
-h1{font-size:22px;font-weight:normal;letter-spacing:-.035em;margin:0 0 28px}
-.versions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.version{display:flex;flex-direction:column;justify-content:space-between;min-height:210px;padding:20px;border:1px solid #e6e6e6;transition:background .2s,border-color .2s}
-.version:hover{background:#f7f7f5;border-color:#bbb;text-decoration:none}
-.version-top{display:flex;justify-content:space-between;align-items:center}
-.version-no{font-size:11px;letter-spacing:.14em;color:#777}
-.arrow{font-size:18px;color:#999}
-.version h2{font-size:17px;font-weight:normal;margin:0 0 7px}
-.version p{font-size:11px;color:#888;line-height:1.6;margin:0;max-width:420px}
-@media(max-width:600px){header{padding:12px}main{padding:26px 14px 40px}.versions{grid-template-columns:1fr}.version{min-height:170px}}
+*{box-sizing:border-box}html{background:#fff;color:#111;font:13px Arial,sans-serif}body{margin:0;min-height:100vh}a{color:inherit;text-decoration:none}a:hover{text-decoration:none}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;border-bottom:1px solid #eee}header .brand{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:bold}header img{width:26px;height:26px}.header-link{font-size:10px;letter-spacing:.12em;color:#888}
+main{max-width:1400px;margin:auto;padding:44px 24px 64px}.kicker{margin:0 0 12px;font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:#999}h1{font-size:clamp(28px,4vw,46px);font-weight:normal;letter-spacing:-.055em;margin:0 0 10px}.intro{max-width:520px;font-size:12px;line-height:1.7;color:#888;margin:0 0 34px}
+.versions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.version{display:flex;flex-direction:column;justify-content:space-between;min-height:280px;padding:22px;border:1px solid #e5e5e5;transition:background .18s,border-color .18s}.version:hover{background:#f8f8f6;border-color:#aaa}.version-top{display:flex;justify-content:space-between;align-items:center}.version-no{font-size:10px;letter-spacing:.15em;color:#999}.arrow{font-size:17px;color:#aaa}.version-bottom h2{font-size:20px;font-weight:normal;letter-spacing:-.03em;margin:0 0 8px}.version-bottom p{font-size:11px;line-height:1.7;color:#888;margin:0;max-width:430px}.version-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}.version-meta span{border:1px solid #e7e7e7;padding:6px 8px;font-size:9px;letter-spacing:.08em;color:#777}.current{border-color:#111}.current .version-no{color:#111}
+footer{margin-top:30px;padding-top:14px;border-top:1px solid #eee;font-size:10px;color:#999;letter-spacing:.08em}
+@media(max-width:620px){header{padding:12px}main{padding:30px 14px 42px}.versions{grid-template-columns:1fr}.version{min-height:220px;padding:18px}.header-link{font-size:9px}}
 </style>
 </head>
 <body>
-<header><a href="../"><img src="../media/lifeafterlogic-mark.svg" alt="">lab</a><span>RESET</span></header>
+<header><a class="brand" href="../"><img src="../media/lifeafterlogic-mark.svg" alt="">lab</a><a class="header-link" href="../">BACK TO LAB INDEX ↗</a></header>
 <main>
-<p class="kicker">Living generative system</p>
-<h1>Choose an engine version</h1>
-<section class="versions" aria-label="RESET versions">
-<a class="version" href="./versions/v.01/index.html">
-<div class="version-top"><span class="version-no">v.01</span><span class="arrow">↗</span></div>
-<div><h2>Original RESET</h2><p>Original movement system and archived experiments.</p></div>
-</a>
-<a class="version" href="./versions/v.02/index.html">
-<div class="version-top"><span class="version-no">v.02</span><span class="arrow">↗</span></div>
-<div><h2>Original visual system</h2><p>Three evolving studies built from architectural structures, local deformation and chromatic propagation.</p></div>
-</a>
-</section>
+ <p class="kicker">LifeAfterLogic / Generative image system</p>
+ <h1>RESET</h1>
+ <p class="intro">A continuously evolving visual system built from dense architectural structures, local pattern mutations and independent movement behaviours. Choose an engine generation to explore its experiments.</p>
+ <section class="versions" aria-label="RESET engine versions">
+  <a class="version" href="./versions/v.01/index.html">
+   <div class="version-top"><span class="version-no">ENGINE / v.01</span><span class="arrow">↗</span></div>
+   <div class="version-bottom"><h2>Original RESET</h2><p>The first movement engine and its preserved experimental rounds. Explore the original procedural language and earlier studies.</p><div class="version-meta"><span>ORIGINAL ENGINE</span><span>ARCHIVE</span></div></div>
+  </a>
+  <a class="version current" href="./versions/v.02/index.html">
+   <div class="version-top"><span class="version-no">CURRENT ENGINE / v.02</span><span class="arrow">↗</span></div>
+   <div class="version-bottom"><h2>RESET / New visual system</h2><p>Higher-resolution micro-architecture, orthogonal modular motion, pattern relay and active chromatic propagation.</p><div class="version-meta"><span>007 / LATTICE DRIFT</span><span>008 / PATCH RELAY</span><span>009 / SIGNAL WEATHER</span></div></div>
+  </a>
+ </section>
+ <footer>RESET / VERSION SELECTOR · ALL EARLIER BUILDS REMAIN ACCESSIBLE</footer>
 </main>
 </body>
 </html>
