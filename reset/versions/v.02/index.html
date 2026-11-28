@@ -57,24 +57,39 @@ main{max-width:1800px;margin:auto;padding:26px 24px 48px}
 </article>
 </section>
 </main>
-<script>
-const tiles=[...document.querySelectorAll('.tile')];
+<script>const tiles=[...document.querySelectorAll('.tile')];
 const loaded=new WeakSet();
 function sourceFor(tile,preview=true){return './source.html?study='+tile.dataset.study+(preview?'&preview=1':'');}
 function loadFrame(tile){
  const frame=tile.querySelector('iframe');
- if(!loaded.has(frame)){frame.src=sourceFor(tile,true);loaded.add(frame);}
+ if(!loaded.has(frame)){
+  loaded.add(frame);
+  frame.addEventListener('load',()=>syncTile(tile));
+  frame.src=sourceFor(tile,true);
+ }
  return frame;
 }
 function message(tile,type,data){
  const frame=tile.querySelector('iframe');
  if(frame?.contentWindow)frame.contentWindow.postMessage({type,...data},location.origin);
 }
+function isVisible(tile){
+ if(document.hidden)return false;
+ if(document.fullscreenElement)return document.fullscreenElement===tile;
+ const r=tile.getBoundingClientRect();
+ return r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;
+}
+function syncTile(tile){
+ const full=document.fullscreenElement===tile;
+ message(tile,'study-visibility',{visible:isVisible(tile)});
+ message(tile,'study-quality',{fullscreen:full,full});
+}
+function syncAll(){for(const tile of tiles)syncTile(tile);}
 const observer=new IntersectionObserver(entries=>{
  for(const entry of entries){
   const tile=entry.target;
-  if(entry.isIntersecting){loadFrame(tile);message(tile,'study-visibility',{visible:true});}
-  else message(tile,'study-visibility',{visible:false});
+  if(entry.isIntersecting)loadFrame(tile);
+  syncTile(tile);
  }
 },{threshold:.04});
 tiles.forEach(tile=>{
@@ -82,25 +97,17 @@ tiles.forEach(tile=>{
  const open=()=>{
   loadFrame(tile);
   if(typeof tile.requestFullscreen==='function'){
-   const result=tile.requestFullscreen();
-   if(result&&typeof result.catch==='function')result.catch(()=>{location.href=sourceFor(tile,false);});
+   try{
+    const result=tile.requestFullscreen();
+    if(result&&typeof result.catch==='function')result.catch(()=>{location.href=sourceFor(tile,false);});
+   }catch(e){location.href=sourceFor(tile,false);}
   }else location.href=sourceFor(tile,false);
  };
  tile.addEventListener('click',open);
  tile.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
 });
-function syncFullscreen(){
- const active=document.fullscreenElement;
- for(const tile of tiles){
-  const full=tile===active;
-  message(tile,'study-visibility',{visible:full||(!active&&tile.getBoundingClientRect().bottom>0&&tile.getBoundingClientRect().top<innerHeight)});
-  message(tile,'study-quality',{fullscreen:full,full});
- }
-}
-document.addEventListener('fullscreenchange',syncFullscreen);
-document.addEventListener('visibilitychange',()=>{
- for(const tile of tiles)message(tile,'study-visibility',{visible:!document.hidden&&(document.fullscreenElement===tile||(!document.fullscreenElement&&tile.getBoundingClientRect().bottom>0&&tile.getBoundingClientRect().top<innerHeight))});
-});
-</script>
+document.addEventListener('fullscreenchange',syncAll);
+document.addEventListener('visibilitychange',syncAll);
+window.addEventListener('resize',syncAll);</script>
 </body>
 </html>
