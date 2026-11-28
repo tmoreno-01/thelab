@@ -3,109 +3,103 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RESET — v.02 / Three studies</title>
+<meta name="theme-color" content="#ffffff">
+<title>RESET — v.02 / 007–009</title>
 <style>
 *{box-sizing:border-box}
 html{background:#fff;color:#111;font:13px Arial,sans-serif}
 body{margin:0;min-height:100vh}
 a{color:inherit;text-decoration:none}
 a:hover{text-decoration:underline}
-header{display:flex;align-items:center;gap:18px;padding:14px 24px;border-bottom:1px solid #eee}
-header a{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:bold}
-header img{width:26px;height:26px}
-header span{color:#777;font-size:12px}
-main{max-width:1800px;margin:auto;padding:26px 24px 48px}
-.intro{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:18px}
-.intro h1{font-size:12px;font-weight:normal;letter-spacing:.16em;text-transform:uppercase;margin:0;color:#777}
+header{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid #eee}
+header .brand{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:bold}
+header .brand img{width:26px;height:26px}
+header .edition{color:#888;font-size:11px;letter-spacing:.12em}
+.version-back{margin-left:auto;display:inline-flex;align-items:center;min-height:34px;padding:0 12px;border:1px solid #ddd;font-size:10px;letter-spacing:.11em}
+.version-back:hover{background:#f4f4f2;text-decoration:none;border-color:#aaa}
+main{max-width:1800px;margin:auto;padding:28px 24px 54px}
+.intro{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:18px}
+.intro h1{font-size:12px;font-weight:normal;letter-spacing:.17em;text-transform:uppercase;color:#777;margin:0}
 .intro p{font-size:11px;color:#999;margin:0}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .tile{min-width:0;cursor:pointer;outline:none}
-.screen{position:relative;overflow:hidden;aspect-ratio:16/10;background:#efeee9;border:1px solid #e8e7e1}
+.screen{position:relative;overflow:hidden;aspect-ratio:16/10;background:#050505;border:1px solid #e8e8e8}
 .screen iframe{display:block;width:100%;height:100%;border:0;pointer-events:none}
 .tile:focus-visible .screen{outline:2px solid #111;outline-offset:3px}
-.number{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 1px 0;color:#111;font-size:10px;letter-spacing:.10em}
+.number{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 1px 0;color:#111;font-size:10px;letter-spacing:.11em}
 .number span:last-child{color:#aaa;font-size:9px;letter-spacing:.08em;white-space:nowrap}
-.reseed{border:0;background:transparent;padding:0;color:#aaa;font:inherit;font-size:9px;letter-spacing:.08em;white-space:nowrap;cursor:pointer}
+.reseed{border:0;background:transparent;padding:0;color:#999;font:inherit;font-size:9px;letter-spacing:.08em;white-space:nowrap;cursor:pointer}
 .reseed:hover{color:#111}
-.archive{margin:24px 0 0;font-size:10px;color:#999}
-.archive a{color:#666}
-.tile:fullscreen{width:100vw;height:100vh;background:#efeee9;padding:16px;display:flex;flex-direction:column;gap:10px}
+.tile:fullscreen{width:100vw;height:100vh;background:#050505;padding:16px;display:flex;flex-direction:column;gap:10px}
 .tile:fullscreen .screen{flex:1;min-height:0;aspect-ratio:auto;border:0}
-.tile:fullscreen .number{padding:0;flex:0 0 auto}
-@media(max-width:800px){main{padding:20px 16px 36px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}}
-@media(max-width:520px){header{padding:12px}.grid{grid-template-columns:1fr;gap:18px}.intro{align-items:flex-start;flex-direction:column;gap:6px}.screen{aspect-ratio:16/9}}
+.tile:fullscreen .number{padding:0;flex:0 0 auto;color:#fff}
+.tile:fullscreen .number span:last-child{color:#888}
+.history{margin-top:34px;padding-top:17px;border-top:1px solid #e9e9e9}
+.history-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:12px}
+.history-head h2{font-size:10px;font-weight:normal;letter-spacing:.15em;text-transform:uppercase;color:#999;margin:0}
+.history-head a{font-size:10px;color:#777}
+.history-list{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.history-item{min-width:0;display:flex;flex-direction:column;gap:7px;padding:11px 10px;border:1px solid #e8e8e8;transition:background .16s,border-color .16s}
+.history-item:hover{background:#f7f7f5;border-color:#bbb;text-decoration:none}
+.history-no{font-size:10px;letter-spacing:.13em;color:#999}
+.history-name{font-size:10px;line-height:1.4;letter-spacing:.04em;color:#333}
+@media(max-width:900px){main{padding:22px 16px 40px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.history-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:540px){header{padding:12px;gap:10px}.edition{display:none}main{padding:20px 12px 34px}.grid{grid-template-columns:1fr;gap:19px}.screen{aspect-ratio:16/9}.intro{align-items:flex-start;flex-direction:column;gap:7px}.history-list{grid-template-columns:repeat(3,minmax(0,1fr))}.history-item{padding:9px 8px}.history-name{font-size:9px}.version-back{font-size:9px;padding:0 8px}}
 </style>
 </head>
 <body>
 <header>
-<a href="../../"><img src="../../../media/lifeafterlogic-mark.svg" alt="">lab</a>
-<span>RESET / v.02</span>
+ <a class="brand" href="../../../"><img src="../../../media/lifeafterlogic-mark.svg" alt="">lab</a>
+ <span class="edition">RESET / v.02</span>
+ <a class="version-back" href="../../index.html">ALL RESET VERSIONS ↗</a>
 </header>
 <main>
-<div class="intro">
-<h1>New visual system</h1>
-<p>Every refresh creates a new composition and seed</p>
-</div>
-<section class="grid" aria-label="Three RESET experiments">
-<article class="tile" tabindex="0" role="button" aria-label="Open Grid Ecology fullscreen" data-study="171">
-<div class="screen"><iframe title="RESET experiment 001" loading="lazy" allowfullscreen></iframe></div>
-<div class="number"><span>001 — GRID ECOLOGY</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
-</article>
-<article class="tile" tabindex="0" role="button" aria-label="Open Signal Fracture fullscreen" data-study="172">
-<div class="screen"><iframe title="RESET experiment 002" loading="lazy" allowfullscreen></iframe></div>
-<div class="number"><span>002 — SIGNAL FRACTURE</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
-</article>
-<article class="tile" tabindex="0" role="button" aria-label="Open Living Syntax fullscreen" data-study="173">
-<div class="screen"><iframe title="RESET experiment 003" loading="lazy" allowfullscreen></iframe></div>
-<div class="number"><span>003 — LIVING SYNTAX</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
-</article>
-</section>
-<p class="archive"><a href="./archive.html">Previous studies ↗</a></p>
+ <div class="intro">
+  <h1>RESET / v.02 — New studies</h1>
+  <p>Fresh seed on every load · 1.5× internal resolution · orthogonal motion system</p>
+ </div>
+ <section class="grid" aria-label="RESET studies 007 to 009">
+  <article class="tile" tabindex="0" role="button" aria-label="Open study 007 Lattice Drift fullscreen" data-study="174">
+   <div class="screen"><iframe title="RESET 007 — Lattice Drift" loading="lazy" allowfullscreen></iframe></div>
+   <div class="number"><span>007 — LATTICE DRIFT</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
+  </article>
+  <article class="tile" tabindex="0" role="button" aria-label="Open study 008 Patch Relay fullscreen" data-study="175">
+   <div class="screen"><iframe title="RESET 008 — Patch Relay" loading="lazy" allowfullscreen></iframe></div>
+   <div class="number"><span>008 — PATCH RELAY</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
+  </article>
+  <article class="tile" tabindex="0" role="button" aria-label="Open study 009 Signal Weather fullscreen" data-study="176">
+   <div class="screen"><iframe title="RESET 009 — Signal Weather" loading="lazy" allowfullscreen></iframe></div>
+   <div class="number"><span>009 — SIGNAL WEATHER</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
+  </article>
+ </section>
+ <nav class="history" aria-label="Previous RESET studies">
+  <div class="history-head"><h2>Previous studies / 001–006</h2><a href="./archive.html">Expanded archive ↗</a></div>
+  <div class="history-list">
+   <a class="history-item" href="./source.html?study=168"><span class="history-no">001</span><span class="history-name">PATCHWORK SIGNALS</span></a>
+   <a class="history-item" href="./source.html?study=169"><span class="history-no">002</span><span class="history-name">CHROMATIC INHERITANCE</span></a>
+   <a class="history-item" href="./source.html?study=170"><span class="history-no">003</span><span class="history-name">RESIDUAL GRAMMAR</span></a>
+   <a class="history-item" href="./source.html?study=171"><span class="history-no">004</span><span class="history-name">GRID ECOLOGY</span></a>
+   <a class="history-item" href="./source.html?study=172"><span class="history-no">005</span><span class="history-name">SIGNAL FRACTURE</span></a>
+   <a class="history-item" href="./source.html?study=173"><span class="history-no">006</span><span class="history-name">LIVING SYNTAX</span></a>
+  </div>
+ </nav>
 </main>
-<script>const tiles=[...document.querySelectorAll('.tile')];
-const loaded=new WeakSet();
+<script>
+const tiles=[...document.querySelectorAll('.tile')],loaded=new WeakSet();
 function sourceFor(tile,preview=true){return './source.html?study='+tile.dataset.study+(preview?'&preview=1':'')+'&refresh='+Date.now();}
-function loadFrame(tile){
- const frame=tile.querySelector('iframe');
- if(!loaded.has(frame)){
-  loaded.add(frame);
-  frame.addEventListener('load',()=>syncTile(tile));
-  frame.src=sourceFor(tile,true);
- }
- return frame;
-}
-function message(tile,type,data){
- const frame=tile.querySelector('iframe');
- if(frame?.contentWindow)frame.contentWindow.postMessage({type,...data},location.origin);
-}
-function isVisible(tile){
- if(document.hidden)return false;
- if(document.fullscreenElement)return document.fullscreenElement===tile;
- const r=tile.getBoundingClientRect();
- return r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;
-}
-function syncTile(tile){
- const full=document.fullscreenElement===tile;
- message(tile,'study-visibility',{visible:isVisible(tile)});
- message(tile,'study-quality',{fullscreen:full,full});
-}
+function loadFrame(tile){const frame=tile.querySelector('iframe');if(!loaded.has(frame)){loaded.add(frame);frame.addEventListener('load',()=>syncTile(tile));frame.src=sourceFor(tile,true);}return frame;}
+function message(tile,type,data){const frame=tile.querySelector('iframe');if(frame?.contentWindow)frame.contentWindow.postMessage({type,...data},location.origin);}
+function isVisible(tile){if(document.hidden)return false;if(document.fullscreenElement)return document.fullscreenElement===tile;const r=tile.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;}
+function syncTile(tile){const full=document.fullscreenElement===tile;message(tile,'study-visibility',{visible:isVisible(tile)});message(tile,'study-quality',{fullscreen:full,full});}
 function syncAll(){for(const tile of tiles)syncTile(tile);}
-const observer=new IntersectionObserver(entries=>{
- for(const entry of entries){
-  const tile=entry.target;
-  if(entry.isIntersecting)loadFrame(tile);
-  syncTile(tile);
- }
-},{threshold:.04});
+const observer=new IntersectionObserver(entries=>{for(const entry of entries){const tile=entry.target;if(entry.isIntersecting)loadFrame(tile);syncTile(tile);}},{threshold:.04});
 tiles.forEach(tile=>{
  observer.observe(tile);
  const open=()=>{
   loadFrame(tile);
   if(typeof tile.requestFullscreen==='function'){
-   try{
-    const result=tile.requestFullscreen();
-    if(result&&typeof result.catch==='function')result.catch(()=>{location.href=sourceFor(tile,false);});
-   }catch(e){location.href=sourceFor(tile,false);}
+   try{const result=tile.requestFullscreen();if(result&&typeof result.catch==='function')result.catch(()=>{location.href=sourceFor(tile,false);});}
+   catch(e){location.href=sourceFor(tile,false);}
   }else location.href=sourceFor(tile,false);
  };
  tile.addEventListener('click',open);
@@ -114,6 +108,7 @@ tiles.forEach(tile=>{
 });
 document.addEventListener('fullscreenchange',syncAll);
 document.addEventListener('visibilitychange',syncAll);
-window.addEventListener('resize',syncAll);</script>
+window.addEventListener('resize',syncAll);
+</script>
 </body>
 </html>
