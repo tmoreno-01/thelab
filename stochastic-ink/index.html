@@ -340,13 +340,17 @@ void main(){
 <script id="particle-fragment" type="x-shader/x-fragment">
 #version 300 es
 precision highp float;
+uniform float uLineMode;
 in float vAlpha;
 in float vTone;
 out vec4 fragColor;
 void main(){
-  vec2 p=gl_PointCoord-0.5;
-  float r=dot(p,p)*4.0;
-  float alpha=vAlpha*exp(-r*4.6);
+  float alpha=vAlpha;
+  if(uLineMode<0.5){
+    vec2 p=gl_PointCoord-0.5;
+    float r=dot(p,p)*4.0;
+    alpha*=exp(-r*4.6);
+  }
   if(alpha<0.002)discard;
   fragColor=vec4(vec3(vTone),alpha);
 }
