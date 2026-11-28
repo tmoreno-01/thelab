@@ -79,8 +79,7 @@ def train():
         z2=a1@params[2]+params[3]; a2=.5*np.maximum(z2,0)**2
         pred=a2@params[4]+params[5]
         diff=pred-yb; dp=2*diff/diff.size
-        grads=[xb.T@( (dp@params[4].T*np.maximum(z2,0))@params[2].T*np.maximum(z1,0) ),
-               None,None,None,None,None]
+        grads=[None,None,None,None,None,None]
         dz2=(dp@params[4].T)*np.maximum(z2,0)
         grads[2]=a1.T@dz2; grads[3]=dz2.sum(0)
         da1=dz2@params[2].T
