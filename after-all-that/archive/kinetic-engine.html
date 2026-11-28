@@ -179,6 +179,7 @@ function draw(){
  applyFlowPockets();
  if(resetStudy){applyResetMaterial();applyResetMotion();}
  if(!gpu){if(resetStudy){if(resetHD)apply62CMotionFields();applyFeedbackFields();}else{apply62CMotionFields();applyFeedbackFields();}}
+ if(localFeedbackStudy&&localFeedbackPatches.length)applyLocalFeedbackPatches();
  // A rare, phase-coherent slip moves a few neighbouring contour cells out and back.
  // It borrows the earlier displacement behaviour without translating the composition.
  for(const s of microSlips){
@@ -1697,10 +1698,10 @@ function localFeedbackSortPatch(p,hist,weight){
 function applyLocalFeedbackPatches(){
  if(!localFeedbackStudy||!localFeedbackHistoryReady||!localFeedbackPatches.length||!localFeedbackBase)return;
  localFeedbackBase.set(renderField);localFeedbackWrites=0;
- const n=localFeedbackHistory.length;
+ const n=localFeedbackHistory.length,historyFrames=[null,localFeedbackHistoryAt(1),localFeedbackHistoryAt(2),localFeedbackHistoryAt(3),localFeedbackHistoryAt(4)];
  for(const p of localFeedbackPatches){
   const envelope=localFeedbackEnvelope(p);if(envelope<.025)continue;
-  const hist=localFeedbackHistoryAt(p.lag),older=localFeedbackHistoryAt(Math.min(n,p.lag+1));
+  const hist=historyFrames[p.lag]||historyFrames[1],older=historyFrames[Math.min(n,p.lag+1)];
   if(!hist)continue;
   const cx=p.cx,cy=p.cy,rx=Math.max(1,p.w*.5),ry=Math.max(1,p.h*.5),beat=Math.floor((age-p.born)*2.2),phase=p.phase+age*.31;
   if(p.mode===6){localFeedbackSortPatch(p,hist,envelope*p.strength);continue;}
@@ -1748,7 +1749,7 @@ function applyLocalFeedbackPatches(){
      sx=cx+(x-cx)*zoom+Math.cos(angle)*fold;sy=cy+(y-cy)*zoom+Math.sin(angle)*fold;dx=sx-x;dy=sy-y;
     }
     sx=clamp(Math.round(x+dx),p.x0+1,p.x1-2);sy=clamp(Math.round(y+dy),p.y0+1,p.y1-2);
-    const sourceLag=localFeedbackHistoryAt(lag)||hist,src=sy*W+sx,baseIndex=sy*W+sx;
+    const sourceLag=historyFrames[lag]||hist,src=sy*W+sx,baseIndex=sy*W+sx;
     let value=sourceLag[src];
     if(older&&grain>.87)value=older[baseIndex];
     else if(grain<.10)value=localFeedbackBase[baseIndex];
@@ -1864,7 +1865,6 @@ function applyResetMotion(){
  for(const e of resetIncidents)resetApplyIncident(e);
  applyKineticMotion();
  if(localPatchStudy&&localPatches.length){resetStamp++;applyLocalPatches();}
- if(localFeedbackStudy&&localFeedbackPatches.length)applyLocalFeedbackPatches();
 }
 
 function frame(t){let dt=last?Math.min(.1,(t-last)/1000):0;last=t;if(!paused&&!document.hidden){age+=dt;sense();if(age>=next){plan();next=age+range(.85,1.8);}planStep();evolve(dt);morph();advanceFronts();advanceSlips();advanceFlowPockets();if(resetStudy){updateResetAgents(dt);if(resetHD)updateMotionFields();if(kineticStudy)updateKineticSystem(dt);if(localPatchStudy)updateLocalPatches(dt);if(localFeedbackStudy)updateLocalFeedbackPatches(dt);}else updateMotionFields();updateFeedbackFields(dt);if(!resetStudy)advancePigmentEvents(dt);if(!lastDraw||t-lastDraw>=33.0){draw();lastDraw=t;}if(q.has('debug'))document.getElementById('err').textContent='proposals '+trials+' accepted '+accepted+' completed '+finished+' rejected '+refusals+' inherited '+inherited+' legacy pigment births '+colourBirths+' changed cells '+changes+' growth cells '+morphChanges+' exchanges '+flowChanges+' colonies '+colonyCount+' fronts '+frontCount+' front edits '+frontEdits+' local slips '+slipEvents+' shifted pairs '+slipPairs+' local flow events '+flowEvents+' flow cells '+flowCells+' 62C motion fields '+motionActive+' created '+motionEvents+' touched pixels '+motionTouched+' moved pixels '+motionMoved+' renderer '+(gpu?'WebGL2':'CPU fallback')+' gpu steps '+gpuTick+' regions '+gpuSlots+' footprint '+gpuCoverage+'% births '+territoryBirths+' legacy chromatic cells '+inkCells+' grown '+inkGrown+' retired '+inkRetired+' white roots '+inkWhite+' black roots '+inkBlack+' feedback pockets '+feedbackActive+' events '+feedbackEvents+' touched '+feedbackTouched+' moved '+feedbackMoved+' pigment events '+pigmentEvents.length+' created '+pigmentEventCount+' transitions '+pigmentTransitions+' / reset agents '+resetAgents.length+' path steps '+resetSteps+' moved cells '+resetMoved+' local incidents '+resetIncidents.length+' behaviour exchanges '+resetInteractions+' memory events '+resetEvents+' / movement colour cells '+resetColourCells+' births '+resetColourBirths+' carried '+resetColourTransfers+' / kinetic agents '+kineticAgents.length+' behaviours '+kineticProfile.behaviours+' mode changes '+kineticModeChanges+' trail steps '+kineticSteps+' chemical steps '+kineticChemSteps+' deposits '+kineticDeposits+' chains '+kineticChains.length+' branches '+kineticBranches+' chain growth '+kineticChains.reduce((n,c)=>n+c.growth,0)+' excitable steps '+kineticExciteSteps+' chain segments '+kineticChainSegments+' rendered nodes '+kineticRenderNodes+' / local patches '+localPatches.length+' coverage '+Math.round(localPatchCoverageNow()*100)+'% events '+localPatchEvents+' patch writes '+localPatchWrites+' / temporal feedback patches '+localFeedbackPatches.length+' coverage '+Math.round(localFeedbackCoverageNow()*100)+'% births '+localFeedbackEvents+' writes '+localFeedbackWrites+' history '+(localFeedbackHistoryReady?'ready':'warming');}requestAnimationFrame(frame);}
