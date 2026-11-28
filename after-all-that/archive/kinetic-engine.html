@@ -1709,7 +1709,7 @@ function applyLocalFeedbackPatches(){
    const ny=(y-cy)/ry,band=Math.floor((y-p.y0)/p.band);
    for(let x=p.x0+2;x<p.x1-2;x+=localFeedbackProfile.step){
     const nx=(x-cx)/rx,mask=localFeedbackMask(p,x,y,nx,ny);if(mask<.035)continue;
-    const grain=motionNoise(x>>1,y>>1,p.seed+beat*31+band*7),strength=envelope*p.strength*mask*p.energy;
+    const grain=motionNoise(x>>1,y>>1,p.seed+beat*31+band*7),strength=envelope*p.strength*mask*(.88+.12*clamp(p.energy,0,1));
     if(grain>strength*p.writeRate)continue;
     let sx=x,sy=y,lag=p.lag,dx=0,dy=0;
     const radial=fastHypot(nx,ny),angle=Math.atan2(ny,nx);
@@ -1753,8 +1753,16 @@ function applyLocalFeedbackPatches(){
     let value=sourceLag[src];
     if(older&&grain>.87)value=older[baseIndex];
     else if(grain<.10)value=localFeedbackBase[baseIndex];
-    const dst=y*W+x;
-    if(value!==localFeedbackBase[dst]){renderField[dst]=value;localFeedbackWrites++;}
+    const dst=y*W+x,original=localFeedbackBase[dst];
+    if(value===original){
+     const sign=grain>.5?1:-1,echoX=clamp(sx+sign*Math.max(2,Math.round(p.shift*.58)),p.x0+1,p.x1-2),echoY=clamp(sy+Math.round(waveSin(phase+nx*5.7)*p.shift*.24),p.y0+1,p.y1-2),echoIndex=echoY*W+echoX;
+     value=sourceLag[echoIndex];
+     if(value===original){
+      const neighbours=[sourceLag[echoIndex-1],sourceLag[echoIndex+1],sourceLag[echoIndex-W],sourceLag[echoIndex+W]],start=(Math.floor(grain*4))&3;
+      for(let k=0;k<4;k++){const candidate=neighbours[(start+k)&3];if(candidate!==original){value=candidate;break;}}
+     }
+    }
+    if(value!==original){renderField[dst]=value;localFeedbackWrites++;}
    }
   }
  }
