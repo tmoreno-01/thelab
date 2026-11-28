@@ -1436,7 +1436,7 @@ function resetAgentColour(agent){
   let inherited=0,best=25;
   for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){
    const x=agent.x+dx,y=agent.y+dy;if(x<1||x>=W-1||y<1||y>=H-1)continue;
-   const colour=resetColour[y*W+x],d=dx*dx+dy*dy;
+   const index=y*W+x,colour=resetColour[index]&&(!v02Study||age>=resetColourTouched[index])?resetColour[index]:0,d=dx*dx+dy*dy;
    if(colour&&d<best){best=d;inherited=colour;}
   }
   if(inherited)return inherited;
