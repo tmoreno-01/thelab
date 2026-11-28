@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex,nofollow">
+<title>Stochastic Ink v.08 — LifeAfterLogic Lab</title>
+<link rel="icon" type="image/svg+xml" href="../media/lifeafterlogic-mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--paper:#f6f6f4;--white:#fff;--ink:#151515;--muted:#777873;--line:#e4e4e0;--soft:#f0f0ed}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:"Poppins",Helvetica,Arial,sans-serif}
+body{min-height:100svh}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{min-height:100svh;display:grid;grid-template-rows:82px minmax(0,1fr)}
+.topbar{height:82px;padding:0 25px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:20px;background:rgba(255,255,255,.84)}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit}
+.mark{width:30px;height:30px;display:block}
+.brand-name{font-size:21px;font-weight:700;letter-spacing:-.065em}
+.brand-sub{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-left:4px}
+.top-meta{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+main{min-height:0;display:grid;grid-template-columns:320px minmax(0,1fr);gap:13px;padding:13px}
+.panel{min-height:0;overflow:auto;background:var(--white);border:1px solid var(--line);padding:20px 19px 16px;display:flex;flex-direction:column;gap:17px}
+.eyebrow{font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:35px;line-height:.94;letter-spacing:-2px;font-weight:500;margin:8px 0 0}
+.intro{font-size:11px;line-height:1.6;color:#777970;margin:10px 0 0;max-width:270px}
+.section{border-top:1px solid var(--line);padding-top:13px;display:flex;flex-direction:column;gap:11px}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.section-title{font-size:9px;text-transform:uppercase;letter-spacing:.15em;color:#6d6e68}
+.small-note{font-size:9px;color:#999a94;font-variant-numeric:tabular-nums}
+.dropzone{position:relative;border:1px dashed #c6c7c0;background:#fbfbfa;padding:12px;display:flex;align-items:center;gap:11px;min-height:63px;transition:background .18s,border-color .18s}
+.dropzone.drag{background:#f0f0eb;border-color:#555}
+.drop-icon{width:29px;height:29px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;font-size:16px;flex:0 0 auto}
+.drop-copy{min-width:0;display:flex;flex-direction:column;gap:4px}
+.drop-copy strong{font-size:11px;font-weight:500}
+.drop-copy span{font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:205px}
+.file-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.transport{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}
+.btn{min-height:34px;border:1px solid #d6d7d1;background:#fff;color:#222;padding:0 9px;font-size:9px;letter-spacing:.09em;text-transform:uppercase;transition:background .16s,border .16s}
+.btn:hover{background:#f1f1ed;border-color:#aaa}
+.btn.primary{background:#191919;border-color:#191919;color:#fff}
+.btn.primary:hover{background:#383838}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.wide{width:100%}
+.control{display:flex;flex-direction:column;gap:5px}
+.control-label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:10px}
+.control-label output{font-variant-numeric:tabular-nums;color:#777970}
+input[type=range]{width:100%;height:3px;appearance:none;background:#deded9;outline:none;margin:5px 0 3px}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:#202020;border:0}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#202020;border:0}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.presets button,.segmented button{height:31px;background:#fff;border:1px solid var(--line);font-size:9px;color:#666;letter-spacing:.02em}
+.presets button.active,.segmented button.active{background:#1b1b1b;color:#fff;border-color:#1b1b1b}
+.segmented{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.select{width:100%;height:33px;border:1px solid var(--line);background:#fff;padding:0 9px;font-size:10px;color:#222}
+.statusline{display:flex;align-items:center;gap:7px;font-size:9px;color:#777970;min-height:14px}
+.dot{width:6px;height:6px;border-radius:50%;background:#aaa;display:inline-block;flex:0 0 auto}
+.dot.live{background:#3a9a67;box-shadow:0 0 0 3px #e2f2e8}
+.audio-meters{display:grid;gap:6px}
+.audio-meter{display:grid;grid-template-columns:32px 1fr 27px;align-items:center;gap:7px;font-size:8px;color:#777}
+.meter-track{height:4px;background:#eeefeb;overflow:hidden}
+.meter-track span{display:block;height:100%;width:0;background:#242424;transition:width .08s linear}
+.audio-readout{font-size:8px;letter-spacing:.11em;color:#898a84;font-variant-numeric:tabular-nums}
+.capture-note{font-size:9px;line-height:1.5;color:#898a84}
+.version-list{display:grid;gap:6px}
+.version-item{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);text-decoration:none;color:inherit;background:#fff}
+.version-item:hover{background:#f8f8f6;border-color:#c7c7c0}
+.version-item.current{background:#f7f7f4;border-color:#c8c8c0}
+.version-no{font-size:9px;letter-spacing:.08em;color:#777}
+.version-item strong{font-size:10px;font-weight:500}
+.version-item em{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#888;font-style:normal}
+.version-item.current em{color:#28754f}
+.version-note{font-size:9px;line-height:1.5;color:#888;margin:0}
+.stage{min-width:0;min-height:0;position:relative;overflow:hidden;background:#eeeae0;border:1px solid #deded9;display:grid;place-items:center;padding:12px}
+.canvas-wrap{height:100%;width:100%;display:grid;place-items:center;min-height:0}
+#art,#fallbackArt{display:block;height:min(79vh,930px);width:auto;max-width:100%;max-height:100%;aspect-ratio:9 / 16;background:#fff;box-shadow:0 8px 34px rgba(0,0,0,.07)}
+.stage-tools{position:absolute;top:13px;right:13px;display:flex;gap:5px;z-index:2}
+.tool-btn{width:34px;height:34px;border:1px solid rgba(0,0,0,.12);background:rgba(255,255,255,.88);color:#222;font-size:14px}
+.tool-btn:hover{background:#fff}
+.stage-caption{position:absolute;left:16px;bottom:13px;font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#85867f;pointer-events:none}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;text-align:center;pointer-events:none;padding:25px}
+.overlay-card{max-width:275px;background:rgba(255,255,255,.9);padding:14px 17px;border:1px solid rgba(0,0,0,.08);font-size:10px;line-height:1.55;color:#666}
+.overlay-card strong{display:block;font-size:12px;color:#222;font-weight:500;margin-bottom:4px}
+.hidden{display:none!important}
+footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
+@media(max-width:900px){main{grid-template-columns:285px minmax(0,1fr);padding:9px;gap:9px}.panel{padding:17px 15px}#art,#fallbackArt{height:min(76vh,850px)}}
+@media(max-width:680px){.app{grid-template-rows:72px auto}.topbar{height:72px;padding:0 20px}.top-meta{font-size:8px}main{display:flex;flex-direction:column;padding:8px;gap:8px}.stage{order:0;min-height:58svh;padding:8px}.panel{order:1;overflow:visible}.canvas-wrap{min-height:56svh}#art,#fallbackArt{height:56svh;max-height:660px;max-width:100%}.stage-caption{font-size:8px;left:10px;bottom:9px}.stage-tools{top:8px;right:8px}.tool-btn{width:32px;height:32px}.panel{gap:15px}.intro{max-width:100%}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+<a class="brand" href="../" aria-label="LifeAfterLogic lab home">
+<img class="mark" src="../media/lifeafterlogic-mark.svg" width="30" height="30" alt="">
+<span class="brand-name">lab</span><span class="brand-sub">Stochastic Ink / 007</span>
+</a>
+<div class="top-meta">WebGL2 / audio-gated filament field · v.08</div>
+</header>
+<main>
+<aside class="panel">
+<div>
+<div class="eyebrow">Experiment 007 / Audiovisual systems</div>
+<h1>Stochastic<br>Ink</h1>
+<p class="intro">A concentrated ink nucleus with thousands of flowing, connected particle filaments. The composition waits for audible music, then expands, folds and contracts with the sound. All paths are continuously bounded; particles cannot escape the frame.</p>
+</div>
+<section class="section">
+<div class="section-head"><span class="section-title">01 / Audio input</span><span class="small-note" id="audioState">No track</span></div>
+<div class="dropzone" id="dropzone">
+<div class="drop-icon">↥</div><div class="drop-copy"><strong>Drop audio or an MP4 with sound</strong><span id="trackName">MP3 · WAV · M4A · OGG · MP4</span></div>
+<input class="file-input" id="audioFile" type="file" accept="audio/*,video/mp4,video/quicktime,.mp3,.wav,.m4a,.ogg,.aac,.flac,.mp4,.mov">
+</div>
+<div class="transport"><button class="btn primary" id="playBtn" disabled>Play audio</button><button class="btn" id="pauseBtn">Pause field</button><button class="btn" id="seedBtn">New form</button></div>
+<div class="audio-meters">
+ <div class="audio-meter"><span>LOW</span><div class="meter-track"><span id="bassBar"></span></div><output id="bassValue">0.00</output></div>
+ <div class="audio-meter"><span>MID</span><div class="meter-track"><span id="midBar"></span></div><output id="midValue">0.00</output></div>
+ <div class="audio-meter"><span>HIGH</span><div class="meter-track"><span id="highBar"></span></div><output id="highValue">0.00</output></div>
+</div>
+<div class="audio-readout" id="audioReadout">WAITING FOR AUDIO SIGNAL</div>
+<div class="statusline"><span class="dot" id="audioDot"></span><span id="audioStatus">Choose a track, then press play</span></div>
+</section>
+<section class="section">
+<div class="section-head"><span class="section-title">02 / Flow presets</span><span class="small-note">Starting points</span></div>
+<div class="presets" id="presets"><button class="active" data-preset="smoke">Smoke</button><button data-preset="filament">Filament</button><button data-preset="turbulent">Turbulent</button></div>
+</section>
+<section class="section">
+<div class="section-head"><span class="section-title">03 / Ink + particle field</span><span class="small-note" id="particleReadout">524,288</span></div>
+<div class="control"><label class="control-label" for="particles"><span>Particle amount</span><output id="particlesOut">524,288</output></label><input id="particles" type="range" min="65536" max="524288" step="16384" value="524288"></div>
+<div class="control"><label class="control-label" for="turbulence"><span>Fluid turbulence</span><output id="turbulenceOut">1.35</output></label><input id="turbulence" type="range" min="0.2" max="3.0" step=".01" value="1.35"></div>
+<div class="control"><label class="control-label" for="vortex"><span>Vortex strength</span><output id="vortexOut">1.20</output></label><input id="vortex" type="range" min="0" max="2.5" step=".01" value="1.20"></div>
+<div class="control"><label class="control-label" for="spread"><span>Cloud spread</span><output id="spreadOut">0.95</output></label><input id="spread" type="range" min="0.55" max="1.8" step=".01" value="0.95"></div>
+<div class="control"><label class="control-label" for="ink"><span>Ink density</span><output id="inkOut">1.35</output></label><input id="ink" type="range" min="0.35" max="2.5" step=".01" value="1.35"></div>
+<div class="control"><label class="control-label" for="trail"><span>Motion echo</span><output id="trailOut">0.20</output></label><input id="trail" type="range" min="0" max="0.65" step=".01" value="0.20"></div>
+<div class="control"><label class="control-label" for="size"><span>Particle scale</span><output id="sizeOut">1.00</output></label><input id="size" type="range" min="0.45" max="2.5" step=".01" value="1.00"></div>
+<div class="control"><label class="control-label" for="audioInfluence"><span>Audio sensitivity</span><output id="audioInfluenceOut">2.80</output></label><input id="audioInfluence" type="range" min="0" max="5" step=".05" value="2.80"></div>
+<div class="control"><label class="control-label" for="drift"><span>Temporal drift</span><output id="driftOut">1.00</output></label><input id="drift" type="range" min="0.1" max="2.5" step=".01" value="1.00"></div>
+</section>
+<section class="section">
+<div class="section-head"><span class="section-title">04 / Composition</span><span class="small-note">Output ratio</span></div>
+<div class="segmented" id="ratioButtons"><button type="button" class="active" data-ratio="portrait">9:16</button><button type="button" data-ratio="square">1:1</button><button type="button" data-ratio="landscape">16:9</button></div>
+<label class="control-label" for="resolution"><span>Render resolution</span></label>
+<select class="select" id="resolution"><option value="720">720 / Preview</option><option value="1080">1080 / High resolution</option></select>
+</section>
+<section class="section">
+<div class="section-head"><span class="section-title">05 / Capture</span><span class="small-note">Live output</span></div>
+<div class="transport"><button class="btn primary" id="recordBtn">Start recording</button><button class="btn" id="stillBtn">Save still</button><button class="btn" id="resetBtn">Reset</button></div>
+<div class="capture-note">Records the accumulated GPU particle trails at up to 60fps. Audio is included when a track is playing. Export format depends on browser support.</div>
+<div class="statusline"><span class="dot live" id="gpuDot"></span><span id="gpuStatus">Waiting for audio…</span></div>
+</section>
+<section class="section">
+<div class="section-head"><span class="section-title">06 / Version history</span><span class="small-note">Preserved builds</span></div>
+<div class="version-list">
+<div class="version-item current"><span class="version-no">v.08</span><strong>Audio-gated bounded filament field</strong><em>Current</em></div>
+<a class="version-item" href="versions/v.07/"><span class="version-no">v.07</span><strong>Bounded ink plumes + particle fluid</strong><em>Archived</em></a>
+<a class="version-item" href="versions/v.06/"><span class="version-no">v.06</span><strong>Multi-scale curl-noise particle fluid</strong><em>Archived</em></a>
+<a class="version-item" href="versions/v.05/"><span class="version-no">v.05</span><strong>First GPU fluid particle advection pass</strong><em>Archived</em></a>
+<a class="version-item" href="versions/v.04/"><span class="version-no">v.04</span><strong>Micro-particle radial filaments</strong><em>Archived</em></a>
+<a class="version-item" href="versions/v.03/"><span class="version-no">v.03</span><strong>WebGPU filament + membrane study</strong><em>Archived</em></a>
+<a class="version-item" href="versions/v.02/"><span class="version-no">v.02</span><strong>3D particle system + shader fix</strong><em>Archived</em></a>
+<a class="version-item" href="versions/v.01/"><span class="version-no">v.01</span><strong>Initial WebGPU build</strong><em>Archived</em></a>
+</div>
+<p class="version-note">v.08 replaces cumulative velocity with bounded, connected, deforming paths. Silence and paused playback hold the composition. All earlier versions are preserved.</p>
+</section>
+<footer>LifeAfterLogic / Stochastic Ink<br>GPU particle simulation and audio analysis run locally in your browser. Audio files are never uploaded.</footer>
+</aside>
+<section class="stage" id="stage">
+<div class="stage-tools"><button class="tool-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Fullscreen">⛶</button></div>
+<div class="canvas-wrap"><canvas id="art" width="720" height="1280"></canvas></div>
+<div class="stage-caption">Audio-gated ink / <span id="stageResolution">720 × 1280</span></div>
+<div class="overlay" id="overlay"><div class="overlay-card"><strong>Preparing audio-gated ink</strong>Initialising the bounded filament renderer…</div></div>
+</section>
+</main>
+</div>
+<audio id="audio" preload="auto"></audio>
+
+<script id="screen-vertex" type="x-shader/x-vertex">
+#version 300 es
+precision highp float;
+out vec2 vUv;
+void main(){
+  vec2 p;
+  if(gl_VertexID==0)p=vec2(-1.0,-1.0);
+  else if(gl_VertexID==1)p=vec2(3.0,-1.0);
+  else p=vec2(-1.0,3.0);
+  gl_Position=vec4(p,0.0,1.0);
+  vUv=p*0.5+0.5;
+}
+</script>
+
+
+
+
+
+
+<script id="particle-vertex" type="x-shader/x-vertex">
+#version 300 es
+precision highp float;
+precision highp int;
+uniform float uTime,uAspect,uSeed,uParticleScale,uInk,uBass,uMids,uHighs,uPulse,uRms,uAudio,uLineMode,uSpread,uTurbulence,uVortex,uPopulation,uGate;
+out float vAlpha;out float vTone;
+float h(uint x){x^=x>>16u;x*=0x7feb352du;x^=x>>15u;x*=0x846ca68bu;x^=x>>16u;return float(x&0xffffffu)/16777216.0;}
+float rnd(uint i,uint k){return h(i*1664525u+k*1013904223u+uint(uSeed*1000.0));}
+vec2 rot(vec2 p,float a){float c=cos(a),s=sin(a);return vec2(c*p.x-s*p.y,s*p.x+c*p.y);}
+vec2 bez(vec2 a,vec2 b,vec2 c,vec2 d,float t){float s=1.0-t;return s*s*s*a+3.0*s*s*t*b+3.0*s*t*t*c+t*t*t*d;}
+void main(){
+  bool line=uLineMode>.5;int id=gl_VertexID;uint fam;float s;uint pid=uint(id);
+  if(line){int seg=id/2;fam=uint(seg/48);s=(float(seg%48)+float(id%2))/48.0;}
+  else{fam=uint(id/96);s=(float(id%96)+rnd(pid,77u))/96.0;}
+  float t=uTime;float bass=clamp(uBass*uAudio*.55,0.0,1.5),mid=clamp(uMids*uAudio*.55,0.0,1.5),hi=clamp(uHighs*uAudio*.55,0.0,1.5),hit=clamp(uPulse*uAudio*.6,0.0,1.5);
+  float f0=rnd(fam,1u),f1=rnd(fam,2u),f2=rnd(fam,3u),f3=rnd(fam,4u),f4=rnd(fam,5u),f5=rnd(fam,6u),f6=rnd(fam,7u);
+  float p0=rnd(pid,11u),p1=rnd(pid,12u),p2=rnd(pid,13u);
+  float mainA=.45+6.283*rnd(17u,5u)+.5*sin(t*.37)+.30*sin(t*.73+.8)+.24*bass;
+  uint group=uint(f0*12.0);float g=float(group);
+  float ga=mainA+g*2.399963+.28*sin(t*.65+g*2.1);
+  if(group<5u)ga=mainA+(g-2.0)*.17+.30*sin(t*.47+g*.8);
+  else if(group<8u)ga=mainA+2.55+(g-6.0)*.31+.25*cos(t*.49+g);
+  float length0=.32+.90*rnd(group,23u);float l=length0*(.45+.80*pow(f1,.7));
+  l*=clamp(uSpread,.55,1.8)*(.79+.16*bass+.14*hit);
+  float width=(group<5u?.18:.12)*(f2-.5)*2.0;
+  float bend=(rnd(group,30u)-.5)*1.6+.55*sin(t*.43+g)+width*1.8;
+  float twist=(rnd(group,31u)-.5)*1.3+.40*cos(t*.35+g*1.4);
+  float loop=step(.78,f3);float mist=step(.57,f4);float core=step(f0,.17);
+  if(line)core=0.0;
+  vec2 p;float a=ga+width*(1.1+mid*.35);float chaos=.65+.35*uTurbulence+.22*mid;
+  if(core>.5){
+    float phi=6.283*f1+2.1*s+t*(.45+.22*uVortex)+.25*sin(t+g);
+    float rad=.008+.14*pow(f2,1.75)*(.6+.4*sin(s*3.14159));
+    rad*=1.0+.28*bass+.20*hit;
+    p=vec2(cos(phi),sin(phi))*rad+vec2(.055*sin(f3*6.283+t*.68),.040*cos(f4*6.283-t*.53));
+    p+=vec2(sin(phi*2.0+f5*8.0),cos(phi*3.0+f6*6.0))*.014;
+    vAlpha=.10*(.6+.8*f5);vTone=.025;
+  }else{
+    vec2 start=vec2(.065*sin(f2*6.283+g),.055*cos(f3*6.283+g));
+    vec2 b=vec2(.20*l,(bend*.34+width*.35)*l);
+    vec2 c=vec2(.64*l,(twist*.58+width*.6)*l);
+    vec2 d=vec2(l,(bend*.22+width*.9)*l);
+    if(loop>.5){
+      b=vec2(.38*l,(.35+.36*f5)*l*sign(bend+.00001));
+      c=vec2(.92*l,-(.55+.40*f6)*l*sign(bend+.00001));
+      d=vec2((.30+.45*f2)*l,(.18+.55*f4)*l*sign(twist+.00001));
+    }
+    p=bez(start,b,c,d,s);
+    float taper=sin(3.14159*s)*.6+s*.4;
+    p.y+=sin(s*(5.0+f5*4.0)+g+t*.73)*.043*chaos*taper;
+    p.x+=sin(s*8.0+g*1.7-t*.49)*.024*chaos*taper;
+    p.y+=(f6-.5)*.10*s*s;
+    p=rot(p,a);
+    if(!line){
+      float jitter=(.002+(.015+.040*mist)*s)*(.6+.5*mid);
+      p+=rot(vec2((p0-.5)*jitter,(p1-.5)*jitter*2.0),a);
+    }
+    float fade=pow(1.0-s,.85)*.76+.05;
+    vAlpha=(line?(.012+.024*loop)*(.65+.6*f5):(.032+.043*(1.0-mist)))*fade;
+    if(line)vAlpha*=1.0+uVortex*.13;
+    vTone=mix(.025,.38,mist*.72+f5*.18);
+  }
+  vec2 centre=vec2(.085*sin(t*.39+uSeed*.012)+.035*sin(t*.83),.075*cos(t*.31+uSeed*.008));
+  p=rot(p,.15*sin(t*.27)+.12*mid)+centre;
+  vec2 raw=p*min(uAspect,1.0)/vec2(uAspect,1.0);
+  vec2 clip=.94*tanh(raw/.94);
+  float edge=length(raw-clip);vAlpha*=exp(-edge*3.5);
+  float exposure=clamp(524288.0/max(uPopulation,65536.0),1.0,5.0);
+  vAlpha*=uInk*sqrt(exposure)*uGate*(.9+.22*bass+.15*hit);
+  gl_Position=vec4(clip,0,1);
+  gl_PointSize=clamp((core>.5?.86+.6*p2:mix(.74,2.6,mist*p2*p2))*uParticleScale*(1.0+.13*hi),1.0,3.8);
+}
+</script>
+
+<script id="particle-fragment" type="x-shader/x-fragment">
+#version 300 es
+precision highp float;
+uniform float uLineMode;in float vAlpha;in float vTone;out vec4 fragColor;
+void main(){float a=vAlpha;if(uLineMode<.5){vec2 p=gl_PointCoord-.5;a*=exp(-dot(p,p)*9.5);}if(a<.001)discard;fragColor=vec4(vec3(vTone),clamp(a,0.0,.7));}
+</script>
+
+<script id="fade-fragment" type="x-shader/x-fragment">
+#version 300 es
+precision highp float;
+in vec2 vUv;
+uniform sampler2D uTrail;
+uniform float uFade;
+out vec4 fragColor;
+void main(){
+  vec3 previous=texture(uTrail,vUv).rgb;
+  vec3 faded=mix(vec3(1.0),previous,clamp(uFade,0.0,1.0));
+  fragColor=vec4(faded,1.0);
+}
+</script>
+
+<script id="present-fragment" type="x-shader/x-fragment">
+#version 300 es
+precision highp float;
+in vec2 vUv;
+uniform sampler2D uTrail;
+out vec4 fragColor;
+void main(){fragColor=vec4(texture(uTrail,vUv).rgb,1.0);}
+</script>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const canvas=$("art"),overlay=$("overlay"),audioEl=$("audio");
+const SIM_W=1024,SIM_H=512,SIM_COUNT=SIM_W*SIM_H,FLOW_W=256,FLOW_H=256;
+const ratioMap={portrait:{w:720,h:1280},square:{w:720,h:720},landscape:{w:1280,h:720}};
+const presets={
+ smoke:{turbulence:1.35,vortex:1.20,spread:.95,ink:1.35,trail:.20,size:1.0,audio:2.8,drift:1.0},
+ filament:{turbulence:.92,vortex:1.65,spread:1.15,ink:1.52,trail:.32,size:.72,audio:2.3,drift:.78},
+ turbulent:{turbulence:2.35,vortex:.72,spread:1.25,ink:1.12,trail:.12,size:1.25,audio:3.8,drift:1.55}
+};
+let ratioMode="portrait",resolutionScale=720;
+let gl=null,flowProgram=null,inkProgram=null,simProgram=null,particleProgram=null,fadeProgram=null,presentProgram=null,vao=null;
+let flowUniforms={},inkUniforms={},simUniforms={},particleUniforms={},fadeUniforms={},presentUniforms={};
+let stateA=null,stateB=null,flowTarget=null,trailA=null,trailB=null,rendererReady=false;
+let fallbackCanvas=null,fallbackCtx=null,renderCanvas=canvas,fallbackParticles=null;
+let particleCount=SIM_COUNT,seedValue=Math.random()*1000;
+let audioContext=null,audioSource=null,analyser=null,mediaDestination=null,frequencyData=null,timeData=null;
+let audioSmooth={bass:0,mid:0,high:0,rms:0,pulse:0},lastBass=0,lastRms=0;
+let audioUrl=null,recorder=null,recordingChunks=[];
+let frameTime=0,lastFrame=0,running=false,fallbackMode=false,frameCounter=0;
+const settings={turbulence:1.35,vortex:1.20,spread:.95,ink:1.35,trail:.20,size:1.0,audio:2.8,drift:1.0};
+const fmt=n=>Number(n).toLocaleString("en-GB");
+function status(message,ok){
+  $("gpuStatus").textContent=message;
+  $("gpuStatus").style.color=ok?"#43835e":"#8b795f";
+  $("gpuDot").classList.toggle("live",!!ok);
+}
+function outputSize(){
+  const base=ratioMap[ratioMode];
+  if(ratioMode==="portrait")return{w:resolutionScale,h:Math.round(resolutionScale*16/9)};
+  if(ratioMode==="landscape")return{w:Math.round(resolutionScale*16/9),h:resolutionScale};
+  return{w:resolutionScale,h:resolutionScale};
+}
+function deleteTarget(target){if(target&&gl){gl.deleteFramebuffer(target.fbo);gl.deleteTexture(target.texture);}}
+function makeTarget(w,h){
+ const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+ const fbo=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,texture,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error("Framebuffer incomplete");return{fbo,texture,w,h};
+}
+function compileShader(type,id){const s=gl.createShader(type);gl.shaderSource(s,$(id).textContent.trim());gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(id+": "+gl.getShaderInfoLog(s));return s;}
+function makeProgram(v,f){const a=compileShader(gl.VERTEX_SHADER,v),b=compileShader(gl.FRAGMENT_SHADER,f),p=gl.createProgram();gl.attachShader(p,a);gl.attachShader(p,b);gl.linkProgram(p);gl.deleteShader(a);gl.deleteShader(b);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;}
+function cacheUniforms(program,names){return Object.fromEntries(names.map(n=>[n,gl.getUniformLocation(program,n)]));}
+function set1(loc,v){if(loc!==null&&loc!==undefined)gl.uniform1f(loc,v);}
+function bindTexture(loc,texture){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);if(loc!==null)gl.uniform1i(loc,0);}
+function clearWhite(){if(!gl)return;gl.disable(gl.BLEND);gl.clearColor(1,1,1,1);for(const target of [trailA,trailB,null]){gl.bindFramebuffer(gl.FRAMEBUFFER,target?target.fbo:null);gl.viewport(0,0,target?target.w:canvas.width,target?target.h:canvas.height);gl.clear(gl.COLOR_BUFFER_BIT);}}
+function resizeRenderer(){const s=outputSize();if(canvas.width===s.w&&canvas.height===s.h&&trailA)return;canvas.width=s.w;canvas.height=s.h;canvas.style.aspectRatio=s.w+" / "+s.h;$("stageResolution").textContent=s.w+" × "+s.h;if(!gl)return;deleteTarget(trailA);deleteTarget(trailB);trailA=makeTarget(s.w,s.h);trailB=makeTarget(s.w,s.h);clearWhite();if(started&&rendererReady)drawFrame(0);}
+function initRenderer(){
+ try{
+  gl=canvas.getContext("webgl2",{alpha:false,antialias:false,preserveDrawingBuffer:true,powerPreference:"high-performance"});if(!gl)throw Error("WebGL2 is unavailable");
+  vao=gl.createVertexArray();gl.bindVertexArray(vao);
+  particleProgram=makeProgram("particle-vertex","particle-fragment");fadeProgram=makeProgram("screen-vertex","fade-fragment");presentProgram=makeProgram("screen-vertex","present-fragment");
+  particleUniforms=cacheUniforms(particleProgram,["uTime","uAspect","uSeed","uParticleScale","uInk","uBass","uMids","uHighs","uPulse","uRms","uAudio","uLineMode","uSpread","uTurbulence","uVortex","uPopulation","uGate"]);
+  fadeUniforms=cacheUniforms(fadeProgram,["uTrail","uFade"]);presentUniforms=cacheUniforms(presentProgram,["uTrail"]);
+  resizeRenderer();rendererReady=true;status("Ready · waiting for audio",true);overlay.classList.add("hidden");requestAnimationFrame(renderFrame);
+  canvas.addEventListener("webglcontextlost",e=>{e.preventDefault();rendererReady=false;status("GPU context lost · reload page",false);});
+ }catch(e){console.error(e);status("Renderer error: "+e.message,false);overlay.classList.remove("hidden");overlay.querySelector(".overlay-card").textContent="GPU renderer could not start: "+e.message;}
+}
+let started=false,fieldPaused=false,rawRms=0,signalHold=0,gate=0,bandPeak=[.05,.05,.05],lastBand=[0,0,0],lastEnergy=0;
+const clamp01=x=>Math.max(0,Math.min(1,x));
+function readAudio(dt){
+ const playing=!!(analyser&&audioContext&&audioContext.state==="running"&&!audioEl.paused&&!audioEl.ended&&audioEl.readyState>=2);
+ if(!playing){rawRms=0;signalHold=0;for(const k in audioSmooth)audioSmooth[k]*=.85;updateAudioMeters(false);return false;}
+ analyser.getFloatFrequencyData(frequencyData);analyser.getFloatTimeDomainData(timeData);
+ let sum=0;for(const v of timeData)sum+=v*v;rawRms=Math.sqrt(sum/timeData.length);
+ const hz=audioContext.sampleRate/analyser.fftSize;
+ const bounds=[[30,180],[180,2500],[2500,12000]];
+ let flux=0;const values=bounds.map(([lo,hi],j)=>{
+  let sum=0,peak=0,n=0;for(let i=Math.max(1,Math.ceil(lo/hz));i<Math.min(frequencyData.length,Math.ceil(hi/hz));i++){const a=Math.pow(10,Math.max(-120,frequencyData[i])/20);sum+=a*a;peak=Math.max(peak,a);n++;}
+  const energy=.65*Math.sqrt(sum/Math.max(1,n))+.35*peak;
+  bandPeak[j]=Math.max(.002,energy,bandPeak[j]*Math.exp(-dt/3));
+  const value=clamp01(Math.sqrt(Math.max(0,energy-.0003)/bandPeak[j])*.85);
+  flux+=Math.max(0,value-lastBand[j])*(j===0?1.2:.6);lastBand[j]=value;return value;
+ });
+ const energy=clamp01(Math.sqrt(rawRms*3));const pulse=clamp01(flux*2+Math.max(0,energy-lastEnergy)*4);lastEnergy=energy;
+ const smooth=(a,b)=>a+(b-a)*(1-Math.exp(-dt*(b>a?20:7)));
+ ["bass","mid","high"].forEach((k,i)=>audioSmooth[k]=smooth(audioSmooth[k],values[i]));audioSmooth.rms=smooth(audioSmooth.rms,energy);audioSmooth.pulse=Math.max(pulse,audioSmooth.pulse*Math.exp(-dt*6));
+ if(rawRms>.0012)signalHold=.18;else signalHold=Math.max(0,signalHold-dt);
+ const active=signalHold>0;updateAudioMeters(active);return active;
+}
+function updateAudioMeters(active){
+ for(const [k,v] of [["bass",audioSmooth.bass],["mid",audioSmooth.mid],["high",audioSmooth.high]]){$(k+"Bar").style.width=(clamp01(v)*100).toFixed(1)+"%";$(k+"Value").textContent=v.toFixed(2);}
+ $("audioReadout").textContent=active?"SIGNAL "+Math.round(audioSmooth.rms*100)+"% / BEAT "+Math.round(audioSmooth.pulse*100)+"%":audioEl.paused?"WAITING FOR AUDIO":"SILENCE · FIELD HELD";
+ $("audioDot").classList.toggle("live",active);
+}
+function drawFrame(dt){
+ const aspect=canvas.width/canvas.height;
+ gl.bindFramebuffer(gl.FRAMEBUFFER,trailB.fbo);gl.viewport(0,0,trailB.w,trailB.h);gl.disable(gl.BLEND);
+ gl.useProgram(fadeProgram);bindTexture(fadeUniforms.uTrail,trailA.texture);set1(fadeUniforms.uFade,dt>0?Math.pow(settings.trail,dt*60):0);gl.drawArrays(gl.TRIANGLES,0,3);
+ gl.useProgram(particleProgram);
+ const values={uTime:frameTime,uAspect:aspect,uSeed:seedValue,uParticleScale:settings.size,uInk:settings.ink,uBass:audioSmooth.bass,uMids:audioSmooth.mid,uHighs:audioSmooth.high,uPulse:audioSmooth.pulse,uRms:audioSmooth.rms,uAudio:settings.audio,uSpread:settings.spread,uTurbulence:settings.turbulence,uVortex:settings.vortex,uPopulation:particleCount,uGate:gate};
+ for(const [k,v] of Object.entries(values))set1(particleUniforms[k],v);
+ gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+ set1(particleUniforms.uLineMode,1);gl.lineWidth(1);gl.drawArrays(gl.LINES,0,Math.max(256,Math.floor(particleCount/328))*96);
+ set1(particleUniforms.uLineMode,0);gl.drawArrays(gl.POINTS,0,particleCount);gl.disable(gl.BLEND);
+ [trailA,trailB]=[trailB,trailA];gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);gl.useProgram(presentProgram);bindTexture(presentUniforms.uTrail,trailA.texture);gl.drawArrays(gl.TRIANGLES,0,3);
+}
+function renderFrame(ms){
+ if(!rendererReady)return;
+ const dt=Math.min(.05,Math.max(.001,lastFrame?ms/1000-lastFrame:1/60));lastFrame=ms/1000;
+ const active=readAudio(dt);
+ if(active&&!fieldPaused){started=true;gate=Math.min(1,gate+dt*5);frameTime+=dt*settings.drift*(.38+.8*audioSmooth.rms+.28*audioSmooth.pulse);drawFrame(dt);if(frameCounter++%120===0){const err=gl.getError();if(err!==gl.NO_ERROR){status("GPU error "+err,false);rendererReady=false;return;}}status("Audio-driven · "+fmt(particleCount)+" particles",true);}
+ else status(fieldPaused?"Field paused":started?"Field held · waiting for sound":"Ready · waiting for audio",true);
+ requestAnimationFrame(renderFrame);
+}
+function resetField(newSeed){if(newSeed)seedValue=Math.random()*1000;started=false;gate=0;frameTime=0;signalHold=0;rawRms=0;lastEnergy=0;lastBand=[0,0,0];bandPeak=[.05,.05,.05];for(const k in audioSmooth)audioSmooth[k]=0;clearWhite();}
+async function ensureAudio(){
+  if(!audioContext){
+    audioContext=new(window.AudioContext||window.webkitAudioContext)();
+    analyser=audioContext.createAnalyser();analyser.fftSize=4096;
+    analyser.minDecibels=-92;analyser.maxDecibels=-18;analyser.smoothingTimeConstant=.24;
+    frequencyData=new Float32Array(analyser.frequencyBinCount);timeData=new Float32Array(analyser.fftSize);
+    audioSource=audioContext.createMediaElementSource(audioEl);
+    mediaDestination=audioContext.createMediaStreamDestination();
+    audioSource.connect(analyser);analyser.connect(audioContext.destination);analyser.connect(mediaDestination);
+  }
+  if(audioContext.state==="suspended")await audioContext.resume();
+}
+async function toggleAudio(){
+  if(!audioEl.src){$("audioStatus").textContent="Choose an audio file first";return;}
+  try{
+    await ensureAudio();
+    if(audioEl.paused){
+      await audioEl.play();$("playBtn").textContent="Pause audio";
+      $("audioState").textContent="Playing";$("audioStatus").textContent="Listening to low, mid and high frequency bands";
+      $("audioDot").classList.add("live");
+    }else{
+      audioEl.pause();$("playBtn").textContent="Play audio";$("audioState").textContent="Paused";
+      $("audioDot").classList.remove("live");$("audioStatus").textContent="Track paused · field held until audio returns";
+    }
+  }catch(e){$("audioStatus").textContent="Audio could not start: "+e.message;}
+}
+function loadAudio(file){
+  if(!file)return;
+  const valid=file.type.startsWith("audio/")||file.type.startsWith("video/")||/\.(mp3|wav|m4a|ogg|aac|flac|mp4|mov)$/i.test(file.name);
+  if(!valid){$("audioStatus").textContent="Choose an audio file or an MP4 with an audio track";return;}
+  if(audioUrl)URL.revokeObjectURL(audioUrl);
+  audioUrl=URL.createObjectURL(file);audioEl.pause();resetField(false);audioEl.src=audioUrl;audioEl.load();
+  $("trackName").textContent=file.name;$("audioState").textContent="Ready";
+  $("audioStatus").textContent="Track loaded · press Play audio";
+  $("playBtn").disabled=false;$("playBtn").textContent="Play audio";$("audioDot").classList.remove("live");
+}
+function setRatio(mode){
+  ratioMode=mode;
+  document.querySelectorAll("#ratioButtons button").forEach(b=>b.classList.toggle("active",b.dataset.ratio===mode));
+  resizeRenderer();
+}
+function setResolution(value){resolutionScale=Number(value);resizeRenderer();}
+function setSetting(id,value){
+  const name=id==="audioInfluence"?"audio":id;settings[name]=Number(value);
+  const out=$(id+"Out");if(out)out.textContent=Number(value).toFixed(2);
+}
+function applyPreset(name){
+  const preset=presets[name];if(!preset)return;
+  Object.keys(preset).forEach(key=>{
+    settings[key]=preset[key];
+    const input=$(key==="audio"?"audioInfluence":key);
+    if(input)input.value=preset[key];
+    const out=$(key==="audio"?"audioInfluenceOut":key+"Out");
+    if(out)out.textContent=Number(preset[key]).toFixed(2);
+  });
+  document.querySelectorAll("#presets button").forEach(b=>b.classList.toggle("active",b.dataset.preset===name));
+  resetField(false);
+}
+function pauseField(){fieldPaused=!fieldPaused;$("pauseBtn").textContent=fieldPaused?"Resume field":"Pause field";}
+function saveStill(){
+  if(!renderCanvas.toBlob){$("audioStatus").textContent="Still export is unavailable";return;}
+  renderCanvas.toBlob(blob=>{
+    if(!blob)return;
+    const url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="lifeafterlogic-stochastic-ink-v08.png";a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),20000);
+  },"image/png");
+}
+async function startRecording(){
+  if(audioEl.src){try{await ensureAudio();}catch(e){$("audioStatus").textContent=e.message;return;}}
+  if(!renderCanvas.captureStream||!window.MediaRecorder){$("audioStatus").textContent="Recording is not supported in this browser";return;}
+  try{
+    const stream=renderCanvas.captureStream(60);
+    if(mediaDestination){const track=mediaDestination.stream.getAudioTracks()[0];if(track)stream.addTrack(track);}
+    const types=["video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
+    const mime=types.find(t=>MediaRecorder.isTypeSupported(t))||"";
+    recorder=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:24000000}:{videoBitsPerSecond:24000000});
+    recordingChunks=[];
+    recorder.ondataavailable=e=>{if(e.data&&e.data.size)recordingChunks.push(e.data);};
+    recorder.onstop=()=>{
+      const type=recorder.mimeType||"video/webm",blob=new Blob(recordingChunks,{type});
+      const url=URL.createObjectURL(blob),a=document.createElement("a");
+      a.href=url;a.download="lifeafterlogic-stochastic-ink-v08."+(type.includes("mp4")?"mp4":"webm");a.click();
+      setTimeout(()=>URL.revokeObjectURL(url),30000);
+      $("recordBtn").textContent="Start recording";$("recordBtn").classList.add("primary");
+      $("audioStatus").textContent="Capture downloaded · "+(type.includes("mp4")?"MP4":"WebM");recorder=null;
+    };
+    recorder.start(1000);$("recordBtn").textContent="Stop & download";$("recordBtn").classList.remove("primary");
+    $("audioStatus").textContent="Recording GPU particle trails at up to 60fps";
+  }catch(e){$("audioStatus").textContent="Could not start recording: "+e.message;}
+}
+function stopRecording(){if(recorder&&recorder.state!=="inactive")recorder.stop();}
+$("audioFile").addEventListener("change",e=>loadAudio(e.target.files[0]));
+$("playBtn").addEventListener("click",toggleAudio);$("pauseBtn").addEventListener("click",pauseField);
+$("seedBtn").addEventListener("click",()=>resetField(true));$("resetBtn").addEventListener("click",()=>resetField(false));
+$("recordBtn").addEventListener("click",()=>recorder?stopRecording():startRecording());
+$("stillBtn").addEventListener("click",saveStill);
+$("particles").addEventListener("input",e=>{
+  particleCount=Math.max(1,Math.min(SIM_COUNT,Number(e.target.value)));
+  $("particlesOut").textContent=fmt(particleCount);$("particleReadout").textContent=fmt(particleCount);
+  status("GPU fluid simulation active · "+fmt(particleCount)+" particles",true);
+});
+["turbulence","vortex","spread","ink","trail","size","audioInfluence","drift"].forEach(id=>{
+  $(id).addEventListener("input",e=>setSetting(id,e.target.value));
+});
+$("presets").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-preset]");if(b)applyPreset(b.dataset.preset);
+});
+$("ratioButtons").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-ratio]");if(b)setRatio(b.dataset.ratio);
+});
+$("resolution").addEventListener("change",e=>setResolution(e.target.value));
+$("fullscreenBtn").addEventListener("click",()=>{
+  const el=$("stage");
+  if(!document.fullscreenElement&&el.requestFullscreen)el.requestFullscreen();
+  else if(document.exitFullscreen)document.exitFullscreen();
+});
+const dropzone=$("dropzone");
+dropzone.addEventListener("dragover",e=>{e.preventDefault();dropzone.classList.add("drag");});
+dropzone.addEventListener("dragleave",()=>dropzone.classList.remove("drag"));
+dropzone.addEventListener("drop",e=>{
+  e.preventDefault();dropzone.classList.remove("drag");
+  const f=Array.from(e.dataTransfer.files).find(x=>x.type.startsWith("audio/")||x.type.startsWith("video/")||/\.(mp3|wav|m4a|ogg|aac|flac|mp4|mov)$/i.test(x.name));
+  loadAudio(f);
+});
+audioEl.addEventListener("ended",()=>{
+  $("playBtn").textContent="Play audio";$("audioState").textContent="Ended";
+  $("audioDot").classList.remove("live");$("audioStatus").textContent="Track ended · field held until audio returns";
+});
+audioEl.addEventListener("error",()=>{$("audioStatus").textContent="This file could not be decoded by the browser";});
+document.addEventListener("visibilitychange",()=>{lastFrame=performance.now()/1000;});
+window.addEventListener("resize",resizeRenderer);
+window.addEventListener("beforeunload",()=>{if(audioUrl)URL.revokeObjectURL(audioUrl);});
+initRenderer();
+})();
+</script>
+</body>
+</html>
