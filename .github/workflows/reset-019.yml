@@ -34,6 +34,9 @@ jobs:
                 assert.equal(stats.gpu,true,JSON.stringify(stats));
                 assert.equal(stats.layout,layout);
                 assert.ok(stats.behaviours>=2);
+                assert.ok(stats.feedbackSections>0,JSON.stringify(stats));
+                assert.ok(stats.particleSections>0,JSON.stringify(stats));
+                assert.ok(stats.layeredSections>0,JSON.stringify(stats));
                 assert.deepEqual(errors,[]);
                 await p.screenshot({path:'/tmp/reset-019-'+layout+'.png'});
                 if(i<3){
@@ -41,6 +44,10 @@ jobs:
                   const after=await p.evaluate(()=>window.__resetDiagnostics());
                   assert.ok(after.cellTransfers>5);
                   assert.ok(after.infections>0);
+                  const before=await p.screenshot();
+                  await p.waitForTimeout(1400);
+                  const later=await p.screenshot();
+                  assert.notDeepEqual(before,later,'Animation must visibly change');
                   console.log(layout,after);
                 }
                 await p.close();
