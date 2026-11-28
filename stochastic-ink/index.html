@@ -264,8 +264,8 @@ out float vTone;
 float hash1(float x){return fract(sin(x*127.1+uSeed*19.19)*43758.5453123);}
 void main(){
   float id=float(gl_VertexID);
-  float family=floor(id/64.0);
-  float local=mod(id,64.0)/63.0;
+  float family=floor(id/128.0);
+  float local=mod(id,128.0)/127.0;
   float base=family*0.754877666+uSeed*0.03171;
   float h0=hash1(base+1.7),h1=hash1(base+8.2),h2=hash1(base+15.9);
   float h3=hash1(base+22.4),h4=hash1(base+39.1),h5=hash1(base+51.8);
@@ -274,42 +274,44 @@ void main(){
   float bass=uBass*uAudio,mids=uMids*uAudio,highs=uHighs*uAudio;
   float mainAngle=0.10+0.53*sin(t*0.12+uSeed*0.2)+0.17*cos(t*0.064+uSeed*0.31);
   mainAngle+=uSwirl*0.10*sin(t*0.17+uSeed*0.13);
-
   float angle=h0*6.28318530718;
-  if(group<0.58)angle=mainAngle+(h1-0.5)*0.34;
-  else if(group<0.78)angle=mainAngle+2.12+(h1-0.5)*0.48;
-  else if(group<0.93)angle=mainAngle-1.46+(h1-0.5)*0.44;
-
-  float curvature=sin(local*4.3+h2*6.283+t*0.065)*0.22
-                 +sin(local*9.1+h3*6.283-t*0.045)*0.09;
-  angle+=curvature*smoothstep(0.0,0.24,local);
-  if(group>0.78&&group<0.93){
-    angle+=sin(local*6.283+h4*6.283+t*0.075)*0.25;
-  }
-
-  float radius=pow(local,1.12)*(0.72+h2*0.76);
-  radius+=sin(local*8.0+h4*6.283+t*0.05)*0.026*local;
-  if(group>0.93)radius=pow(h2,1.62)*0.58;
+  if(group<0.60)angle=mainAngle+(h1-0.5)*0.36;
+  else if(group<0.81)angle=mainAngle+2.12+(h1-0.5)*0.48;
+  else if(group<0.94)angle=mainAngle-1.46+(h1-0.5)*0.46;
+  if(group>0.81&&group<0.94)angle+=sin(local*6.283+h4*6.283+t*0.075)*0.22;
 
   vec2 direction=vec2(cos(angle),sin(angle));
-  vec2 side=vec2(-direction.y,direction.x);
-  float across=(h3-0.5)*(0.0018+radius*0.032);
-  across+=sin(local*7.5+h5*6.283+t*0.07)*0.022*radius;
-  float curl=sin(radius*8.0+h2*6.283+t*0.08)*0.018*radius;
+  float totalLength=pow(local,1.08)*(0.74+h2*0.82)*uSpread;
+  if(group>0.94)totalLength=pow(h2,1.62)*0.52;
+  float stepLength=totalLength/9.0;
   vec2 centre=vec2(
     0.045*sin(t*0.15+uSeed)+0.028*sin(t*0.067+uSeed*1.7)+0.014*bass,
     -0.045+0.043*cos(t*0.12+uSeed*0.83)-0.010*bass
   );
-  vec2 pos=centre+direction*radius+side*(across+curl);
-  pos+=vec2(sin(pos.y*5.7+t*0.06+h4*6.283),cos(pos.x*6.3-t*0.05+h5*6.283))*0.014*radius;
+  vec2 pos=centre;
+  for(int k=0;k<9;k++){
+    float s=(float(k)+0.5)/9.0;
+    float nA=sin(pos.y*5.3+pos.x*2.1+t*0.11+h3*6.283);
+    float nB=cos(pos.x*4.7-pos.y*3.0-t*0.09+h4*6.283);
+    vec2 curl=normalize(vec2(nA,nB)+vec2(0.0001));
+    vec2 tangent=vec2(-direction.y,direction.x);
+    float bend=sin(s*4.7+h5*6.283+t*0.045);
+    direction=normalize(direction+curl*(0.16+uDensity*0.018)+tangent*(0.055*bend));
+    pos+=direction*stepLength;
+  }
+  vec2 side=vec2(-direction.y,direction.x);
+  float across=(h3-0.5)*(0.0015+totalLength*0.026);
+  across+=sin(local*7.5+h5*6.283+t*0.07)*0.018*totalLength;
+  pos+=side*across;
+  pos+=vec2(sin(pos.y*5.7+t*0.06+h4*6.283),cos(pos.x*6.3-t*0.05+h5*6.283))*0.010*totalLength;
 
-  float haze=group>0.93?1.0:0.0;
-  float strandFade=exp(-radius*(0.48/max(uSpread,0.25)));
-  float groupOpacity=group<0.78?0.050:(group<0.93?0.046:0.016);
+  float haze=group>0.94?1.0:0.0;
+  float strandFade=exp(-totalLength*(0.48/max(uSpread,0.25)));
+  float groupOpacity=group<0.81?0.050:(group<0.94?0.046:0.016);
   vAlpha=groupOpacity*strandFade*(0.62+h4*0.82)*(0.78+uDensity*0.15)
          *(0.90+bass*0.20+mids*0.12)*(1.0-haze*0.20);
   vTone=mix(0.10,0.38,h5);
-  if(radius<0.14)vTone=mix(0.025,0.13,h5);
+  if(totalLength<0.14)vTone=mix(0.025,0.13,h5);
   gl_Position=vec4(pos.x/max(uAspect,0.1),pos.y,0.0,1.0);
   gl_PointSize=clamp((0.66+h3*0.92)*uParticleScale,0.55,1.9);
 }
