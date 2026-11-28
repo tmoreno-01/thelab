@@ -2672,7 +2672,7 @@ function createGraphGPU(){
  "float hash21(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}",
  "float noise2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash21(i),hash21(i+vec2(1.,0.)),f.x),mix(hash21(i+vec2(0.,1.)),hash21(i+vec2(1.,1.)),f.x),f.y);}",
  "float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<3;i++){v+=a*noise2(p);p=p*2.03+vec2(17.1,9.2);a*=.5;}return v;}",
- "void main(){ivec2 p=clamp(ivec2(gl_FragCoord.xy),ivec2(0),uDim-1);float tone=texelFetch(uBase,p,0).r;vec3 base=tone<.5?uPalette[0]:uPalette[1];",
+ "void main(){ivec2 p=clamp(ivec2(gl_FragCoord.xy),ivec2(0),uDim-1);float tone=texelFetch(uBase,p,0).r;vec3 base=tone<.0015?uPalette[0]:uPalette[1];",
  "int id=int(round(texelFetch(uModules,p,0).r*255.))-1;if(id<0||id>=uCount){outColor=vec4(base,1.);return;}",
  "vec4 rect=uRects[id],trait=uTraits[id],state=uStates[id];vec2 local=clamp((vec2(p)+.5-rect.xy)/max(vec2(1.),rect.zw-rect.xy),0.,1.);",
  "float activity=clamp(state.x,0.,1.),phase=trait.y+uTime*(.48+trait.z*.72);int mode=int(state.z+.5);",
@@ -2685,7 +2685,7 @@ function createGraphGPU(){
  "delta*=activity*trait.w;ivec2 lo=ivec2(ceil(rect.xy+vec2(1.))),hi=ivec2(floor(rect.zw-vec2(2.)));ivec2 q=clamp(ivec2(round(vec2(p)+delta)),lo,max(lo,hi));",
  "vec3 prior=uReady==0?base:texelFetch(uPrev,q,0).rgb;float scanCoord=mode==1?local.x:local.y;float scan=abs(fract(scanCoord*(mode==2?2.6:1.65)-uTime*(.075+trait.z*.045)+trait.y*.159)-.5);",
  "float repair=1.-smoothstep(.006,.027,scan);vec3 colour=mix(prior,base,activity*repair*(mode==2?.31:.24));colour=mix(colour,base,.0015+(1.-activity)*.001);",
- "int accent=int(state.y+.5);if(accent>1&&tone>.5){float chromaWave=.5+.5*sin(along*39.+across*8.+uTime*(.43+trait.z*.24)+trait.y);float chromaTexture=fbm(local*vec2(23.,17.)+vec2(uTime*.07,trait.y));float mask=smoothstep(.53,.84,chromaWave)*smoothstep(.26,.78,chromaTexture);colour=mix(colour,uPalette[clamp(accent,2,11)],activity*mask*.84);}",
+ "int accent=int(state.y+.5);if(accent>1&&tone>.0015){float chromaWave=.5+.5*sin(along*39.+across*8.+uTime*(.43+trait.z*.24)+trait.y);float chromaTexture=fbm(local*vec2(23.,17.)+vec2(uTime*.07,trait.y));float mask=smoothstep(.53,.84,chromaWave)*smoothstep(.26,.78,chromaTexture);colour=mix(colour,uPalette[clamp(accent,2,11)],activity*mask*.84);}",
  "outColor=vec4(colour,1.);}"
  ].join('\n');
  const show=["#version 300 es","precision highp float;uniform sampler2D uState;uniform vec2 uViewSize;out vec4 outColor;","void main(){vec2 uv=gl_FragCoord.xy/uViewSize;outColor=texture(uState,vec2(uv.x,1.-uv.y));}"].join('\n');
