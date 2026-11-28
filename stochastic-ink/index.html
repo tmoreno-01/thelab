@@ -295,16 +295,12 @@ void main(){
   if(group<0.70)angle=mainAngle+(h1-0.5)*0.24;
   else if(group<0.83)angle=mainAngle+2.12+(h1-0.5)*0.38;
   else if(group<0.91)angle=mainAngle-1.46+(h1-0.5)*0.34;
-  float curvature=sin(local*4.3+h2*6.283+t*0.065)*0.22+sin(local*9.1+h3*6.283-t*0.045)*0.09;
-  angle+=curvature*smoothstep(0.0,0.24,local);
-  if(group>0.83&&group<0.91)angle+=sin(local*6.283+h4*6.283+t*0.075)*0.22;
-
   vec2 direction=vec2(cos(angle),sin(angle));
-  float totalLength=pow(local,1.08)*(0.74+h2*0.82)*uSpread;
-  if(group>0.91)totalLength=pow(h2,1.62)*0.52;
+  float fullLength=(0.74+h2*0.82)*uSpread;
+  if(group>0.91)fullLength=pow(h2,1.62)*0.52;
+  float totalLength=local*fullLength;
   float target=local*9.0;
-  float stepLength=(0.74+h2*0.82)*uSpread/9.0;
-  if(group>0.91)stepLength=pow(h2,1.62)*0.52/9.0;
+  float stepLength=fullLength/9.0;
   vec2 centre=vec2(
     0.045*sin(t*0.15+uSeed)+0.028*sin(t*0.067+uSeed*1.7)+0.014*bass,
     -0.045+0.043*cos(t*0.12+uSeed*0.83)-0.010*bass
@@ -318,7 +314,8 @@ void main(){
     vec2 curl=normalize(vec2(nA,nB)+vec2(0.0001));
     vec2 tangent=vec2(-direction.y,direction.x);
     float bend=sin(s*4.7+h5*6.283+t*0.045);
-    direction=normalize(direction+curl*(0.16+uDensity*0.018)+tangent*(0.055*bend));
+    float loopBend=(group>0.83&&group<0.91)?0.22:0.055;
+    direction=normalize(direction+curl*(0.16+uDensity*0.018)+tangent*(loopBend*bend));
     float portion=min(1.0,target-float(k));
     pos+=direction*stepLength*portion;
   }
