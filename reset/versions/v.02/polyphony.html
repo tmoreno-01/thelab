@@ -194,11 +194,12 @@ function assignBehaviors(){
    candidates.sort((a,b)=>a.score-b.score);f=candidates[0].k;
   }
   const options=motionFamilies[f];const prefer=options.filter(k=>(motifBehaviors[m.kind]||[]).includes(k));
-  m.signature=pick(prefer.length&&R()<.65?prefer:options);m.motionFamily=f;
+  const heroModes=mode===0?[17,20,26,24,28,30,27,31]:mode===1?[16,18,26,29,5,25,27,14]:[21,11,26,24,28,30,9,31];
+  m.signature=i<8?heroModes[f]:pick(prefer.length&&R()<.65?prefer:options);m.motionFamily=f;
   familyArea[f]+=m.w*m.h;all[f]++;
   m.grammar=m.signature;
   const secondaryFamily=order.find(k=>k!==f&&all[k]===0)??pick(order.filter(k=>k!==f));
-  m.secondary=pick(motionFamilies[secondaryFamily]);m.secondaryFamily=secondaryFamily;
+  m.secondary=secondaryFamily===2?26:pick(motionFamilies[secondaryFamily]);m.secondaryFamily=secondaryFamily;
   m.splitMotion=Math.min(m.w,m.h)>38?F(.14,.32):0;
   m.motionRate=f===0?F(.55,1.2):f===2?F(.8,1.8):f===3?F(.18,.52):f===4?F(.65,2.2):f===5?F(.10,.36):f===6?F(.24,.85):F(.08,.34);
   m.motionOffset=F(0,36);
@@ -258,9 +259,30 @@ function createGPU(){const gl=canvas.getContext('webgl2',{alpha:false,antialias:
  gl.viewport(0,0,W,H);gl.useProgram(sim);gl.bindFramebuffer(gl.FRAMEBUFFER,fb[1-read]);[['a',0],['b',1],['im',2],['prev',3+read],['meta',5],['state',6],['traits',7],['life',8],['motion',9],['timing',10]].forEach(([n,i],j)=>bind(sim,n,i,j));gl.uniform2i(gl.getUniformLocation(sim,'dim'),W,H);gl.uniform2i(gl.getUniformLocation(sim,'cellDim'),CW,CH);gl.uniform1f(gl.getUniformLocation(sim,'unitSize'),cellSize);gl.uniform1f(gl.getUniformLocation(sim,'t'),elapsed);gl.uniform1i(gl.getUniformLocation(sim,'ready'),ready);gl.uniform1i(gl.getUniformLocation(sim,'mode'),mode);gl.uniform1i(gl.getUniformLocation(sim,'unified'),unified?1:0);gl.uniform3fv(gl.getUniformLocation(sim,'pal[0]'),palette.flat().map(x=>x/255));gl.drawArrays(gl.TRIANGLES,0,3);read=1-read;ready=1;gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.useProgram(display);bind(display,'tex',3+read,0);gl.uniform2i(gl.getUniformLocation(display,'dim'),W,H);gl.drawArrays(gl.TRIANGLES,0,3);}
  return {reset,draw};
 }
-function drawCPU(){const frame=ctx.createImageData(W,H),data=frame.data;data.set(base);for(const m of regions){if(m.energy<.03&&m.pig<.03)continue;const phase=m.phaseNow,ax=m.axis;
- for(let y=m.y;y<m.y+m.h;y++)for(let x=m.x;x<m.x+m.w;x++){const along=ax===0?x-m.x:y-m.y,across=ax===0?y-m.y:x-m.x;let lane=Math.floor(across/4),step=Math.floor(phase*2),shift=Math.round(((lane+step)%9-4)*m.energy*1.7);if(m.grammar%3===1)shift=Math.round(((phase*.13+lane*.137)%1-.5)*m.energy*16);const sx=cl(x+(ax===0?shift:0),m.x,m.x+m.w-1),sy=cl(y+(ax===1?shift:0),m.y,m.y+m.h-1),i=(y*W+x)*4,j=(sy*W+sx)*4;let tone=base[j]>128;const cell=Math.floor(y/cellSize)*CW+Math.floor(x/cellSize),pulse=charge[cell],memory=scar[cell];if(m.signature%4===1&&pulse>.3&&along%m.pitch===0)tone=true;if(m.signature%4===2&&pulse>.35&&across%m.pitch===0)tone=true;if(m.signature%4===3&&pulse>.3&&hashPixel(x,y,19)<.4)tone=false;if((m.grammar===2||m.grammar===4)&&m.energy>.45&&((Math.floor(along/6)*.13+phase*.2)%1)>.55)tone=alt[j]>128;const chroma=tone&&m.pig>.04&&((Math.floor(across/3)*.173+phase*.11)%1)*.55+((Math.floor(along/5)*.11+phase*.07)%1)*.45>1-m.pig*1.9;const col=tone&&stain[cell]>.15&&hashPixel(x,y,23)<stain[cell]?palette[stainKind[cell]]:chroma?palette[m.color]:tone?[245,244,239]:[5,5,5];data[i]=col[0];data[i+1]=col[1];data[i+2]=col[2]}}
- ctx.putImageData(frame,0,0)}
+function drawCPU(){
+ const frame=ctx.createImageData(W,H),data=frame.data;data.set(base);
+ for(const m of regions){const ax=m.axis,pitch=Math.max(4,m.pitch),period=m.localPeriod,clock=elapsed*m.motionRate+m.motionOffset,local=elapsed/period+m.localPhase,cycle=local-Math.floor(local),burst=Math.floor(local),cx=hashPixel(burst,m.id,7)*m.w,cy=hashPixel(m.id,burst,11)*m.h;
+ for(let y=m.y;y<m.y+m.h;y++)for(let x=m.x;x<m.x+m.w;x++){
+  const xx=x-m.x,yy=y-m.y,along=ax===0?xx:yy,across=ax===0?yy:xx,slot=Math.floor(along/pitch),row=Math.floor(across/pitch),gx=along%pitch,gy=across%pitch;
+  const i=(y*W+x)*4,cell=Math.floor(y/cellSize)*CW+Math.floor(x/cellSize),pulse=charge[cell],memory=scar[cell],pattern=hashPixel(slot,row,m.id+1);
+  const family=hashPixel(Math.floor(across/(pitch*3)),Math.floor(along/(pitch*20)),m.id+29)<m.splitMotion?m.secondaryFamily:m.motionFamily;
+  let tone=base[i]>128;const e=cl(m.energy*.55+pulse*.85+(cycle<m.localDuty?.36:0));
+  if(family===0||family===1){
+   let shift=Math.round(((clock*.31+Math.floor(across/4)*.137)%1-.5)*pitch*3*(.4+e*.6));
+   if(family===1)shift=Math.round((hashPixel(Math.floor(across/4),Math.floor(clock),m.id)-.5)*pitch*2);
+   const sx=cl(x+(ax===0?shift:0),m.x,m.x+m.w-1),sy=cl(y+(ax===1?shift:0),m.y,m.y+m.h-1),j=(sy*W+sx)*4;
+   if(pattern>.2)tone=(family===1&&pattern>.72?alt[j]:base[j])>128;
+  }else if(family===2){const dist=Math.abs(xx-cx)+Math.abs(yy-cy),radius=cycle*(m.w+m.h)*.72;tone=tone||(Math.abs(dist-radius)<pitch*.6&&xx%3===0&&yy%3===0&&pattern>.28)||(pulse>.4&&(gx===0||gy===0));}
+  else if(family===3){const p=(local+slot*.071+row*.11)%1,extent=p<.75?cl(p*2):cl((1-p)*4);if(pattern>.3)tone=(gx===0&&gy<pitch*extent)||(gy===pitch-1&&gx<pitch*cl(extent*2-1));}
+  else if(family===4){if(pattern>.28&&(slot+row)%4===Math.floor(clock*2)%4)tone=(slot+row+Math.floor(clock))%2===0?gx===0:gy===0;}
+  else if(family===5){if((pulse>.3||cycle>.15&&cycle<.65)&&hashPixel(x,y,m.id)<.28)tone=false;}
+  else if(family===6){const phase=(local+Math.floor(slot/2)*.14+row*.08)%1;if(pattern>.22&&phase>.38&&phase<.82)tone=alt[i]>128;}
+  else if(cycle>.92&&pattern>.93)tone=alt[i]>128;
+  const p=Math.max(stain[cell],m.pig*.42),color=tone&&p>.04&&hashPixel(x,y,23)<p*.9?palette[stain[cell]>.07?stainKind[cell]:m.color]:tone?[245,244,239]:[5,5,5];
+  data[i]=color[0];data[i+1]=color[1];data[i+2]=color[2];
+ }}
+ ctx.putImageData(frame,0,0)
+}
 init();try{if(!q.has('cpu'))gpu=createGPU();if(gpu)gpu.reset()}catch(e){console.warn(e);gpu=null}
 if(!gpu){ctx=canvas.getContext('2d',{alpha:false});if(!ctx){const replacement=document.createElement('canvas');replacement.width=W;replacement.height=H;replacement.id='art';canvas.replaceWith(replacement);canvas=replacement;ctx=replacement.getContext('2d',{alpha:false});}ctx.imageSmoothingEnabled=false}
 function frame(now){requestAnimationFrame(frame);const dt=last?Math.min(.08,(now-last)/1000):.016;last=now;if(hidden||document.hidden)return;update(dt);if(now-lastPaint<(preview&&!full?50:25))return;lastPaint=now;if(gpu)gpu.draw();else drawCPU();stats.frames++}
