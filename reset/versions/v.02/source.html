@@ -208,6 +208,7 @@ let trials=0,accepted=0,finished=0,colourBirths=0,inherited=0,refusals=0,changes
 let serpentineAgents=[],serpentineMemory=null,serpentineNext=0,serpentineEvents=0,serpentineSteps=0,serpentineWrites=0,serpentineActive=0;
 
 if(chromaticStudy){
+ const rr=(a,b)=>a+random()*(b-a);
  const hsl=(h,s,l)=>{
   h=((h%1)+1)%1;
   const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};
@@ -219,16 +220,16 @@ if(chromaticStudy){
   v02Chromatic=random()<.72;
   palette[0]=[2,3,5];palette[1]=[246,246,242];
   if(v02Chromatic){
-   const baseHue=random(),harmony=R(3),spread=harmony===0?.5:harmony===1?1/3:.42;
+   const baseHue=random(),harmony=Math.floor(random()*3),spread=harmony===0?.5:harmony===1?1/3:.42;
    const hues=[baseHue,baseHue+spread+(random()-.5)*.035,baseHue+spread*.48+(random()-.5)*.045];
-   const sat=range(.72,.94),light=range(.47,.59);
-   const A=hsl(hues[0],sat,light),B=hsl(hues[1],range(.72,.96),range(.48,.61)),C=hsl(hues[2],range(.70,.95),range(.47,.60));
+   const sat=rr(.72,.94),light=rr(.47,.59);
+   const A=hsl(hues[0],sat,light),B=hsl(hues[1],rr(.72,.96),rr(.48,.61)),C=hsl(hues[2],rr(.70,.95),rr(.47,.60));
    const tint=(c,k)=>c.map(v=>Math.round(v+(255-v)*k));
    const shade=(c,k)=>c.map(v=>Math.round(v*(1-k)));
    const colours=[A,tint(A,.28),shade(A,.32),shade(B,.22),B,tint(B,.25),shade(C,.24),tint(C,.20),C,tint(C,.32)];
    for(let i=0;i<10;i++)palette[i+2]=colours[i];
   }else{
-   for(let i=2;i<12;i++){const v=range(150,238)|0;palette[i]=[v,v,v];}
+   for(let i=2;i<12;i++){const v=rr(150,238)|0;palette[i]=[v,v,v];}
   }
   resetProfile.colours=[2,6,10];
  }else{
