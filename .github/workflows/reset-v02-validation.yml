@@ -30,14 +30,14 @@ jobs:
           }
           const gallery = fs.readFileSync('reset/versions/v.02/index.html', 'utf8');
           for (const id of [177, 178, 179]) {
-            if (!gallery.includes('data-study="' + id + '"')) throw new Error('Gallery missing study ' + id);
+            if (!fs.readFileSync('reset/versions/v.02/archive.html','utf8').includes('study=' + id)) throw new Error('Gallery missing study ' + id);
           }
           for (const file of ['reset/versions/v.02/index.html', 'reset/index.html']) {
             if (/cargo/i.test(fs.readFileSync(file, 'utf8'))) throw new Error('Unexpected legacy wording in ' + file);
           }
           const archive = fs.readFileSync('reset/versions/v.02/archive.html', 'utf8');
           for (const id of [168, 169, 170, 171, 172, 173, 174, 175, 176]) if (!archive.includes('study=' + id)) throw new Error('Archived study missing: ' + id);
-          for (const number of ['007','008','009']) if (!gallery.includes('history-no">' + number)) throw new Error('Previous test number missing: ' + number);
+          for (const number of ['001–003','004–006','007–009','010–012','013–015']) if (!gallery.includes('history-no">' + number)) throw new Error('Previous test number missing: ' + number);
           if (!gallery.includes('ALL RESET VERSIONS')) throw new Error('Version selector link missing');
           if (!engine.includes('graphStudy?1.5:v02OrthogonalMotion?2.25:resetHD?1.5:1')) throw new Error('New studies are not 1.5x denser than previous v.02');
           if (!engine.includes('updateV02ChromaticPackets')) throw new Error('Chromatic propagation system missing');

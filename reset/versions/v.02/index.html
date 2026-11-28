@@ -45,6 +45,7 @@ main{max-width:1800px;margin:auto;padding:28px 24px 54px}
 .history-name{font-size:10px;line-height:1.4;letter-spacing:.04em;color:#333}
 @media(max-width:900px){main{padding:22px 16px 40px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.history-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:540px){header{padding:12px;gap:10px}.edition{display:none}main{padding:20px 12px 34px}.grid{grid-template-columns:1fr;gap:19px}.screen{aspect-ratio:16/9}.intro{align-items:flex-start;flex-direction:column;gap:7px}.history-list{grid-template-columns:repeat(3,minmax(0,1fr))}.history-item{padding:9px 8px}.history-name{font-size:9px}.version-back{font-size:9px;padding:0 8px}}
+.history-list{display:flex;flex-wrap:wrap;gap:7px}.history-item{font:inherit;cursor:pointer;background:white;text-align:left;min-width:105px;flex:0 0 auto}.history-item[aria-pressed=true]{background:#111;border-color:#111;color:#fff}.history-item[aria-pressed=true] .history-no,.history-item[aria-pressed=true] .history-name{color:#fff}.history-item:focus-visible{outline:2px solid #111;outline-offset:2px}
 </style>
 </head>
 <body>
@@ -73,48 +74,47 @@ main{max-width:1800px;margin:auto;padding:28px 24px 54px}
   </article>
  </section>
  <nav class="history" aria-label="Previous RESET studies">
-  <div class="history-head"><h2>Previous studies / 001–012</h2><a href="./archive.html">Expanded archive ↗</a></div>
-  <div class="history-list">
-   <a class="history-item" href="./source.html?study=168"><span class="history-no">001</span><span class="history-name">PATCHWORK SIGNALS</span></a>
-   <a class="history-item" href="./source.html?study=169"><span class="history-no">002</span><span class="history-name">CHROMATIC INHERITANCE</span></a>
-   <a class="history-item" href="./source.html?study=170"><span class="history-no">003</span><span class="history-name">RESIDUAL GRAMMAR</span></a>
-   <a class="history-item" href="./source.html?study=171"><span class="history-no">004</span><span class="history-name">GRID ECOLOGY</span></a>
-   <a class="history-item" href="./source.html?study=172"><span class="history-no">005</span><span class="history-name">SIGNAL FRACTURE</span></a>
-   <a class="history-item" href="./source.html?study=173"><span class="history-no">006</span><span class="history-name">LIVING SYNTAX</span></a>
-   <a class="history-item" href="./source.html?study=174"><span class="history-no">007</span><span class="history-name">LATTICE DRIFT</span></a>
-   <a class="history-item" href="./source.html?study=175"><span class="history-no">008</span><span class="history-name">PATCH RELAY</span></a>
-   <a class="history-item" href="./source.html?study=176"><span class="history-no">009</span><span class="history-name">SIGNAL WEATHER</span></a>
-   <a class="history-item" href="./source.html?study=177"><span class="history-no">010</span><span class="history-name">RELAY SPINE</span></a>
-   <a class="history-item" href="./source.html?study=178"><span class="history-no">011</span><span class="history-name">CLUSTER GRAMMAR</span></a>
-   <a class="history-item" href="./source.html?study=179"><span class="history-no">012</span><span class="history-name">SIGNAL WEATHER</span></a>
+  <div class="history-head"><h2>Study rounds</h2><a href="./archive.html">Expanded archive ↗</a></div>
+  <div class="history-list" aria-label="Choose a round">
+   <button type="button" class="history-item" data-round="0" aria-pressed="false"><span class="history-no">001–003</span><span class="history-name">ROUND 001</span></button>
+   <button type="button" class="history-item" data-round="1" aria-pressed="false"><span class="history-no">004–006</span><span class="history-name">ROUND 002</span></button>
+   <button type="button" class="history-item" data-round="2" aria-pressed="false"><span class="history-no">007–009</span><span class="history-name">ROUND 003</span></button>
+   <button type="button" class="history-item" data-round="3" aria-pressed="false"><span class="history-no">010–012</span><span class="history-name">ROUND 004</span></button>
+   <button type="button" class="history-item" data-round="4" aria-pressed="true"><span class="history-no">013–015</span><span class="history-name">LATEST</span></button>
   </div>
  </nav>
 </main>
 <script>
-const tiles=[...document.querySelectorAll('.tile')],loaded=new WeakSet();
-function sourceFor(tile,preview=true){return './living.html?study='+tile.dataset.study+(preview?'&preview=1':'')+'&refresh='+Date.now();}
+const names=["Patchwork Signals","Chromatic Inheritance","Residual Grammar","Grid Ecology","Signal Fracture","Living Syntax","Lattice Drift","Patch Relay","Signal Weather","Relay Spine","Cluster Grammar","Signal Weather","Coherent Weather","Relay Bloom","Quiet Pressure"];
+const tiles=[...document.querySelectorAll('.tile')],loaded=new WeakSet(),buttons=[...document.querySelectorAll('[data-round]')];
+const number=n=>String(n).padStart(3,'0');
+let current=4;
+function sourceFor(tile,preview=true){const n=Number(tile.dataset.number),old=n<=12;return './'+(old?'source':'living')+'.html?study='+(old?n+167:n)+(preview?'&preview=1':'')+'&refresh='+Date.now();}
 function loadFrame(tile){const frame=tile.querySelector('iframe');if(!loaded.has(frame)){loaded.add(frame);frame.addEventListener('load',()=>syncTile(tile));frame.src=sourceFor(tile,true);}return frame;}
 function message(tile,type,data){const frame=tile.querySelector('iframe');if(frame?.contentWindow)frame.contentWindow.postMessage({type,...data},location.origin);}
 function isVisible(tile){if(document.hidden)return false;if(document.fullscreenElement)return document.fullscreenElement===tile;const r=tile.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;}
 function syncTile(tile){const full=document.fullscreenElement===tile;message(tile,'study-visibility',{visible:isVisible(tile)});message(tile,'study-quality',{fullscreen:full,full});}
 function syncAll(){for(const tile of tiles)syncTile(tile);}
+function selectRound(round,write=true){
+ current=Math.max(0,Math.min(4,round));const start=current*3+1;
+ document.querySelector('.intro h1').textContent='RESET / v.02 — '+number(start)+'–'+number(start+2);
+ document.querySelector('.intro p').textContent=current===4?'Continuous currents · living pigment · evolving structural grammar':'Preserved studies · fresh seed on every load';
+ document.querySelector('.grid').setAttribute('aria-label','RESET studies '+number(start)+' to '+number(start+2));
+ buttons.forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.round)===current)));
+ tiles.forEach((tile,i)=>{const n=start+i,name=names[n-1];tile.dataset.number=n;tile.dataset.study=n<=12?n+167:n;tile.setAttribute('aria-label','Open study '+number(n)+' '+name+' fullscreen');tile.querySelector('.number span').textContent=number(n)+' — '+name.toUpperCase();const frame=tile.querySelector('iframe');frame.title='RESET '+number(n)+' — '+name;if(loaded.has(frame))frame.src=sourceFor(tile,true);else if(isVisible(tile))loadFrame(tile);});
+ if(write)history.replaceState(null,'','#round-'+(current+1));
+}
 const observer=new IntersectionObserver(entries=>{for(const entry of entries){const tile=entry.target;if(entry.isIntersecting)loadFrame(tile);syncTile(tile);}},{threshold:.04});
+const initial=location.hash.match(/^#round-([1-5])$/);selectRound(initial?Number(initial[1])-1:4,false);
+buttons.forEach(b=>b.addEventListener('click',()=>selectRound(Number(b.dataset.round))));
 tiles.forEach(tile=>{
  observer.observe(tile);
- const open=()=>{
-  loadFrame(tile);
-  if(typeof tile.requestFullscreen==='function'){
-   try{const result=tile.requestFullscreen();if(result&&typeof result.catch==='function')result.catch(()=>{location.href=sourceFor(tile,false);});}
-   catch(e){location.href=sourceFor(tile,false);}
-  }else location.href=sourceFor(tile,false);
- };
+ const open=()=>{loadFrame(tile);if(typeof tile.requestFullscreen==='function'){try{const result=tile.requestFullscreen();if(result?.catch)result.catch(()=>{location.href=sourceFor(tile,false);});}catch(e){location.href=sourceFor(tile,false);}}else location.href=sourceFor(tile,false);};
  tile.addEventListener('click',open);
- tile.querySelector('.reseed').addEventListener('click',e=>{e.stopPropagation();const full=document.fullscreenElement===tile;const frame=loadFrame(tile);frame.src=sourceFor(tile,!full);});
- tile.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
+ tile.querySelector('.reseed').addEventListener('click',e=>{e.stopPropagation();const frame=loadFrame(tile);frame.src=sourceFor(tile,document.fullscreenElement!==tile);});
+ tile.addEventListener('keydown',e=>{if(e.target===tile&&(e.key==='Enter'||e.key===' ')){e.preventDefault();open();}});
 });
-document.addEventListener('fullscreenchange',syncAll);
-document.addEventListener('visibilitychange',syncAll);
-window.addEventListener('resize',syncAll);
+document.addEventListener('fullscreenchange',syncAll);document.addEventListener('visibilitychange',syncAll);window.addEventListener('resize',syncAll);
 </script>
 </body>
 </html>

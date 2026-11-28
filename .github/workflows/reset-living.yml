@@ -35,6 +35,17 @@ jobs:
                 await p.screenshot({path:'/tmp/reset-'+study+'.png'});
                 await p.close();
               }
+              const page=await b.newPage({viewport:{width:1200,height:800}});
+              await page.goto('http://127.0.0.1:8765/reset/versions/v.02/index.html');
+              for(const round of [0,3,1,2,4]){
+                await page.locator('[data-round="'+round+'"]').click();
+                const studies=await page.locator('.tile').evaluateAll(tiles=>tiles.map(t=>Number(t.dataset.number)));
+                if(studies.join(',')!==[round*3+1,round*3+2,round*3+3].join(','))throw Error('Round did not switch: '+round);
+                if(await page.evaluate(()=>!!document.fullscreenElement))throw Error('Round button triggered fullscreen');
+                const srcs=await page.locator('.tile iframe').evaluateAll(frames=>frames.map(f=>f.getAttribute('src')));
+                if(!srcs.every(s=>s&&s.includes(round===4?'living.html':'source.html')))throw Error('Wrong renderer: '+srcs);
+              }
+              await page.close();
             }finally{await b.close()}
           })().catch(e=>{console.error(e);process.exit(1)});
           NODE
