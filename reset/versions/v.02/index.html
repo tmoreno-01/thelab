@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RESET — v.02</title>
+<style>
+*{box-sizing:border-box}
+html{background:#fff;color:#111;font:13px Arial,sans-serif}
+body{margin:0;min-height:100vh}
+a{color:inherit;text-decoration:none}
+a:hover{text-decoration:underline}
+header{display:flex;align-items:center;gap:18px;padding:14px 24px;border-bottom:1px solid #eee}
+header a{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:bold}
+header img{width:26px;height:26px}
+header span{color:#777;font-size:12px}
+main{max-width:1800px;margin:auto;padding:26px 24px 48px}
+.intro{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:18px}
+.intro h1{font-size:12px;font-weight:normal;letter-spacing:.16em;text-transform:uppercase;margin:0;color:#777}
+.intro p{font-size:11px;color:#999;margin:0}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.tile{min-width:0;cursor:pointer;outline:none}
+.screen{position:relative;overflow:hidden;aspect-ratio:16/10;background:#efeee9;border:1px solid #e8e7e1}
+.screen iframe{display:block;width:100%;height:100%;border:0;pointer-events:none}
+.tile:focus-visible .screen{outline:2px solid #111;outline-offset:3px}
+.number{display:flex;align-items:center;justify-content:space-between;padding:9px 1px 0;color:#111;font-size:11px;letter-spacing:.12em}
+.number span:last-child{color:#aaa;font-size:9px;letter-spacing:.08em}
+.tile:fullscreen{width:100vw;height:100vh;background:#efeee9;padding:16px;display:flex;flex-direction:column;gap:10px}
+.tile:fullscreen .screen{flex:1;min-height:0;aspect-ratio:auto;border:0}
+.tile:fullscreen .number{padding:0;flex:0 0 auto}
+@media(max-width:800px){main{padding:20px 16px 36px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}}
+@media(max-width:520px){header{padding:12px}.grid{grid-template-columns:1fr;gap:18px}.intro{align-items:flex-start;flex-direction:column;gap:6px}.screen{aspect-ratio:16/9}}
+</style>
+</head>
+<body>
+<header>
+<a href="../../"><img src="../../../media/lifeafterlogic-mark.svg" alt="">lab</a>
+<span>RESET / v.02</span>
+</header>
+<main>
+<div class="intro">
+<h1>Cargo-influenced motion studies</h1>
+<p>Select a study to expand it</p>
+</div>
+<section class="grid" aria-label="Three RESET experiments">
+<article class="tile" tabindex="0" role="button" aria-label="Open experiment 001 fullscreen" data-study="168">
+<div class="screen"><iframe title="RESET experiment 001" loading="lazy" allowfullscreen></iframe></div>
+<div class="number"><span>001</span><span>FULLSCREEN ↗</span></div>
+</article>
+<article class="tile" tabindex="0" role="button" aria-label="Open experiment 002 fullscreen" data-study="169">
+<div class="screen"><iframe title="RESET experiment 002" loading="lazy" allowfullscreen></iframe></div>
+<div class="number"><span>002</span><span>FULLSCREEN ↗</span></div>
+</article>
+<article class="tile" tabindex="0" role="button" aria-label="Open experiment 003 fullscreen" data-study="170">
+<div class="screen"><iframe title="RESET experiment 003" loading="lazy" allowfullscreen></iframe></div>
+<div class="number"><span>003</span><span>FULLSCREEN ↗</span></div>
+</article>
+</section>
+</main>
+<script>
+const tiles=[...document.querySelectorAll('.tile')];
+const loaded=new WeakSet();
+function sourceFor(tile,preview=true){return './source.html?study='+tile.dataset.study+(preview?'&preview=1':'');}
+function loadFrame(tile){
+ const frame=tile.querySelector('iframe');
+ if(!loaded.has(frame)){frame.src=sourceFor(tile,true);loaded.add(frame);}
+ return frame;
+}
+function message(tile,type,data){
+ const frame=tile.querySelector('iframe');
+ if(frame?.contentWindow)frame.contentWindow.postMessage({type,...data},location.origin);
+}
+const observer=new IntersectionObserver(entries=>{
+ for(const entry of entries){
+  const tile=entry.target;
+  if(entry.isIntersecting){loadFrame(tile);message(tile,'study-visibility',{visible:true});}
+  else message(tile,'study-visibility',{visible:false});
+ }
+},{threshold:.04});
+tiles.forEach(tile=>{
+ observer.observe(tile);
+ const open=()=>{
+  loadFrame(tile);
+  if(typeof tile.requestFullscreen==='function'){
+   const result=tile.requestFullscreen();
+   if(result&&typeof result.catch==='function')result.catch(()=>{location.href=sourceFor(tile,false);});
+  }else location.href=sourceFor(tile,false);
+ };
+ tile.addEventListener('click',open);
+ tile.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
+});
+function syncFullscreen(){
+ const active=document.fullscreenElement;
+ for(const tile of tiles){
+  const full=tile===active;
+  message(tile,'study-visibility',{visible:full||(!active&&tile.getBoundingClientRect().bottom>0&&tile.getBoundingClientRect().top<innerHeight)});
+  message(tile,'study-quality',{fullscreen:full,full});
+ }
+}
+document.addEventListener('fullscreenchange',syncFullscreen);
+document.addEventListener('visibilitychange',()=>{
+ for(const tile of tiles)message(tile,'study-visibility',{visible:!document.hidden&&(document.fullscreenElement===tile||(!document.fullscreenElement&&tile.getBoundingClientRect().bottom>0&&tile.getBoundingClientRect().top<innerHeight))});
+});
+</script>
+</body>
+</html>
