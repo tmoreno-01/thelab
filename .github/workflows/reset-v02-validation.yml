@@ -42,7 +42,7 @@ jobs:
       - name: Browser-render the three studies
         run: |
           npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
           python3 -m http.server 8765 >/tmp/reset-v02-server.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
