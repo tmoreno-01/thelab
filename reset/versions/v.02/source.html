@@ -2393,7 +2393,7 @@ function createGPU(){
   }
   gl.activeTexture(gl.TEXTURE0+2);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,atlasW,atlasH,gl.RGBA,gl.UNSIGNED_BYTE,atlasData);
   gl.bindVertexArray(vao);gl.disable(gl.BLEND);gl.useProgram(sim);gl.viewport(0,0,W,H);
-  gl.uniform2i(u.dim,W,H);gl.uniform1i(u.tick,gpuTick);gl.uniform1i(u.modeCount,modeCount);gl.uniform1f(u.seconds,age);gl.uniform1f(u.globalGain,resetStudy?(requestedStudy===168?.70:requestedStudy===169?.78:requestedStudy===170?.86:requestedStudy===154?.52:requestedStudy===155?.62:requestedStudy===156?.70:requestedStudy===148?.58:requestedStudy===149?.68:.78):requestedStudy===145?1.12:requestedStudy===146?1.32:1.52);
+  gl.uniform2i(u.dim,W,H);gl.uniform1i(u.tick,gpuTick);gl.uniform1i(u.modeCount,modeCount);gl.uniform1f(u.seconds,age);gl.uniform1f(u.globalGain,resetStudy?(requestedStudy===171?.86:requestedStudy===172?.94:requestedStudy===173?1.02:requestedStudy===168?.70:requestedStudy===169?.78:requestedStudy===170?.86:requestedStudy===154?.52:requestedStudy===155?.62:requestedStudy===156?.70:requestedStudy===148?.58:requestedStudy===149?.68:.78):requestedStudy===145?1.12:requestedStudy===146?1.32:1.52);
   gl.uniform4fv(u['regions[0]'],regionData);gl.uniform4fv(u['traits[0]'],traitData);gl.uniform4fv(u['genes[0]'],geneData);
   bind(home,0,u.homeTex);bind(atlasTex,2,u.atlas);gl.uniform2i(u.atlasDim,atlasW,atlasH);
   if(!ready){gl.uniform1i(u.regionCount,0);gl.bindFramebuffer(gl.FRAMEBUFFER,fbos[0]);bind(home,1,u.prev);gl.drawArrays(gl.TRIANGLES,0,3);ready=true;read=0;}
