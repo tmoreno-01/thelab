@@ -25,18 +25,21 @@ jobs:
           const match = engine.match(/<script>([\s\S]*?)<\/script>/);
           if (!match) throw new Error('RESET engine script is missing');
           fs.writeFileSync('/tmp/reset-v02-engine.js', match[1]);
-          for (const id of [171, 172, 173]) {
+          for (const id of [174, 175, 176]) {
             if (!engine.includes(String(id) + ' —')) throw new Error('Missing study ' + id);
           }
           const gallery = fs.readFileSync('reset/versions/v.02/index.html', 'utf8');
-          for (const id of [171, 172, 173]) {
+          for (const id of [174, 175, 176]) {
             if (!gallery.includes('data-study="' + id + '"')) throw new Error('Gallery missing study ' + id);
           }
           for (const file of ['reset/versions/v.02/index.html', 'reset/index.html']) {
             if (/cargo/i.test(fs.readFileSync(file, 'utf8'))) throw new Error('Unexpected legacy wording in ' + file);
           }
           const archive = fs.readFileSync('reset/versions/v.02/archive.html', 'utf8');
-          for (const id of [168, 169, 170]) if (!archive.includes('study=' + id)) throw new Error('Archived study missing: ' + id);
+          for (const id of [168, 169, 170, 171, 172, 173]) if (!archive.includes('study=' + id)) throw new Error('Archived study missing: ' + id);
+          for (const number of ['001','002','003','004','005','006']) if (!gallery.includes('history-no">' + number)) throw new Error('Previous test number missing: ' + number);
+          if (!gallery.includes('ALL RESET VERSIONS')) throw new Error('Version selector link missing');
+          if (!engine.includes('v02OrthogonalMotion') || !engine.includes('updateV02ChromaticPackets')) throw new Error('New motion or chromatic system missing');
           NODE
           node --check /tmp/reset-v02-engine.js
       - name: Browser-render the three studies
@@ -51,7 +54,7 @@ jobs:
           (async () => {
             const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
             try {
-              for (const id of [171, 172, 173]) {
+              for (const id of [174, 175, 176]) {
                 const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
                 const errors = [];
                 page.on('pageerror', error => errors.push(error.message));
