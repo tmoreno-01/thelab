@@ -1166,11 +1166,11 @@ function makeMotionField(slot,initial=false){
  let choice=random()*total,kind=0;
  for(;kind<weights.length-1;kind++){choice-=weights[kind];if(choice<=0)break;}
  if(initial&&motionProfile.initial[slot]!==undefined)kind=motionProfile.initial[slot];
- const slow=kind===3||kind===5,delay=initial?slot*2.8:1+random()*10;
+ const slow=kind===3||kind===5,delay=initial?slot*2.8:1+random()*10,direction=R(4),axisAngle=direction*Math.PI*.5;
  motionEvents++;
  return {id:motionEvents,kind,x:.13+random()*.74,y:.13+random()*.74,
   radius:(.065+Math.pow(random(),1.6)*.19)*motionProfile.radius,
-  angle:random()*6.283,heading:random()*6.283,
+  angle:v02OrthogonalMotion?axisAngle:random()*6.283,heading:v02OrthogonalMotion?axisAngle:random()*6.283,direction,nextTurn:age+range(1.6,4.2),
   rate:((slow?.003:.007)+random()*.008)*motionProfile.speed,
   start:age+delay,duration:(slow?16:9)+random()*25,
   amp:(.42+random()*.48)*motionProfile.gain,phase:random()*6.283,last:age};
@@ -1187,11 +1187,20 @@ function updateMotionFields(){
   if(!p||age>p.start+p.duration)p=motionFields[i]=makeMotionField(i,false);
   const dt=clamp(age-p.last,0,.1);p.last=age;
   const u=clamp((age-p.start)/p.duration,0,1);
-  p.heading+=Math.sin(p.phase+age*.065)*dt*.12;
-  p.x+=Math.cos(p.heading)*p.rate*dt;p.y+=Math.sin(p.heading)*p.rate*dt;
-  if(p.x<.06||p.x>.94){p.heading=Math.PI-p.heading;p.x=clamp(p.x,.06,.94);}
-  if(p.y<.06||p.y>.94){p.heading=-p.heading;p.y=clamp(p.y,.06,.94);}
-  p.angle+=Math.sin(p.phase+age*.08)*dt*.035;
+  if(v02OrthogonalMotion){
+   if(age>=p.nextTurn){p.direction=R(4);p.nextTurn=age+range(1.6,4.2);p.angle=R(4)*Math.PI*.5;}
+   const d=[[1,0],[0,1],[-1,0],[0,-1]][p.direction];p.heading=p.direction*Math.PI*.5;
+   p.x+=d[0]*p.rate*dt;p.y+=d[1]*p.rate*dt;
+   if(p.x<.06||p.x>.94){p.direction=(p.direction+2)&3;p.x=clamp(p.x,.06,.94);p.heading=p.direction*Math.PI*.5;}
+   if(p.y<.06||p.y>.94){p.direction=(p.direction+2)&3;p.y=clamp(p.y,.06,.94);p.heading=p.direction*Math.PI*.5;}
+   p.angle=Math.round(p.angle/(Math.PI*.5))*Math.PI*.5;
+  }else{
+   p.heading+=Math.sin(p.phase+age*.065)*dt*.12;
+   p.x+=Math.cos(p.heading)*p.rate*dt;p.y+=Math.sin(p.heading)*p.rate*dt;
+   if(p.x<.06||p.x>.94){p.heading=Math.PI-p.heading;p.x=clamp(p.x,.06,.94);}
+   if(p.y<.06||p.y>.94){p.heading=-p.heading;p.y=clamp(p.y,.06,.94);}
+   p.angle+=Math.sin(p.phase+age*.08)*dt*.035;
+  }
   if(age>=p.start&&u<1&&Math.sin(Math.PI*u)>0)motionActive++;
  }
 }
@@ -2526,7 +2535,7 @@ function createGPU(){
   }
   gl.activeTexture(gl.TEXTURE0+2);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,atlasW,atlasH,gl.RGBA,gl.UNSIGNED_BYTE,atlasData);
   gl.bindVertexArray(vao);gl.disable(gl.BLEND);gl.useProgram(sim);gl.viewport(0,0,W,H);
-  gl.uniform2i(u.dim,W,H);gl.uniform1i(u.tick,gpuTick);gl.uniform1i(u.modeCount,modeCount);gl.uniform1f(u.seconds,age);gl.uniform1f(u.globalGain,resetStudy?(requestedStudy===171?.86:requestedStudy===172?.94:requestedStudy===173?1.02:requestedStudy===168?.70:requestedStudy===169?.78:requestedStudy===170?.86:requestedStudy===154?.52:requestedStudy===155?.62:requestedStudy===156?.70:requestedStudy===148?.58:requestedStudy===149?.68:.78):requestedStudy===145?1.12:requestedStudy===146?1.32:1.52);
+  gl.uniform2i(u.dim,W,H);gl.uniform1i(u.tick,gpuTick);gl.uniform1i(u.modeCount,modeCount);gl.uniform1f(u.seconds,age);gl.uniform1f(u.globalGain,resetStudy?(requestedStudy===171?.86:requestedStudy===172?.94:requestedStudy===173?1.02:requestedStudy===174?.90:requestedStudy===175?1.02:requestedStudy===176?.94:requestedStudy===168?.70:requestedStudy===169?.78:requestedStudy===170?.86:requestedStudy===154?.52:requestedStudy===155?.62:requestedStudy===156?.70:requestedStudy===148?.58:requestedStudy===149?.68:.78):requestedStudy===145?1.12:requestedStudy===146?1.32:1.52);
   gl.uniform4fv(u['regions[0]'],regionData);gl.uniform4fv(u['traits[0]'],traitData);gl.uniform4fv(u['genes[0]'],geneData);
   bind(home,0,u.homeTex);bind(atlasTex,2,u.atlas);gl.uniform2i(u.atlasDim,atlasW,atlasH);
   if(!ready){gl.uniform1i(u.regionCount,0);gl.bindFramebuffer(gl.FRAMEBUFFER,fbos[0]);bind(home,1,u.prev);gl.drawArrays(gl.TRIANGLES,0,3);ready=true;read=0;}
