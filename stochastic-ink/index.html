@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
 <meta name="robots" content="noindex,nofollow">
-<title>Stochastic Ink v.09 — LifeAfterLogic Lab</title>
+<title>Stochastic Ink v.10 — LifeAfterLogic Lab</title>
 <link rel="icon" type="image/svg+xml" href="../media/lifeafterlogic-mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,14 +100,14 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <img class="mark" src="../media/lifeafterlogic-mark.svg" width="30" height="30" alt="">
 <span class="brand-name">lab</span><span class="brand-sub">Stochastic Ink / 007</span>
 </a>
-<div class="top-meta">WebGL2 / spectral particle sheets · v.09</div>
+<div class="top-meta">WebGL2 / persistent spectral advection · v.10</div>
 </header>
 <main>
 <aside class="panel">
 <div>
 <div class="eyebrow">Experiment 007 / Audiovisual systems</div>
 <h1>Stochastic<br>Ink</h1>
-<p class="intro">A moving granular ink nucleus, asymmetric particle sheets and fine isolated tendrils. Independent frequency clocks move individual particles through folded, evolving paths. The piece waits for sound and holds during silence.</p>
+<p class="intro">Persistent particles moving through a local velocity field. Independent sound-driven jets, rotating eddies and fine-scale shear transport ink with inertia, so bass, mids and treble change the motion rather than directly deforming the image. Waits for audio; holds on silence.</p>
 </div>
 <section class="section">
 <div class="section-head"><span class="section-title">01 / Audio input</span><span class="small-note" id="audioState">No track</span></div>
@@ -135,7 +135,7 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <div class="control"><label class="control-label" for="vortex"><span>Vortex strength</span><output id="vortexOut">1.20</output></label><input id="vortex" type="range" min="0" max="2.5" step=".01" value="1.20"></div>
 <div class="control"><label class="control-label" for="spread"><span>Cloud spread</span><output id="spreadOut">1.25</output></label><input id="spread" type="range" min="0.55" max="1.8" step=".01" value="1.25"></div>
 <div class="control"><label class="control-label" for="ink"><span>Ink density</span><output id="inkOut">1.60</output></label><input id="ink" type="range" min="0.35" max="2.5" step=".01" value="1.60"></div>
-<div class="control"><label class="control-label" for="trail"><span>Motion echo</span><output id="trailOut">0.08</output></label><input id="trail" type="range" min="0" max="0.65" step=".01" value="0.08"></div>
+<div class="control"><label class="control-label" for="trail"><span>Motion echo</span><output id="trailOut">0.68</output></label><input id="trail" type="range" min="0" max="0.92" step=".01" value="0.68"</div>
 <div class="control"><label class="control-label" for="size"><span>Particle scale</span><output id="sizeOut">1.00</output></label><input id="size" type="range" min="0.45" max="2.5" step=".01" value="1.00"></div>
 <div class="control"><label class="control-label" for="audioInfluence"><span>Audio sensitivity</span><output id="audioInfluenceOut">2.80</output></label><input id="audioInfluence" type="range" min="0" max="5" step=".05" value="2.80"></div>
 <div class="control"><label class="control-label" for="drift"><span>Temporal drift</span><output id="driftOut">1.00</output></label><input id="drift" type="range" min="0.1" max="2.5" step=".01" value="1.00"></div>
@@ -155,7 +155,8 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <section class="section">
 <div class="section-head"><span class="section-title">06 / Version history</span><span class="small-note">Preserved builds</span></div>
 <div class="version-list">
-<div class="version-item current"><span class="version-no">v.09</span><strong>Spectral particle sheets and tendrils</strong><em>Current</em></div>
+<div class="version-item current"><span class="version-no">v.10</span><strong>Persistent spectral particle advection</strong><em>Current</em></div>
+<a class="version-item" href="versions/v.09/"><span class="version-no">v.09</span><strong>Spectral particle sheets and tendrils</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.08/"><span class="version-no">v.08</span><strong>Audio-gated bounded filament field</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.07/"><span class="version-no">v.07</span><strong>Bounded ink plumes + particle fluid</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.06/"><span class="version-no">v.06</span><strong>Multi-scale curl-noise particle fluid</strong><em>Archived</em></a>
@@ -165,7 +166,7 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <a class="version-item" href="versions/v.02/"><span class="version-no">v.02</span><strong>3D particle system + shader fix</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.01/"><span class="version-no">v.01</span><strong>Initial WebGPU build</strong><em>Archived</em></a>
 </div>
-<p class="version-note">v.09 draws individual point particles with separate spectral phase clocks, folded sheets and transient-driven local deflections. Earlier versions remain archived.</p>
+<p class="version-note">v.10 uses real particle state, velocity and age through transform feedback, with fixed-step integration and independently filtered audio forces. Earlier builds remain archived.</p>
 </section>
 <footer>LifeAfterLogic / Stochastic Ink<br>GPU particle simulation and audio analysis run locally in your browser. Audio files are never uploaded.</footer>
 </aside>
@@ -198,71 +199,61 @@ void main(){
 
 
 
+<script id="advect-vertex" type="x-shader/x-vertex">
+#version 300 es
+precision highp float;precision highp int;
+layout(location=0) in vec4 state;layout(location=1) in vec4 info;
+uniform float uDt,uTime,uSeed,uAspect,uBass,uMid,uHigh,uBeat,uAudio,uTurbulence,uVortex,uSpread;
+out vec4 nextState;out vec4 nextInfo;
+float h(uint x){x^=x>>16u;x*=0x7feb352du;x^=x>>15u;x*=0x846ca68bu;x^=x>>16u;return float(x&0xffffffu)/16777216.;}
+float r(uint i,uint k){return h(i*1664525u+k*1013904223u+uint(uSeed*1000.));}
+vec2 turn(vec2 p){return vec2(-p.y,p.x);}
+vec2 core(float t){return vec2(.13*sin(t*.28),.15*cos(t*.19+.6));}
+void main(){
+ uint id=uint(gl_VertexID),g=uint(r(id,1u)*12.);float j=float(g),kind=r(id,2u),a=r(id,3u),b=r(id,4u);
+ float t=uTime,dt=uDt,sens=uAudio*.45,lo=uBass*sens,mi=uMid*sens,hi=uHigh*sens,beat=uBeat*sens;
+ float scale=uSpread;vec2 ctr=core(t),p=state.xy,v=state.zw;float age=info.x+dt,life=info.y,cycle=info.z;
+ float angle=j*2.399963+r(g,11u)*.8+.45*sin(t*.19+j)+.34*cos(t*.31+j*2.1);
+ vec2 axis=vec2(cos(angle),sin(angle));vec2 source=ctr+axis*(.035+.055*r(g,9u));
+ if(age>=life||life<=0.){cycle+=1.;uint k=uint(cycle);float theta=6.283*r(id,k+71u);float rr=pow(r(id,k+93u),1.7)*(kind<.13?.075:kind<.72?.018:.075);p=source+vec2(cos(theta),sin(theta))*rr;v=axis*(.05+.07*a);age=0.;life=(kind<.13?6.+5.*b:3.5+7.*b);}
+ vec2 q=p-ctr;float dist=length(q);vec2 n=q/max(.04,dist);float along=dot(q,axis),across=dot(q,turn(axis));
+ float jetWidth=(kind<.72?.10:.21)+.16*max(along,0.);float jet=exp(-pow(across/max(.01,jetWidth),2.))*exp(-max(0.,-along)*8.);
+ float front=.6+.4*sin(t*2.2-j*.74-dist*4.7);float burst=beat*front;
+ float thrust=(.17+.25*r(g,15u)+.34*lo+.53*burst)*jet;
+ vec2 desired=axis*thrust+turn(axis)*(.16*sin(along*5.2+t*.55+j)+.08*cos(along*11.-t*.7+j))*jet*(.65+mi);
+ for(int k=0;k<5;k++){float f=float(k);float ang=f*2.399963+.32*sin(t*.23+f)+j*.16;vec2 vc=ctr+vec2(cos(ang),sin(ang))*(.13+.17*r(uint(k),33u))*scale;vec2 d=p-vc;float rad=.14+.16*r(uint(k),42u);float spin=k%2==0?1.:-1.;desired+=turn(d)*spin*exp(-dot(d,d)/(rad*rad))*(1.2+uVortex*.6+lo*.65+burst*.85);}
+ vec2 w=q/scale;float x=w.x,y=w.y;
+ vec2 curl=vec2(cos(y*4.1+x*2.6+t*.47+j*.19)+.45*sin(y*11.-x*5.+t*.78),-cos(x*4.8-y*1.8-t*.39+j*.13)-.45*sin(x*9.+y*7.-t*.67));
+ desired+=curl*(.055+.048*uTurbulence+.075*mi);
+ desired+=vec2(sin(y*24.+x*8.+t*.9),cos(x*21.-y*7.-t*.76))*(.008+.027*hi);
+ if(kind<.13){desired=desired*.38+turn(q)*(.9+lo*1.8+burst*1.1)-q*(1.5+.6*a);}
+ else {desired-=q*(.07+.32*smoothstep(.44,1.05,dist/scale));desired+=n*.05*jet;}
+ vec2 limit=vec2(max(1.,uAspect),max(1.,1./uAspect))*.91;vec2 ell=p/limit;float edge=length(ell);
+ desired-=p*(2.9*smoothstep(.55,.95,edge));
+ float speed=length(desired);desired*=min(1.,.72/max(.0001,speed));v=mix(v,desired,1.-exp(-dt*(kind<.13?5.:3.8)));p+=v*dt;
+ float e=length(p/limit);if(e>.94){vec2 normal=normalize(p/(limit*limit));p*=.94/e;v-=normal*max(0.,dot(v,normal));}
+ nextState=vec4(p,v);nextInfo=vec4(age,life,cycle,0.);gl_Position=vec4(0.,0.,0.,1.);
+}
+</script>
+<script id="advect-fragment" type="x-shader/x-fragment">
+#version 300 es
+precision highp float;out vec4 c;void main(){c=vec4(0.);}
+</script>
 <script id="particle-vertex" type="x-shader/x-vertex">
 #version 300 es
 precision highp float;precision highp int;
-uniform float uTime,uAspect,uSeed,uParticleScale,uInk,uBass,uMids,uHighs,uPulse,uRms,uAudio,uLineMode,uSpread,uTurbulence,uVortex,uPopulation,uGate;
-uniform vec3 uClock;
+layout(location=0) in vec4 state;layout(location=1) in vec4 info;
+uniform float uAspect,uSeed,uParticleScale,uInk,uPopulation,uGate,uTime,uResolution;
 out float vAlpha;out float vTone;
 float h(uint x){x^=x>>16u;x*=0x7feb352du;x^=x>>15u;x*=0x846ca68bu;x^=x>>16u;return float(x&0xffffffu)/16777216.;}
-float rnd(uint i,uint j){return h(i*1664525u+j*1013904223u+uint(uSeed*1000.));}
-vec2 rot(vec2 p,float a){float c=cos(a),s=sin(a);return vec2(c*p.x-s*p.y,s*p.x+c*p.y);}
-vec2 curve(vec2 a,vec2 b,vec2 c,vec2 d,float s){return mix(mix(mix(a,b,s),mix(b,c,s),s),mix(mix(b,c,s),mix(c,d,s),s),s);}
-void main(){
- uint id=uint(gl_VertexID);float a=rnd(id,1u),b=rnd(id,2u),c=rnd(id,3u),d=rnd(id,4u),e=rnd(id,5u),f=rnd(id,6u);
- float bass=clamp(uBass*uAudio*.48,0.,1.4),mid=clamp(uMids*uAudio*.48,0.,1.4),hi=clamp(uHighs*uAudio*.48,0.,1.4),hit=clamp(uPulse*uAudio*.6,0.,1.4);
- float t=uTime;float mainA=.25+6.283*rnd(31u,1u)+.65*sin(t*.17)+.4*sin(uClock.x*.11);
- vec2 p;float opacity;float fog=0.;float shade=.03;float grain=1.;
- if(a<.12){
-  uint k=uint(b*7.);float q=float(k),phase=c*6.283+uClock.x*(.7+d*1.4)+q*.9;
-  vec2 knot=rot(vec2(.045*cos(q*2.4+t*.65),.033*sin(q*1.7-uClock.y*.24)),mainA);
-  float rr=pow(d,.68)*(.055+.060*rnd(k,41u));
-  p=knot+rot(vec2(cos(phase)*rr,sin(phase*1.07)*rr*.48),mainA+q*.45);
-  p+=vec2(sin(phase*3.+e*5.),cos(phase*2.+f*4.))*.022;
-  opacity=.055+.055*e;grain=.9+.8*f;
- }else{
-  uint k=a<.54?uint(b*7.):a<.84?7u+uint(b*6.):13u+uint(b*6.);float q=float(k);float r0=rnd(k,10u),r1=rnd(k,11u),r2=rnd(k,12u),r3=rnd(k,13u),r4=rnd(k,14u);
-  float role=k<7u?0.:k<13u?1.:2.;
-  float clock=k%3u==0u?uClock.x:k%3u==1u?uClock.y:uClock.z;
-  float local=clock*(.13+.19*r0)+q*2.31;
-  float life=fract(c+clock*(.025+.065*d));float s=pow(life,role==2.?1.15:1.4);
-  float birth=smoothstep(0.,.035,life)*(1.-smoothstep(.78,1.,life));
-  float angle=mainA+(role==0.?(-.29+q*.09):role==1.?2.1+(q-9.)*.26:4.0+(q-15.)*.52);
-  angle+=.26*sin(local)+.14*sin(clock*.53+q)+.37*hit*sin(q*2.7+s*2.);
-  float len=(role==0.? .60+.36*r1:role==1.? .42+.33*r1:.60+.35*r1);
-  len*=clamp(uSpread,.55,1.8)*(.93+.14*sin(local*.72)+.10*bass*sin(q));
-  float bend=.36*sin(local*.8+q)+.3*(r2-.5);float turn=.58*sin(local*.58+q*1.7)+.25*(r3-.5);
-  vec2 p0=vec2(.045*cos(q*2.4),.04*sin(q*2.4));
-  vec2 p1=vec2(.22*len,(-.12+bend)*len),p2=vec2(.76*len,turn*len),p3=vec2(len,(bend*.7-turn*.5)*len);
-  if(role==2.){float sign0=r4<.5?-1.:1.;p1=vec2(.2*len,sign0*.7*len);p2=vec2(1.14*len,-sign0*(.65+.6*r3)*len);p3=vec2((.42+.37*r2)*len,sign0*(.45+.35*r0)*len);}
-  vec2 center=curve(p0,p1,p2,p3,s);vec2 deriv=curve(p0,p1,p2,p3,min(1.,s+.004))-curve(p0,p1,p2,p3,max(0.,s-.004));vec2 side=normalize(vec2(-deriv.y,deriv.x)+vec2(.000001));
-  float envelope=pow(s,.75)*(1.-.4*s);
-  float ribbon=(e-.5)*2.;float fold=sin(s*11.+q+local*.9+ribbon*2.1);
-  float w=(role==0.? .21:role==1.? .20:.018)*envelope*(.65+.6*r3);
-  float sheet=ribbon*w*(.20+.80*abs(sin(s*5.+local+q*.5)));
-  float fil=sin(s*22.+ribbon*5.+local*1.3)*.022*envelope*(.6+mid);
-  float ridge=sin(ribbon*19.+s*9.+local*1.9);
-  float curl=(sin(s*17.+q*2.1+local)+.4*sin(s*39.-local*1.6+q))* (.009+.012*uTurbulence+.008*uVortex)*envelope;
-  center+=side*(sheet+fil+curl*(.35+.65*mid)+fold*.017*envelope);
-  center+=vec2(sin(s*32.+q+local),cos(s*27.-q-local))*.009*envelope*(.5+hi);
-  fog=step(.52,f);float blur=(role==2.? .027:.095)*envelope*fog;
-  center+=vec2(sin(d*145.7+local*2.),cos(d*191.3-local*1.7))*blur;
-  p=rot(center,angle);
-  float decay=pow(1.-s,role==2.? .55:1.1);float detail=.45+.55*pow(abs(ridge),7.);
-  opacity=birth*decay*(role==0.? .23:role==1.? .15:.095)*detail*(fog>.5?.30:1.);
-  opacity*=.72+.25*sin(local+s*8.)+.22*hit*sin(q*1.9+s*5.);
-  shade=fog>.5?.32:.035;grain=fog>.5?2.2+2.*f: .85+.55*d;
- }
- p+=vec2(.10*sin(t*.22)+.06*cos(uClock.y*.10),.11*cos(t*.18)+.045*sin(uClock.x*.17));
- vec2 raw=p*min(uAspect,1.)/vec2(uAspect,1.);vec2 clip=.91*tanh(raw/.91);
- vAlpha=opacity*uGate*uInk*sqrt(clamp(524288./max(uPopulation,65536.),1.,5.))*(.88+.12*hi);vTone=shade;
- gl_Position=vec4(clip,0.,1.);gl_PointSize=clamp(grain*uParticleScale,1.,5.);
-}
+float r(uint i,uint k){return h(i*1664525u+k*1013904223u+uint(uSeed*1000.));}
+void main(){uint id=uint(gl_VertexID);float k=r(id,2u),a=r(id,4u),b=r(id,5u);float age=info.x/max(.01,info.y);float life=smoothstep(0.,.055,age)*(1.-smoothstep(.70,1.,age));float core=k<.13?1.:0.;float fog=k>.72?1.:0.;float dist=length(state.xy-vec2(.13*sin(uTime*.28),.15*cos(uTime*.19+.6)));float opacity=mix(.14,.05,fog);opacity=mix(opacity,.17,core);opacity*=exp(-dist*.75)*(.52+.85*a);float size=mix(.8+1.*b,2.+2.8*b,fog);vAlpha=opacity*life*uGate*uInk*sqrt(clamp(524288./max(uPopulation,65536.),1.,4.));vTone=mix(.025,.35,fog);vec2 clip=state.xy*min(uAspect,1.)/vec2(uAspect,1.);gl_Position=vec4(clip,0.,1.);gl_PointSize=clamp(size*uParticleScale*uResolution/720.,1.,8.);}
 </script>
 
 <script id="particle-fragment" type="x-shader/x-fragment">
 #version 300 es
-precision highp float;in float vAlpha;in float vTone;out vec4 fragColor;void main(){vec2 p=gl_PointCoord-.5;float a=vAlpha*exp(-dot(p,p)*8.);if(a<.001)discard;fragColor=vec4(vec3(vTone),a);}
+precision highp float;in float vAlpha;in float vTone;out vec4 fragColor;
+void main(){vec2 p=gl_PointCoord-.5;float a=vAlpha*exp(-dot(p,p)*11.);if(a<.001)discard;fragColor=vec4(vec3(vTone),a);}
 </script>
 
 <script id="fade-fragment" type="x-shader/x-fragment">
@@ -296,9 +287,9 @@ const canvas=$("art"),overlay=$("overlay"),audioEl=$("audio");
 const SIM_W=1024,SIM_H=512,SIM_COUNT=SIM_W*SIM_H,FLOW_W=256,FLOW_H=256;
 const ratioMap={portrait:{w:720,h:1280},square:{w:720,h:720},landscape:{w:1280,h:720}};
 const presets={
- smoke:{turbulence:1.35,vortex:1.20,spread:1.25,ink:1.60,trail:.08,size:1.0,audio:2.8,drift:1.0},
- filament:{turbulence:.92,vortex:1.65,spread:1.10,ink:1.75,trail:.12,size:.72,audio:2.3,drift:.78},
- turbulent:{turbulence:2.35,vortex:.72,spread:1.35,ink:1.50,trail:.04,size:1.25,audio:3.8,drift:1.55}
+ smoke:{turbulence:1.35,vortex:1.20,spread:1.25,ink:1.60,trail:.68,size:1.0,audio:2.8,drift:1.0},
+ filament:{turbulence:.92,vortex:1.65,spread:1.10,ink:1.75,trail:.74,size:.72,audio:2.3,drift:.78},
+ turbulent:{turbulence:2.35,vortex:.72,spread:1.35,ink:1.50,trail:.46,size:1.25,audio:3.8,drift:1.55}
 };
 let ratioMode="portrait",resolutionScale=720;
 let gl=null,flowProgram=null,inkProgram=null,simProgram=null,particleProgram=null,fadeProgram=null,presentProgram=null,vao=null;
@@ -310,7 +301,7 @@ let audioContext=null,audioSource=null,analyser=null,mediaDestination=null,frequ
 let audioSmooth={bass:0,mid:0,high:0,rms:0,pulse:0},lastBass=0,lastRms=0;
 let audioUrl=null,recorder=null,recordingChunks=[];
 let frameTime=0,lastFrame=0,running=false,fallbackMode=false,frameCounter=0;
-const settings={turbulence:1.35,vortex:1.20,spread:1.25,ink:1.60,trail:.08,size:1.0,audio:2.8,drift:1.0};
+const settings={turbulence:1.35,vortex:1.20,spread:1.25,ink:1.60,trail:.68,size:1.0,audio:2.8,drift:1.0};
 const fmt=n=>Number(n).toLocaleString("en-GB");
 function status(message,ok){
   $("gpuStatus").textContent=message;
@@ -335,14 +326,36 @@ function set1(loc,v){if(loc!==null&&loc!==undefined)gl.uniform1f(loc,v);}
 function bindTexture(loc,texture){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);if(loc!==null)gl.uniform1i(loc,0);}
 function clearWhite(){if(!gl)return;gl.disable(gl.BLEND);gl.clearColor(1,1,1,1);for(const target of [trailA,trailB,null]){gl.bindFramebuffer(gl.FRAMEBUFFER,target?target.fbo:null);gl.viewport(0,0,target?target.w:canvas.width,target?target.h:canvas.height);gl.clear(gl.COLOR_BUFFER_BIT);}}
 function resizeRenderer(){const s=outputSize();if(canvas.width===s.w&&canvas.height===s.h&&trailA)return;canvas.width=s.w;canvas.height=s.h;canvas.style.aspectRatio=s.w+" / "+s.h;$("stageResolution").textContent=s.w+" × "+s.h;if(!gl)return;deleteTarget(trailA);deleteTarget(trailB);trailA=makeTarget(s.w,s.h);trailB=makeTarget(s.w,s.h);clearWhite();if(started&&rendererReady)drawFrame(0);}
+let particleBuffers=[],particleVAOs=[],stateIndex=0,tf=null,accumulator=0,forces={bass:0,mid:0,high:0,beat:0};
+function initialiseParticles(){
+ const rand=(()=>{let x=(seedValue*1000)>>>0;return()=>{x=(Math.imul(x,1664525)+1013904223)>>>0;return x/4294967296;};})();
+ const data=new Float32Array(SIM_COUNT*8);
+ for(let i=0;i<SIM_COUNT;i++){const k=i*8,a=rand()*Math.PI*2,rr=Math.sqrt(rand())*.075,life=3.5+7*rand();data[k]=Math.cos(a)*rr;data[k+1]=.15*Math.cos(.6)+Math.sin(a)*rr;data[k+2]=0;data[k+3]=0;data[k+4]=rand()*life;data[k+5]=life;}
+ for(let i=0;i<2;i++){gl.bindVertexArray(particleVAOs[i]);gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffers[i]);gl.bufferData(gl.ARRAY_BUFFER,data,gl.DYNAMIC_COPY);for(let k=0;k<2;k++){gl.enableVertexAttribArray(k);gl.vertexAttribPointer(k,4,gl.FLOAT,false,32,k*16);}}
+ gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,null);stateIndex=0;accumulator=0;
+}
+function initialiseAdvection(){
+ const a=compileShader(gl.VERTEX_SHADER,"advect-vertex"),b=compileShader(gl.FRAGMENT_SHADER,"advect-fragment");
+ simProgram=gl.createProgram();gl.attachShader(simProgram,a);gl.attachShader(simProgram,b);gl.transformFeedbackVaryings(simProgram,["nextState","nextInfo"],gl.INTERLEAVED_ATTRIBS);gl.linkProgram(simProgram);gl.deleteShader(a);gl.deleteShader(b);if(!gl.getProgramParameter(simProgram,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(simProgram));
+ simUniforms=cacheUniforms(simProgram,["uDt","uTime","uSeed","uAspect","uBass","uMid","uHigh","uBeat","uAudio","uTurbulence","uVortex","uSpread"]);
+ particleBuffers=[gl.createBuffer(),gl.createBuffer()];particleVAOs=[gl.createVertexArray(),gl.createVertexArray()];tf=gl.createTransformFeedback();initialiseParticles();
+}
+function advect(dt){
+ gl.useProgram(simProgram);
+ const values={uDt:dt,uTime:frameTime,uSeed:seedValue,uAspect:canvas.width/canvas.height,uBass:forces.bass,uMid:forces.mid,uHigh:forces.high,uBeat:forces.beat,uAudio:settings.audio,uTurbulence:settings.turbulence,uVortex:settings.vortex,uSpread:settings.spread};
+ for(const [k,v] of Object.entries(values))set1(simUniforms[k],v);
+ gl.bindVertexArray(particleVAOs[stateIndex]);gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK,tf);gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,0,particleBuffers[1-stateIndex]);gl.enable(gl.RASTERIZER_DISCARD);
+ gl.beginTransformFeedback(gl.POINTS);gl.drawArrays(gl.POINTS,0,particleCount);gl.endTransformFeedback();gl.disable(gl.RASTERIZER_DISCARD);gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,0,null);gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK,null);gl.bindVertexArray(vao);stateIndex=1-stateIndex;
+}
+
 function initRenderer(){
  try{
   gl=canvas.getContext("webgl2",{alpha:false,antialias:false,preserveDrawingBuffer:true,powerPreference:"high-performance"});if(!gl)throw Error("WebGL2 is unavailable");
   vao=gl.createVertexArray();gl.bindVertexArray(vao);
   particleProgram=makeProgram("particle-vertex","particle-fragment");fadeProgram=makeProgram("screen-vertex","fade-fragment");presentProgram=makeProgram("screen-vertex","present-fragment");
-  particleUniforms=cacheUniforms(particleProgram,["uTime","uAspect","uSeed","uParticleScale","uInk","uBass","uMids","uHighs","uPulse","uRms","uAudio","uLineMode","uSpread","uTurbulence","uVortex","uPopulation","uGate","uClock"]);
+  particleUniforms=cacheUniforms(particleProgram,["uTime","uAspect","uSeed","uParticleScale","uInk","uPopulation","uGate","uResolution"]);
   fadeUniforms=cacheUniforms(fadeProgram,["uTrail","uFade"]);presentUniforms=cacheUniforms(presentProgram,["uTrail"]);
-  resizeRenderer();rendererReady=true;status("Ready · waiting for audio",true);overlay.classList.add("hidden");requestAnimationFrame(renderFrame);
+  resizeRenderer();initialiseAdvection();rendererReady=true;status("Ready · waiting for audio",true);overlay.classList.add("hidden");requestAnimationFrame(renderFrame);
   canvas.addEventListener("webglcontextlost",e=>{e.preventDefault();rendererReady=false;status("GPU context lost · reload page",false);});
  }catch(e){console.error(e);status("Renderer error: "+e.message,false);overlay.classList.remove("hidden");overlay.querySelector(".overlay-card").textContent="GPU renderer could not start: "+e.message;}
 }
@@ -375,25 +388,31 @@ function updateAudioMeters(active){
 }
 function drawFrame(dt){
  const aspect=canvas.width/canvas.height;
- gl.bindFramebuffer(gl.FRAMEBUFFER,trailB.fbo);gl.viewport(0,0,trailB.w,trailB.h);gl.disable(gl.BLEND);
+ gl.bindVertexArray(vao);gl.bindFramebuffer(gl.FRAMEBUFFER,trailB.fbo);gl.viewport(0,0,trailB.w,trailB.h);gl.disable(gl.BLEND);
  gl.useProgram(fadeProgram);bindTexture(fadeUniforms.uTrail,trailA.texture);set1(fadeUniforms.uFade,dt>0?Math.pow(settings.trail,dt*60):0);gl.drawArrays(gl.TRIANGLES,0,3);
  gl.useProgram(particleProgram);
- const values={uTime:frameTime,uAspect:aspect,uSeed:seedValue,uParticleScale:settings.size,uInk:settings.ink,uBass:audioSmooth.bass,uMids:audioSmooth.mid,uHighs:audioSmooth.high,uPulse:audioSmooth.pulse,uRms:audioSmooth.rms,uAudio:settings.audio,uSpread:settings.spread,uTurbulence:settings.turbulence,uVortex:settings.vortex,uPopulation:particleCount,uGate:gate};
+ const values={uTime:frameTime,uAspect:aspect,uSeed:seedValue,uParticleScale:settings.size,uInk:settings.ink,uPopulation:particleCount,uGate:gate,uResolution:Math.min(canvas.width,canvas.height)};
  for(const [k,v] of Object.entries(values))set1(particleUniforms[k],v);
- gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
- gl.uniform3f(particleUniforms.uClock,clocks[0],clocks[1],clocks[2]);
- set1(particleUniforms.uLineMode,0);gl.drawArrays(gl.POINTS,0,particleCount);gl.disable(gl.BLEND);
+ gl.bindVertexArray(particleVAOs[stateIndex]);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.drawArrays(gl.POINTS,0,particleCount);gl.disable(gl.BLEND);gl.bindVertexArray(vao);
  [trailA,trailB]=[trailB,trailA];gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);gl.useProgram(presentProgram);bindTexture(presentUniforms.uTrail,trailA.texture);gl.drawArrays(gl.TRIANGLES,0,3);
 }
 function renderFrame(ms){
  if(!rendererReady)return;
  const dt=Math.min(.05,Math.max(.001,lastFrame?ms/1000-lastFrame:1/60));lastFrame=ms/1000;
  const active=readAudio(dt);
- if(active&&!fieldPaused){started=true;gate=Math.min(1,gate+dt*5);frameTime+=dt*settings.drift*(.38+.8*audioSmooth.rms+.28*audioSmooth.pulse);const speed=dt*settings.drift;const sensitivity=Math.min(2,settings.audio*.48);clocks[0]+=speed*(.12+sensitivity*(audioSmooth.bass*1.8+audioSmooth.pulse*2.3));clocks[1]+=speed*(.10+sensitivity*(audioSmooth.mid*1.65+audioSmooth.pulse*.62));clocks[2]+=speed*(.18+sensitivity*(audioSmooth.high*3.1+audioSmooth.pulse*.9));drawFrame(dt);if(frameCounter++%120===0){const err=gl.getError();if(err!==gl.NO_ERROR){status("GPU error "+err,false);rendererReady=false;return;}}status("Audio-driven · "+fmt(particleCount)+" particles",true);}
- else status(fieldPaused?"Field paused":started?"Field held · waiting for sound":"Ready · waiting for audio",true);
+ if(active&&!fieldPaused){
+  started=true;gate=Math.min(1,gate+dt*3);
+  for(const k of ["bass","mid","high","beat"]){const target=k==="beat"?audioSmooth.pulse:audioSmooth[k];const rate=k==="beat"?(target>forces[k]?12:3.5):(target>forces[k]?8:4);forces[k]+=(target-forces[k])*(1-Math.exp(-dt*rate));}
+  accumulator+=dt*Math.max(.1,settings.drift);const step=1/60;let count=0;
+  while(accumulator>=step&&count<4){frameTime+=step;advect(step);accumulator-=step;count++;}
+  if(count===4)accumulator=Math.min(accumulator,step);
+  drawFrame(dt);
+  if(frameCounter++%120===0){const err=gl.getError();if(err!==gl.NO_ERROR){status("GPU error "+err,false);rendererReady=false;return;}}
+  status("Audio-driven advection · "+fmt(particleCount)+" particles",true);
+ }else{accumulator=0;status(fieldPaused?"Field paused":started?"Field held · waiting for sound":"Ready · waiting for audio",true);}
  requestAnimationFrame(renderFrame);
 }
-function resetField(newSeed){if(newSeed)seedValue=Math.random()*1000;started=false;gate=0;frameTime=0;clocks=[0,0,0];signalHold=0;rawRms=0;lastEnergy=0;lastBand=[0,0,0];bandPeak=[.05,.05,.05];for(const k in audioSmooth)audioSmooth[k]=0;clearWhite();}
+function resetField(newSeed){if(newSeed)seedValue=Math.random()*1000;started=false;gate=0;frameTime=0;signalHold=0;rawRms=0;lastEnergy=0;lastBand=[0,0,0];bandPeak=[.05,.05,.05];for(const k in audioSmooth)audioSmooth[k]=0;for(const k in forces)forces[k]=0;if(rendererReady)initialiseParticles();clearWhite();}
 async function ensureAudio(){
   if(!audioContext){
     audioContext=new(window.AudioContext||window.webkitAudioContext)();
@@ -458,7 +477,7 @@ function saveStill(){
   renderCanvas.toBlob(blob=>{
     if(!blob)return;
     const url=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=url;a.download="lifeafterlogic-stochastic-ink-v09.png";a.click();
+    a.href=url;a.download="lifeafterlogic-stochastic-ink-v10.png";a.click();
     setTimeout(()=>URL.revokeObjectURL(url),20000);
   },"image/png");
 }
@@ -476,7 +495,7 @@ async function startRecording(){
     recorder.onstop=()=>{
       const type=recorder.mimeType||"video/webm",blob=new Blob(recordingChunks,{type});
       const url=URL.createObjectURL(blob),a=document.createElement("a");
-      a.href=url;a.download="lifeafterlogic-stochastic-ink-v09."+(type.includes("mp4")?"mp4":"webm");a.click();
+      a.href=url;a.download="lifeafterlogic-stochastic-ink-v10."+(type.includes("mp4")?"mp4":"webm");a.click();
       setTimeout(()=>URL.revokeObjectURL(url),30000);
       $("recordBtn").textContent="Start recording";$("recordBtn").classList.add("primary");
       $("audioStatus").textContent="Capture downloaded · "+(type.includes("mp4")?"MP4":"WebM");recorder=null;
@@ -494,7 +513,7 @@ $("stillBtn").addEventListener("click",saveStill);
 $("particles").addEventListener("input",e=>{
   particleCount=Math.max(1,Math.min(SIM_COUNT,Number(e.target.value)));
   $("particlesOut").textContent=fmt(particleCount);$("particleReadout").textContent=fmt(particleCount);
-  status("GPU fluid simulation active · "+fmt(particleCount)+" particles",true);
+  status("Particle amount · "+fmt(particleCount),true);
 });
 ["turbulence","vortex","spread","ink","trail","size","audioInfluence","drift"].forEach(id=>{
   $(id).addEventListener("input",e=>setSetting(id,e.target.value));
