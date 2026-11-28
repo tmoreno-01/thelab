@@ -35,12 +35,26 @@ jobs:
                 assert.ok(d.motionFamilies.length>=Math.min(6,d.modules),JSON.stringify(d));
                 assert.ok(d.motionFamilies.includes(0)&&d.motionFamilies.includes(2));
                 assert.ok(d.matterCount>0);assert.equal(d.matterCount,d.matterLive);
+                const sample=()=>p.evaluate(()=>{
+                  const c=document.querySelector('#art'),gl=c.getContext('webgl2'),d=window.__resetDiagnostics();
+                  const bytes=new Uint8Array(c.width*c.height*4);gl.readPixels(0,0,c.width,c.height,gl.RGBA,gl.UNSIGNED_BYTE,bytes);
+                  return d.motionRegions.map(r=>{
+                    const v=[];for(let y=r.y+2;y<r.y+r.h-2;y+=Math.max(2,Math.floor(r.h/20)))for(let x=r.x+2;x<r.x+r.w-2;x+=Math.max(2,Math.floor(r.w/20))){
+                      const i=((c.height-1-y)*c.width+x)*4;v.push(bytes[i],bytes[i+1],bytes[i+2]);}
+                    return {family:r.family,v};
+                  });
+                });
+                const beforeRegions=await sample();
                 const first=await p.screenshot();
                 await p.waitForTimeout(2500);
                 await p.waitForFunction(()=>window.__resetDiagnostics().contactPushes>0,{},{timeout:30000});
                 const after=await p.evaluate(()=>window.__resetDiagnostics());assert.equal(after.matterCount,after.matterLive);assert.ok(after.longestPush>=2);
                 const later=await p.screenshot({path:'/tmp/reset-'+study+'-'+layout+'.png'});
                 assert.notDeepEqual(first,later);
+                const afterRegions=await sample();
+                const changed=new Set(beforeRegions.filter((r,i)=>r.v.some((v,j)=>v!==afterRegions[i].v[j])).map(r=>r.family));
+                assert.ok(changed.size>=2,'Distinct motion families must visibly evolve: '+JSON.stringify([...changed]));
+                console.log('Changed motion families:', [...changed]);
                 assert.deepEqual(errors,[]);
                 console.log(study,layout,d.motionFamilies,d.motionArea);
                 await p.close();
