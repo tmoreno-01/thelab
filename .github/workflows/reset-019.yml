@@ -1,0 +1,62 @@
+name: Validate RESET 019
+on:
+  push:
+    paths:
+      - 'reset/versions/v.02/autogenesis.html'
+      - 'reset/versions/v.02/index.html'
+      - '.github/workflows/reset-019.yml'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: |
+          npm install --no-save playwright
+          npx playwright install chromium
+          python3 -m http.server 8765 &
+          node <<'NODE'
+          const {chromium}=require('playwright');
+          const assert=require('node:assert/strict');
+          (async()=>{
+            const b=await chromium.launch({args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+            try {
+              const root='http://127.0.0.1:8765/reset/versions/v.02/';
+              for(const [i,layout] of ['territories','continuous','columns','crossroads','monolith','interlace','constellation','register','faultline','strata','woven','archipelago'].entries()){
+                const p=await b.newPage({viewport:{width:800,height:600}}),errors=[];
+                p.on('pageerror',e=>errors.push(e.message));
+                await p.goto(root+'autogenesis.html?layout='+layout+'&seed='+(12345+i)+'&colour=1&preview=1');
+                await p.waitForFunction(()=>window.__resetDiagnostics?.().frames>4);
+                const stats=await p.evaluate(()=>window.__resetDiagnostics());
+                assert.equal(stats.gpu,true,JSON.stringify(stats));
+                assert.equal(stats.layout,layout);
+                assert.ok(stats.behaviours>=2);
+                assert.deepEqual(errors,[]);
+                await p.screenshot({path:'/tmp/reset-019-'+layout+'.png'});
+                if(i<3){
+                  await p.waitForFunction(()=>window.__resetDiagnostics().cellTransfers>5,{},{timeout:30000});
+                  const after=await p.evaluate(()=>window.__resetDiagnostics());
+                  assert.ok(after.cellTransfers>5);
+                  assert.ok(after.infections>0);
+                  console.log(layout,after);
+                }
+                await p.close();
+              }
+              const p=await b.newPage({viewport:{width:1200,height:800}});
+              await p.goto(root+'index.html#round-7');
+              assert.deepEqual(await p.locator('.tile').evaluateAll(t=>t.map(e=>e.dataset.number)),['19','19','19']);
+              await p.locator('[data-round="5"]').click();
+              assert.deepEqual(await p.locator('.tile').evaluateAll(t=>t.map(e=>e.dataset.number)),['16','17','18']);
+              await p.locator('[data-round="6"]').click();
+              assert.deepEqual(await p.locator('.tile').evaluateAll(t=>t.map(e=>e.dataset.number)),['19','19','19']);
+              await p.close();
+            }finally{await b.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reset-019-previews
+          path: /tmp/reset-019-*.png
