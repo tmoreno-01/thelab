@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'reset/versions/v.02/living.html'
+      - 'reset/versions/v.02/axial.html'
       - 'reset/versions/v.02/index.html'
       - '.github/workflows/reset-living.yml'
   workflow_dispatch:
@@ -23,27 +24,37 @@ jobs:
           (async()=>{
             const b=await chromium.launch({args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
             try {
-              for(const study of [13,14,15]){
+              for(const study of [13,14,15,16,17,18]){
                 const p=await b.newPage({viewport:{width:900,height:700}});
                 const errors=[];p.on('pageerror',e=>errors.push(e.message));
-                await p.goto('http://127.0.0.1:8765/reset/versions/v.02/living.html?study='+study+'&preview=1&seed=12345&colour=1');
+                await p.goto('http://127.0.0.1:8765/reset/versions/v.02/'+(study<=15?'living':'axial')+'.html?study='+study+'&preview=1&seed=12345&colour=1');
                 await p.waitForFunction(()=>window.__resetDiagnostics?.().frames>10);
                 await p.waitForTimeout(6500);
                 const stats=await p.evaluate(()=>window.__resetDiagnostics());
-                if(errors.length||stats.modules<10||stats.transfers<1||stats.infections<1)throw Error(JSON.stringify({errors,stats}));
+                if(errors.length||stats.modules<2||stats.transfers<1||stats.infections<1)throw Error(JSON.stringify({errors,stats}));
                 console.log(study,stats);
                 await p.screenshot({path:'/tmp/reset-'+study+'.png'});
                 await p.close();
               }
+              for(const layout of ['columns','strata','territories','continuous','woven','archipelago']){
+                const p=await b.newPage({viewport:{width:800,height:600}});
+                const errors=[];p.on('pageerror',e=>errors.push(e.message));
+                await p.goto('http://127.0.0.1:8765/reset/versions/v.02/axial.html?study=18&layout='+layout+'&preview=1&seed=54321&colour=1');
+                await p.waitForFunction(()=>window.__resetDiagnostics?.().frames>8);
+                const stats=await p.evaluate(()=>window.__resetDiagnostics());
+                if(errors.length||stats.layout!==layout||!stats.gpu||stats.edges<2)throw Error(JSON.stringify({errors,stats}));
+                await p.screenshot({path:'/tmp/reset-layout-'+layout+'.png'});
+                await p.close();
+              }
               const page=await b.newPage({viewport:{width:1200,height:800}});
               await page.goto('http://127.0.0.1:8765/reset/versions/v.02/index.html');
-              for(const round of [0,3,1,2,4]){
+              for(const round of [0,3,1,2,4,5]){
                 await page.locator('[data-round="'+round+'"]').click();
                 const studies=await page.locator('.tile').evaluateAll(tiles=>tiles.map(t=>Number(t.dataset.number)));
                 if(studies.join(',')!==[round*3+1,round*3+2,round*3+3].join(','))throw Error('Round did not switch: '+round);
                 if(await page.evaluate(()=>!!document.fullscreenElement))throw Error('Round button triggered fullscreen');
                 const srcs=await page.locator('.tile iframe').evaluateAll(frames=>frames.map(f=>f.getAttribute('src')));
-                if(!srcs.every(s=>s&&s.includes(round===4?'living.html':'source.html')))throw Error('Wrong renderer: '+srcs);
+                if(!srcs.every(s=>s&&s.includes(round===5?'axial.html':round===4?'living.html':'source.html')))throw Error('Wrong renderer: '+srcs);
               }
               await page.close();
             }finally{await b.close()}

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
-<title>RESET — v.02 / 013–015</title>
+<title>RESET — v.02 / 016–018</title>
 <style>
 *{box-sizing:border-box}
 html{background:#fff;color:#111;font:13px Arial,sans-serif}
@@ -59,18 +59,18 @@ main{max-width:1800px;margin:auto;padding:28px 24px 54px}
   <h1>RESET / v.02 — New studies</h1>
   <p>Fresh seed on every load · continuous currents · living pigment · evolving structural grammar</p>
  </div>
- <section class="grid" aria-label="RESET studies 013 to 015">
-  <article class="tile" tabindex="0" role="button" aria-label="Open study 013 Coherent Weather fullscreen" data-study="13">
-   <div class="screen"><iframe title="RESET 013 — Coherent Weather" loading="lazy" allowfullscreen></iframe></div>
-   <div class="number"><span>013 — COHERENT WEATHER</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
+ <section class="grid" aria-label="RESET studies 016 to 018">
+  <article class="tile" tabindex="0" role="button" aria-label="Open study 016 Axial Drift fullscreen" data-study="16">
+   <div class="screen"><iframe title="RESET 016 — Axial Drift" loading="lazy" allowfullscreen></iframe></div>
+   <div class="number"><span>016 — AXIAL DRIFT</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
   </article>
-  <article class="tile" tabindex="0" role="button" aria-label="Open study 014 Relay Bloom fullscreen" data-study="14">
-   <div class="screen"><iframe title="RESET 014 — Relay Bloom" loading="lazy" allowfullscreen></iframe></div>
-   <div class="number"><span>014 — RELAY BLOOM</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
+  <article class="tile" tabindex="0" role="button" aria-label="Open study 017 Fracture Atlas fullscreen" data-study="17">
+   <div class="screen"><iframe title="RESET 017 — Fracture Atlas" loading="lazy" allowfullscreen></iframe></div>
+   <div class="number"><span>017 — FRACTURE ATLAS</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
   </article>
-  <article class="tile" tabindex="0" role="button" aria-label="Open study 015 Quiet Pressure fullscreen" data-study="15">
-   <div class="screen"><iframe title="RESET 015 — Quiet Pressure" loading="lazy" allowfullscreen></iframe></div>
-   <div class="number"><span>015 — QUIET PRESSURE</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
+  <article class="tile" tabindex="0" role="button" aria-label="Open study 018 Common Current fullscreen" data-study="18">
+   <div class="screen"><iframe title="RESET 018 — Common Current" loading="lazy" allowfullscreen></iframe></div>
+   <div class="number"><span>018 — COMMON CURRENT</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
   </article>
  </section>
  <nav class="history" aria-label="Previous RESET studies">
@@ -80,32 +80,33 @@ main{max-width:1800px;margin:auto;padding:28px 24px 54px}
    <button type="button" class="history-item" data-round="1" aria-pressed="false"><span class="history-no">004–006</span><span class="history-name">ROUND 002</span></button>
    <button type="button" class="history-item" data-round="2" aria-pressed="false"><span class="history-no">007–009</span><span class="history-name">ROUND 003</span></button>
    <button type="button" class="history-item" data-round="3" aria-pressed="false"><span class="history-no">010–012</span><span class="history-name">ROUND 004</span></button>
-   <button type="button" class="history-item" data-round="4" aria-pressed="true"><span class="history-no">013–015</span><span class="history-name">LATEST</span></button>
+   <button type="button" class="history-item" data-round="4" aria-pressed="false"><span class="history-no">013–015</span><span class="history-name">ROUND 005</span></button>
+   <button type="button" class="history-item" data-round="5" aria-pressed="true"><span class="history-no">016–018</span><span class="history-name">LATEST</span></button>
   </div>
  </nav>
 </main>
 <script>
-const names=["Patchwork Signals","Chromatic Inheritance","Residual Grammar","Grid Ecology","Signal Fracture","Living Syntax","Lattice Drift","Patch Relay","Signal Weather","Relay Spine","Cluster Grammar","Signal Weather","Coherent Weather","Relay Bloom","Quiet Pressure"];
+const names=["Patchwork Signals","Chromatic Inheritance","Residual Grammar","Grid Ecology","Signal Fracture","Living Syntax","Lattice Drift","Patch Relay","Signal Weather","Relay Spine","Cluster Grammar","Signal Weather","Coherent Weather","Relay Bloom","Quiet Pressure","Axial Drift","Fracture Atlas","Common Current"];
 const tiles=[...document.querySelectorAll('.tile')],loaded=new WeakSet(),buttons=[...document.querySelectorAll('[data-round]')];
 const number=n=>String(n).padStart(3,'0');
-let current=4;
-function sourceFor(tile,preview=true){const n=Number(tile.dataset.number),old=n<=12;return './'+(old?'source':'living')+'.html?study='+(old?n+167:n)+(preview?'&preview=1':'')+'&refresh='+Date.now();}
+let current=5;
+function sourceFor(tile,preview=true){const n=Number(tile.dataset.number),old=n<=12;return './'+(old?'source':n<=15?'living':'axial')+'.html?study='+(old?n+167:n)+(preview?'&preview=1':'')+'&refresh='+Date.now();}
 function loadFrame(tile){const frame=tile.querySelector('iframe');if(!loaded.has(frame)){loaded.add(frame);frame.addEventListener('load',()=>syncTile(tile));frame.src=sourceFor(tile,true);}return frame;}
 function message(tile,type,data){const frame=tile.querySelector('iframe');if(frame?.contentWindow)frame.contentWindow.postMessage({type,...data},location.origin);}
 function isVisible(tile){if(document.hidden)return false;if(document.fullscreenElement)return document.fullscreenElement===tile;const r=tile.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;}
 function syncTile(tile){const full=document.fullscreenElement===tile;message(tile,'study-visibility',{visible:isVisible(tile)});message(tile,'study-quality',{fullscreen:full,full});}
 function syncAll(){for(const tile of tiles)syncTile(tile);}
 function selectRound(round,write=true){
- current=Math.max(0,Math.min(4,round));const start=current*3+1;
+ current=Math.max(0,Math.min(5,round));const start=current*3+1;
  document.querySelector('.intro h1').textContent='RESET / v.02 — '+number(start)+'–'+number(start+2);
- document.querySelector('.intro p').textContent=current===4?'Continuous currents · living pigment · evolving structural grammar':'Preserved studies · fresh seed on every load';
+ document.querySelector('.intro p').textContent=current===5?'Six compositional grammars · angular movement · living pigment':'Preserved studies · fresh seed on every load';
  document.querySelector('.grid').setAttribute('aria-label','RESET studies '+number(start)+' to '+number(start+2));
  buttons.forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.round)===current)));
  tiles.forEach((tile,i)=>{const n=start+i,name=names[n-1];tile.dataset.number=n;tile.dataset.study=n<=12?n+167:n;tile.setAttribute('aria-label','Open study '+number(n)+' '+name+' fullscreen');tile.querySelector('.number span').textContent=number(n)+' — '+name.toUpperCase();const frame=tile.querySelector('iframe');frame.title='RESET '+number(n)+' — '+name;if(loaded.has(frame))frame.src=sourceFor(tile,true);else if(isVisible(tile))loadFrame(tile);});
  if(write)history.replaceState(null,'','#round-'+(current+1));
 }
 const observer=new IntersectionObserver(entries=>{for(const entry of entries){const tile=entry.target;if(entry.isIntersecting)loadFrame(tile);syncTile(tile);}},{threshold:.04});
-const initial=location.hash.match(/^#round-([1-5])$/);selectRound(initial?Number(initial[1])-1:4,false);
+const initial=location.hash.match(/^#round-([1-6])$/);selectRound(initial?Number(initial[1])-1:5,false);
 buttons.forEach(b=>b.addEventListener('click',()=>selectRound(Number(b.dataset.round))));
 tiles.forEach(tile=>{
  observer.observe(tile);
