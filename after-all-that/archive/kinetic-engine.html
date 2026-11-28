@@ -1098,9 +1098,20 @@ function applySerpentineMotion(){
    const width=node.width+(grain>.945?1:0);
    for(let across=-width;across<=width;across++){
     if(across!==0&&motionNoise(x+across,y-across,node.seed+along*31+across*17)>.43)continue;
-    const dx=x+nx*across,dy=y+ny*across,drift=Math.round(waveSin(node.phase+age*2.35+along*.31)*node.wobble+(grain-.5)*.55);
-    const back=node.displace+(grain>.84?1:0),sx=dx-v[0]*back+nx*drift,sy=dy-v[1]*back+ny*drift;
-    const edge=resetEdgeAt(dx,dy)/4,strength=fade*node.strength*pulse*(across===0?1:.62)*(.58+.42*edge),before=resetMoved;
+    const dx=x+nx*across,dy=y+ny*across,drift=Math.round(waveSin(node.phase+age*2.35+along*.31)*node.wobble+(grain-.5)*.55),back=node.displace+(grain>.84?1:0),base=field[dy*W+dx];
+    const candidates=[
+     [dx-v[0]*back+nx*drift,dy-v[1]*back+ny*drift],
+     [dx+v[0]*back-nx*drift,dy+v[1]*back-ny*drift],
+     [dx+nx*back,dy+ny*back],
+     [dx-nx*back,dy-ny*back]
+    ];
+    let sx=dx-v[0],sy=dy-v[1],found=false,start=Math.floor(grain*4);
+    for(let k=0;k<4;k++){
+     const c=candidates[(start+k)&3],cx=clamp(Math.round(c[0]),1,W-2),cy=clamp(Math.round(c[1]),1,H-2);
+     if(field[cy*W+cx]!==base){sx=cx;sy=cy;found=true;break;}
+    }
+    if(!found)continue;
+    const edge=resetEdgeAt(dx,dy)/4,strength=fade*node.strength*pulse*(across===0?1:.62)*(.62+.38*edge),before=resetMoved;
     resetWritePixel(dx,dy,sx,sy,strength,node.seed+along*23+across*41,node.colour,nx,ny);
     if(resetMoved>before)serpentineWrites++;
    }
