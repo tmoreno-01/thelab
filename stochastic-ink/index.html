@@ -244,16 +244,16 @@ void main(){
   float secondaryB=exp(-dot(q-vec2(-0.17,-0.10),q-vec2(-0.17,-0.10))*28.0);
   vec2 secondaryTangent=vec2(-(q.y-0.08),q.x-0.16)/sqrt(dot(q-vec2(0.16,0.08),q-vec2(0.16,0.08))+0.003);
   vec2 secondaryTangentB=vec2(-(q.y+0.10),q.x+0.17)/sqrt(dot(q-vec2(-0.17,-0.10),q-vec2(-0.17,-0.10))+0.003);
-  float audioForce=uAudio*(uBass*0.48+uPulse*1.55);
-  vec2 force=flow*(0.24+uTurbulence*0.62+uAudio*uMids*1.25+uAudio*uHighs*0.30);
-  force+=tangent*vortexMask*uVortex*(0.52+uAudio*uBass*0.90+uAudio*uPulse*1.35);
+  float audioForce=uAudio*(uBass*0.72+uPulse*2.20);
+  vec2 force=flow*(0.24+uTurbulence*0.62+uAudio*uMids*1.65+uAudio*uHighs*0.52);
+  force+=tangent*vortexMask*uVortex*(0.52+uAudio*uBass*1.35+uAudio*uPulse*2.00);
   force+=secondaryTangent*secondaryA*0.42-secondaryTangentB*secondaryB*0.34;
   force+=q/sqrt(r2+0.012)*audioForce*0.70;
   force-=q*max(0.0,length(q)-0.40)*0.24;
   float idNoise=hash1(id+floor(t*5.0));
   force+=vec2(cos(idNoise*6.283),sin(idNoise*6.283))*uAudio*uHighs*0.10;
   vec2 velocity=pos-previous;
-  velocity=velocity*0.985+force*uDt*0.115;
+  velocity=velocity*0.983+force*uDt*0.145;
   float speed=length(velocity);
   if(speed>0.012)velocity*=0.012/speed;
   vec2 nextPos=pos+velocity;
@@ -272,7 +272,7 @@ void main(){
 precision highp float;
 uniform sampler2D uState;
 uniform int uSimWidth;
-uniform float uAspect,uSeed,uParticleScale,uInk,uBass,uMids,uHighs,uPulse,uRms,uLineMode;
+uniform float uAspect,uSeed,uParticleScale,uInk,uBass,uMids,uHighs,uPulse,uRms,uAudio,uLineMode;
 out float vAlpha;
 out float vTone;
 void main(){
@@ -289,13 +289,13 @@ void main(){
   float core=exp(-radius*radius*10.0);
   float air=fract(sin(float(id)*39.7+uSeed*7.1)*24634.6345);
   vAlpha=(0.012+core*0.045+speed*2.8)*(0.68+air*0.70)*uInk;
-  vAlpha*=0.82+uRms*0.95+uPulse*1.65;
+  vAlpha*=0.78+uRms*0.85+uAudio*(uRms*0.72+uPulse*1.85);
   if(uLineMode>0.5)vAlpha*=0.80;
   else vAlpha*=1.22;
   vTone=mix(0.035,0.30,seed);
   if(core>0.45)vTone=mix(0.012,0.085,seed);
   gl_Position=vec4(pos.x/max(uAspect,0.05),pos.y,0.0,1.0);
-  gl_PointSize=clamp((0.58+air*1.05)*uParticleScale*(1.0+uHighs*0.28+uPulse*0.70),0.5,3.0);
+  gl_PointSize=clamp((0.58+air*1.05)*uParticleScale*(1.0+uAudio*uHighs*0.42+uAudio*uPulse*1.05),0.5,3.0);
 }
 </script>
 
@@ -488,7 +488,7 @@ function initRenderer(){
     fadeProgram=makeProgram("screen-vertex","fade-fragment");
     presentProgram=makeProgram("screen-vertex","present-fragment");
     simUniforms=cacheUniforms(simProgram,["uState","uSimWidth","uTime","uDt","uAspect","uTurbulence","uVortex","uSpread","uBass","uMids","uHighs","uPulse","uAudio","uSeed","uDrift"]);
-    particleUniforms=cacheUniforms(particleProgram,["uState","uSimWidth","uAspect","uSeed","uParticleScale","uInk","uBass","uMids","uHighs","uPulse","uRms","uLineMode"]);
+    particleUniforms=cacheUniforms(particleProgram,["uState","uSimWidth","uAspect","uSeed","uParticleScale","uInk","uBass","uMids","uHighs","uPulse","uRms","uAudio","uLineMode"]);
     fadeUniforms=cacheUniforms(fadeProgram,["uTrail","uFade"]);
     presentUniforms=cacheUniforms(presentProgram,["uTrail"]);
     resizeRenderer();initStateTargets();createTrailTargets();
@@ -517,13 +517,13 @@ function readAudio(){
   const rawRms=Math.sqrt(sum/timeData.length);
   const raw={bass:band(35,170),mid:band(170,2400),high:band(2400,12000),rms:Math.max(0,Math.min(1,(rawRms-.008)*6.0))};
   const bassRise=Math.max(0,raw.bass-lastBass),rmsRise=Math.max(0,raw.rms-lastRms);
-  const pulse=Math.max(bassRise*4.2,rmsRise*5.2);
+  const pulse=Math.max(bassRise*6.0,rmsRise*8.0);
   lastBass=raw.bass;lastRms=raw.rms;
   audioSmooth.bass+=(raw.bass-audioSmooth.bass)*.24;
   audioSmooth.mid+=(raw.mid-audioSmooth.mid)*.20;
   audioSmooth.high+=(raw.high-audioSmooth.high)*.23;
   audioSmooth.rms+=(raw.rms-audioSmooth.rms)*.22;
-  audioSmooth.pulse=Math.max(audioSmooth.pulse*.82,Math.min(1,pulse));
+  audioSmooth.pulse=Math.max(audioSmooth.pulse*.88,Math.min(1,pulse));
   updateAudioMeters();
 }
 function updateAudioMeters(){
@@ -554,7 +554,7 @@ function drawParticles(aspect){
   set1i(particleUniforms.uSimWidth,SIM_W);set1(particleUniforms.uAspect,aspect);set1(particleUniforms.uSeed,seedValue);
   set1(particleUniforms.uParticleScale,settings.size);set1(particleUniforms.uInk,settings.ink);
   set1(particleUniforms.uBass,audioSmooth.bass);set1(particleUniforms.uMids,audioSmooth.mid);set1(particleUniforms.uHighs,audioSmooth.high);
-  set1(particleUniforms.uPulse,audioSmooth.pulse);set1(particleUniforms.uRms,audioSmooth.rms);
+  set1(particleUniforms.uPulse,audioSmooth.pulse);set1(particleUniforms.uRms,audioSmooth.rms);set1(particleUniforms.uAudio,settings.audio);
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
   set1(particleUniforms.uLineMode,1);gl.lineWidth(1);gl.drawArrays(gl.LINES,0,particleCount*2);
   set1(particleUniforms.uLineMode,0);gl.drawArrays(gl.POINTS,0,particleCount);
@@ -594,6 +594,7 @@ function startFallback(reason){
   fallbackCanvas.width=canvas.width;fallbackCanvas.height=canvas.height;
   canvas.parentNode.insertBefore(fallbackCanvas,canvas.nextSibling);
   fallbackCtx=fallbackCanvas.getContext("2d",{alpha:false});renderCanvas=fallbackCanvas;
+  fallbackCtx.fillStyle="#fff";fallbackCtx.fillRect(0,0,fallbackCanvas.width,fallbackCanvas.height);
   fallbackParticles=randomFallbackState();overlay.classList.add("hidden");
   status("Canvas fallback · "+String(reason).slice(0,45),false);
   lastFrame=performance.now()/1000;requestAnimationFrame(renderFallback);
