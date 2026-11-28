@@ -31,8 +31,10 @@ jobs:
             const errors=[];
             page.on('pageerror',e=>errors.push(String(e)));
             page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
-            await page.goto('http://127.0.0.1:8000/lanterns/',{waitUntil:'domcontentloaded',timeout:60000});
-            await page.waitForFunction(()=>document.querySelector('#loader')?.classList.contains('done')||document.querySelector('#error')?.textContent.trim(),{},{timeout:90000});
+            await page.goto('http://127.0.0.1:8000/lanterns/?test=1',{waitUntil:'domcontentloaded',timeout:60000});
+            await Promise.race([page.waitForFunction(()=>document.querySelector('#loader')?.classList.contains('done')||document.querySelector('#error')?.textContent.trim(),{},{timeout:60000}),new Promise(resolve=>setTimeout(resolve,65000))]);
+            if(errors.length)throw Error(errors.join('\\n'));
+            if(!await page.locator('#loader').evaluate(el=>el.classList.contains('done')))throw Error('The first frame did not render within 65 seconds.');
             const errorText=(await page.locator('#error').textContent()).trim();
             if(errorText)throw Error(errorText);
             if(!(await page.locator('canvas').count()))throw Error('No WebGL canvas was created');
