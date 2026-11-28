@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
 <meta name="robots" content="noindex,nofollow">
-<title>Stochastic Ink v.05 — LifeAfterLogic Lab</title>
+<title>Stochastic Ink v.06 — LifeAfterLogic Lab</title>
 <link rel="icon" type="image/svg+xml" href="../media/lifeafterlogic-mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,14 +100,14 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <img class="mark" src="../media/lifeafterlogic-mark.svg" width="30" height="30" alt="">
 <span class="brand-name">lab</span><span class="brand-sub">Stochastic Ink / 007</span>
 </a>
-<div class="top-meta">WebGL2 / GPU fluid particles · v.05</div>
+<div class="top-meta">WebGL2 / curl-noise fluid particles · v.06</div>
 </header>
 <main>
 <aside class="panel">
 <div>
 <div class="eyebrow">Experiment 007 / Audiovisual systems</div>
 <h1>Stochastic<br>Ink</h1>
-<p class="intro">A living ink cloud. Hundreds of thousands of particles advect through a turbulent curl field, accumulating into smoky filaments, tangled loops and a dense shifting nucleus. Music drives the pressure, turbulence and particle emission.</p>
+<p class="intro">A living ink cloud. Hundreds of thousands of particles advect through a multi-scale curl-noise field and overlapping micro-vortices, accumulating into smoky filaments, tangled loops and a dense shifting nucleus. Music drives the turbulence, pressure and particle emission.</p>
 </div>
 <section class="section">
 <div class="section-head"><span class="section-title">01 / Audio input</span><span class="small-note" id="audioState">No track</span></div>
@@ -135,7 +135,7 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <div class="control"><label class="control-label" for="vortex"><span>Vortex strength</span><output id="vortexOut">1.20</output></label><input id="vortex" type="range" min="0" max="2.5" step=".01" value="1.20"></div>
 <div class="control"><label class="control-label" for="spread"><span>Cloud spread</span><output id="spreadOut">1.10</output></label><input id="spread" type="range" min="0.55" max="1.8" step=".01" value="1.10"></div>
 <div class="control"><label class="control-label" for="ink"><span>Ink density</span><output id="inkOut">1.35</output></label><input id="ink" type="range" min="0.35" max="2.5" step=".01" value="1.35"></div>
-<div class="control"><label class="control-label" for="trail"><span>Trail persistence</span><output id="trailOut">0.976</output></label><input id="trail" type="range" min="0.90" max="0.997" step=".001" value="0.976"></div>
+<div class="control"><label class="control-label" for="trail"><span>Trail persistence</span><output id="trailOut">0.962</output></label><input id="trail" type="range" min="0.90" max="0.997" step=".001" value="0.962"></div>
 <div class="control"><label class="control-label" for="size"><span>Particle scale</span><output id="sizeOut">1.00</output></label><input id="size" type="range" min="0.45" max="2.5" step=".01" value="1.00"></div>
 <div class="control"><label class="control-label" for="audioInfluence"><span>Audio sensitivity</span><output id="audioInfluenceOut">2.80</output></label><input id="audioInfluence" type="range" min="0" max="5" step=".05" value="2.80"></div>
 <div class="control"><label class="control-label" for="drift"><span>Temporal drift</span><output id="driftOut">1.00</output></label><input id="drift" type="range" min="0.1" max="2.5" step=".01" value="1.00"></div>
@@ -155,13 +155,14 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <section class="section">
 <div class="section-head"><span class="section-title">06 / Version history</span><span class="small-note">Preserved builds</span></div>
 <div class="version-list">
-<div class="version-item current"><span class="version-no">v.05</span><strong>GPU fluid particle advection</strong><em>Current</em></div>
+<div class="version-item current"><span class="version-no">v.06</span><strong>Multi-scale curl-noise particle fluid</strong><em>Current</em></div>
+<a class="version-item" href="versions/v.05/"><span class="version-no">v.05</span><strong>First GPU fluid particle advection pass</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.04/"><span class="version-no">v.04</span><strong>Micro-particle radial filaments</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.03/"><span class="version-no">v.03</span><strong>WebGPU filament + membrane study</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.02/"><span class="version-no">v.02</span><strong>3D particle system + shader fix</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.01/"><span class="version-no">v.01</span><strong>Initial WebGPU build</strong><em>Archived</em></a>
 </div>
-<p class="version-note">Every previous build remains playable. v.05 uses persistent GPU particle state and motion trails rather than pre-drawn radial strands.</p>
+<p class="version-note">Every previous build remains playable. v.06 adds a dedicated curl-noise flow texture and overlapping moving vortices to break up coherent ribbon-like motion.</p>
 </section>
 <footer>LifeAfterLogic / Stochastic Ink<br>GPU particle simulation and audio analysis run locally in your browser. Audio files are never uploaded.</footer>
 </aside>
@@ -189,23 +190,73 @@ void main(){
 }
 </script>
 
+<script id="flow-fragment" type="x-shader/x-fragment">
+#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 outFlow;
+uniform float uTime,uAspect,uSeed,uTurbulence,uAudio,uBass,uMids,uHighs,uPulse,uDrift;
+float hash21(vec2 p){
+  p=fract(p*vec2(123.34,456.21));
+  p+=dot(p,p+45.32);
+  return fract(p.x*p.y);
+}
+float noise2(vec2 p){
+  vec2 i=floor(p),f=fract(p);
+  f=f*f*(3.0-2.0*f);
+  float a=hash21(i);
+  float b=hash21(i+vec2(1.0,0.0));
+  float c=hash21(i+vec2(0.0,1.0));
+  float d=hash21(i+vec2(1.0,1.0));
+  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
+}
+float fbm(vec2 p){
+  float v=0.0,a=0.5;
+  mat2 rot=mat2(0.80,-0.60,0.60,0.80);
+  for(int i=0;i<3;i++){
+    v+=a*noise2(p);
+    p=rot*p*2.03+vec2(17.1,9.2);
+    a*=0.5;
+  }
+  return v;
+}
+float potential(vec2 p,float t){
+  vec2 warp=vec2(
+    sin(p.y*2.8+t*0.14+uSeed)+0.35*sin(p.y*7.2-p.x*2.1+t*0.19),
+    cos(p.x*2.4-t*0.11+uSeed*0.7)+0.35*cos(p.x*6.7+p.y*3.1-t*0.17)
+  )*vec2(0.18,0.18);
+  warp*=1.0+uAudio*(uMids*0.10+uPulse*0.12);
+  vec2 q=p+warp;
+  return fbm(q*2.5+vec2(t*0.035,-t*0.026)+uSeed)
+       +0.48*fbm(q*6.4+vec2(-t*0.07,t*0.06)+uSeed*1.7)
+       +0.20*fbm(q*13.2+vec2(t*0.10,t*0.08)+uSeed*2.3);
+}
+void main(){
+  vec2 p=(vUv-0.5)*vec2(uAspect,1.0)*2.0;
+  float t=uTime*uDrift;
+  float e=0.008;
+  float a=potential(p+vec2(e,0.0),t);
+  float b=potential(p-vec2(e,0.0),t);
+  float c=potential(p+vec2(0.0,e),t);
+  float d=potential(p-vec2(0.0,e),t);
+  vec2 curl=vec2(c-d,-(a-b))/(2.0*e);
+  float magnitude=length(curl);
+  curl/=1.0+magnitude*0.38;
+  curl*=0.62+uTurbulence*0.28+uAudio*(uMids*0.15+uHighs*0.045);
+  curl+=vec2(-p.y,p.x)*(0.025+uBass*0.018);
+  outFlow=vec4(curl,0.0,1.0);
+}
+</script>
 <script id="sim-fragment" type="x-shader/x-fragment">
 #version 300 es
 precision highp float;
 in vec2 vUv;
 out vec4 outState;
 uniform sampler2D uState;
+uniform sampler2D uFlow;
 uniform int uSimWidth;
 uniform float uTime,uDt,uAspect,uTurbulence,uVortex,uSpread,uBass,uMids,uHighs,uPulse,uAudio,uSeed,uDrift;
 float hash1(float x){return fract(sin(x*127.1+uSeed*19.19)*43758.5453123);}
-vec2 curlField(vec2 p,float t){
-  float waveA=p.x*1.72+sin(p.y*1.91+t*0.13+uSeed);
-  float waveB=p.y*2.63-p.x*1.21+t*0.11+uSeed*0.71;
-  float waveC=p.x*4.18+p.y*3.73-t*0.17+uSeed*1.37;
-  float gx=cos(waveA)*1.72-cos(waveB)*0.45*1.21+cos(waveC)*0.20*4.18;
-  float gy=cos(waveA)*cos(p.y*1.91+t*0.13+uSeed)*1.91+cos(waveB)*0.45*2.63+cos(waveC)*0.20*3.73;
-  return normalize(vec2(gy,-gx)+vec2(0.00001));
-}
 float rand2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7))+uSeed*19.19)*43758.5453123);}
 vec2 respawn(float id,vec2 centre){
   float a=max(rand2(vec2(id,1.7)),0.0001);
@@ -228,41 +279,49 @@ vec2 respawn(float id,vec2 centre){
 void main(){
   ivec2 cell=ivec2(gl_FragCoord.xy);
   vec4 state=texelFetch(uState,cell,0);
-  vec2 pos=state.xy;
-  vec2 previous=state.zw;
+  vec2 pos=state.xy,previous=state.zw;
   float id=float(cell.x+cell.y*uSimWidth);
   float t=uTime*uDrift;
   vec2 centre=vec2(0.018*sin(t*0.17+uSeed),-0.035+0.032*cos(t*0.13+uSeed*0.83));
   vec2 q=pos-centre;
   float r2=dot(q,q);
-  vec2 flowA=curlField(q*2.15+vec2(t*0.055,-t*0.041),t);
-  vec2 flowB=curlField(q*5.1+vec2(-t*0.071,t*0.063)+uSeed*0.3,t*0.74);
-  vec2 flow=normalize(flowA+flowB*0.54+vec2(0.0001));
+  vec2 uv=vec2(pos.x/max(uAspect,0.05),pos.y)*0.5+0.5;
+  vec2 flow=texture(uFlow,clamp(uv,vec2(0.002),vec2(0.998))).xy;
+  vec2 force=flow*(0.52+uTurbulence*0.30+uAudio*uMids*0.42+uAudio*uHighs*0.12);
+
   vec2 tangent=vec2(-q.y,q.x)/sqrt(r2+0.006);
-  float vortexMask=exp(-r2*2.7);
-  float secondaryA=exp(-dot(q-vec2(0.16,0.08),q-vec2(0.16,0.08))*23.0);
-  float secondaryB=exp(-dot(q-vec2(-0.17,-0.10),q-vec2(-0.17,-0.10))*28.0);
-  vec2 secondaryTangent=vec2(-(q.y-0.08),q.x-0.16)/sqrt(dot(q-vec2(0.16,0.08),q-vec2(0.16,0.08))+0.003);
-  vec2 secondaryTangentB=vec2(-(q.y+0.10),q.x+0.17)/sqrt(dot(q-vec2(-0.17,-0.10),q-vec2(-0.17,-0.10))+0.003);
-  float audioForce=uAudio*(uBass*0.72+uPulse*2.20);
-  vec2 force=flow*(0.24+uTurbulence*0.62+uAudio*uMids*1.65+uAudio*uHighs*0.52);
-  force+=tangent*vortexMask*uVortex*(0.52+uAudio*uBass*1.35+uAudio*uPulse*2.00);
-  force+=secondaryTangent*secondaryA*0.42-secondaryTangentB*secondaryB*0.34;
-  force+=q/sqrt(r2+0.012)*audioForce*0.70;
-  force-=q*max(0.0,length(q)-0.40)*0.24;
-  float idNoise=hash1(id+floor(t*5.0));
-  force+=vec2(cos(idNoise*6.283),sin(idNoise*6.283))*uAudio*uHighs*0.10;
+  float vortexMask=exp(-r2*3.8);
+  force+=tangent*vortexMask*uVortex*(0.16+uAudio*uBass*0.72+uAudio*uPulse*1.25);
+
+  for(int i=0;i<6;i++){
+    float fi=float(i);
+    float direction=(i%2==0)?1.0:-1.0;
+    float angle=fi*1.04719755+t*(direction>0.0?0.13:-0.16)+uSeed*0.08;
+    vec2 vortexCentre=vec2(
+      cos(angle)*(0.13+0.035*sin(t*0.27+fi)),
+      sin(angle)*(0.11+0.030*cos(t*0.31+fi))
+    );
+    vec2 d=q-vortexCentre;
+    float rr=dot(d,d);
+    vec2 localTangent=vec2(-d.y,d.x)/sqrt(rr+0.0018);
+    float localMask=exp(-rr*62.0);
+    force+=localTangent*localMask*direction*(0.30+uAudio*uMids*0.13+uAudio*uPulse*0.10);
+  }
+
+  float audioForce=uAudio*(uBass*0.62+uPulse*1.85);
+  force+=q/sqrt(r2+0.012)*audioForce*0.58;
+  force-=q*max(0.0,length(q)-0.52)*0.13;
+  float idNoise=hash1(id+floor(t*4.0));
+  force+=vec2(cos(idNoise*6.283),sin(idNoise*6.283))*uAudio*uHighs*0.055;
+
   vec2 velocity=pos-previous;
-  velocity=velocity*0.983+force*uDt*0.145;
+  velocity=velocity*0.982+force*uDt*0.17;
   float speed=length(velocity);
-  if(speed>0.012)velocity*=0.012/speed;
+  if(speed>0.014)velocity*=0.014/speed;
   vec2 nextPos=pos+velocity;
   float maxRadius=0.44+uSpread*0.52;
   bool outside=length(nextPos-centre)>maxRadius||abs(nextPos.x)>uAspect*0.97||abs(nextPos.y)>0.97;
-  if(outside){
-    nextPos=respawn(id,centre);
-    velocity=vec2(0.0);
-  }
+  if(outside){nextPos=respawn(id,centre);velocity=vec2(0.0);}
   outState=vec4(nextPos,nextPos-velocity);
 }
 </script>
@@ -346,17 +405,17 @@ void main(){fragColor=vec4(texture(uTrail,vUv).rgb,1.0);}
 "use strict";
 const $=id=>document.getElementById(id);
 const canvas=$("art"),overlay=$("overlay"),audioEl=$("audio");
-const SIM_W=1024,SIM_H=512,SIM_COUNT=SIM_W*SIM_H;
+const SIM_W=1024,SIM_H=512,SIM_COUNT=SIM_W*SIM_H,FLOW_W=256,FLOW_H=256;
 const ratioMap={portrait:{w:720,h:1280},square:{w:720,h:720},landscape:{w:1280,h:720}};
 const presets={
- smoke:{turbulence:1.35,vortex:1.20,spread:1.10,ink:1.35,trail:.976,size:1.0,audio:2.8,drift:1.0},
- filament:{turbulence:.92,vortex:1.65,spread:1.25,ink:1.52,trail:.988,size:.72,audio:2.3,drift:.78},
- turbulent:{turbulence:2.35,vortex:.72,spread:1.48,ink:1.12,trail:.951,size:1.25,audio:3.8,drift:1.55}
+ smoke:{turbulence:1.35,vortex:1.20,spread:1.10,ink:1.35,trail:.962,size:1.0,audio:2.8,drift:1.0},
+ filament:{turbulence:.92,vortex:1.65,spread:1.25,ink:1.52,trail:.980,size:.72,audio:2.3,drift:.78},
+ turbulent:{turbulence:2.35,vortex:.72,spread:1.48,ink:1.12,trail:.936,size:1.25,audio:3.8,drift:1.55}
 };
 let ratioMode="portrait",resolutionScale=720;
-let gl=null,simProgram=null,particleProgram=null,fadeProgram=null,presentProgram=null,vao=null;
-let simUniforms={},particleUniforms={},fadeUniforms={},presentUniforms={};
-let stateA=null,stateB=null,trailA=null,trailB=null,rendererReady=false;
+let gl=null,flowProgram=null,simProgram=null,particleProgram=null,fadeProgram=null,presentProgram=null,vao=null;
+let flowUniforms={},simUniforms={},particleUniforms={},fadeUniforms={},presentUniforms={};
+let stateA=null,stateB=null,flowTarget=null,trailA=null,trailB=null,rendererReady=false;
 let fallbackCanvas=null,fallbackCtx=null,renderCanvas=canvas,fallbackParticles=null;
 let particleCount=SIM_COUNT,seedValue=Math.random()*1000;
 let audioContext=null,audioSource=null,analyser=null,mediaDestination=null,frequencyData=null,timeData=null;
@@ -454,6 +513,11 @@ function initStateTargets(){
   stateB=makeTarget(SIM_W,SIM_H,gl.RGBA32F,gl.RGBA,gl.FLOAT,null,gl.NEAREST);
   gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 }
+function createFlowTarget(){
+  deleteTarget(flowTarget);
+  flowTarget=makeTarget(FLOW_W,FLOW_H,gl.RGBA32F,gl.RGBA,gl.FLOAT,null,gl.LINEAR);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+}
 function clearTrails(){
   if(!trailA||!trailB)return;
   gl.bindFramebuffer(gl.FRAMEBUFFER,trailA.fbo);gl.viewport(0,0,trailA.width,trailA.height);
@@ -483,17 +547,19 @@ function initRenderer(){
     if(!floatTargets)throw new Error("This browser cannot create floating-point GPU particle state");
     gl.disable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.disable(gl.SCISSOR_TEST);gl.clearColor(1,1,1,1);
     vao=gl.createVertexArray();gl.bindVertexArray(vao);
+    flowProgram=makeProgram("screen-vertex","flow-fragment");
     simProgram=makeProgram("screen-vertex","sim-fragment");
     particleProgram=makeProgram("particle-vertex","particle-fragment");
     fadeProgram=makeProgram("screen-vertex","fade-fragment");
     presentProgram=makeProgram("screen-vertex","present-fragment");
-    simUniforms=cacheUniforms(simProgram,["uState","uSimWidth","uTime","uDt","uAspect","uTurbulence","uVortex","uSpread","uBass","uMids","uHighs","uPulse","uAudio","uSeed","uDrift"]);
+    flowUniforms=cacheUniforms(flowProgram,["uTime","uAspect","uSeed","uTurbulence","uAudio","uBass","uMids","uHighs","uPulse","uDrift"]);
+    simUniforms=cacheUniforms(simProgram,["uState","uFlow","uSimWidth","uTime","uDt","uAspect","uTurbulence","uVortex","uSpread","uBass","uMids","uHighs","uPulse","uAudio","uSeed","uDrift"]);
     particleUniforms=cacheUniforms(particleProgram,["uState","uSimWidth","uAspect","uSeed","uParticleScale","uInk","uBass","uMids","uHighs","uPulse","uRms","uAudio","uLineMode"]);
     fadeUniforms=cacheUniforms(fadeProgram,["uTrail","uFade"]);
     presentUniforms=cacheUniforms(presentProgram,["uTrail"]);
-    resizeRenderer();initStateTargets();createTrailTargets();
+    resizeRenderer();initStateTargets();createFlowTarget();createTrailTargets();
     rendererReady=true;overlay.classList.add("hidden");
-    status("GPU fluid simulation active · "+fmt(particleCount)+" particles",true);
+    status("GPU curl-noise simulation active · "+fmt(particleCount)+" particles",true);
     running=true;lastFrame=performance.now()/1000;requestAnimationFrame(renderFrame);
     canvas.addEventListener("webglcontextlost",e=>{e.preventDefault();running=false;startFallback("GPU context lost");},{once:true});
   }catch(error){console.error(error);startFallback(error.message||"GPU initialisation failed");}
@@ -539,9 +605,20 @@ function updateAudioMeters(){
   if(playing&&energy>.025)$("audioState").textContent="Live signal";
   else if(playing)$("audioState").textContent="Playing";
 }
+function updateFlow(aspect){
+  gl.bindFramebuffer(gl.FRAMEBUFFER,flowTarget.fbo);
+  gl.viewport(0,0,FLOW_W,FLOW_H);
+  gl.useProgram(flowProgram);
+  set1(flowUniforms.uTime,frameTime);set1(flowUniforms.uAspect,aspect);set1(flowUniforms.uSeed,seedValue);
+  set1(flowUniforms.uTurbulence,settings.turbulence);set1(flowUniforms.uAudio,settings.audio);
+  set1(flowUniforms.uBass,audioSmooth.bass);set1(flowUniforms.uMids,audioSmooth.mid);
+  set1(flowUniforms.uHighs,audioSmooth.high);set1(flowUniforms.uPulse,audioSmooth.pulse);
+  set1(flowUniforms.uDrift,settings.drift);
+  gl.disable(gl.BLEND);gl.drawArrays(gl.TRIANGLES,0,3);
+}
 function updateSimulation(dt,aspect){
   gl.bindFramebuffer(gl.FRAMEBUFFER,stateB.fbo);gl.viewport(0,0,SIM_W,SIM_H);gl.useProgram(simProgram);
-  bindTexture(simUniforms.uState,stateA.texture,0);set1i(simUniforms.uSimWidth,SIM_W);
+  bindTexture(simUniforms.uState,stateA.texture,0);bindTexture(simUniforms.uFlow,flowTarget.texture,1);set1i(simUniforms.uSimWidth,SIM_W);
   set1(simUniforms.uTime,frameTime);set1(simUniforms.uDt,dt);set1(simUniforms.uAspect,aspect);
   set1(simUniforms.uTurbulence,settings.turbulence);set1(simUniforms.uVortex,settings.vortex);set1(simUniforms.uSpread,settings.spread);
   set1(simUniforms.uBass,audioSmooth.bass);set1(simUniforms.uMids,audioSmooth.mid);set1(simUniforms.uHighs,audioSmooth.high);
@@ -566,7 +643,7 @@ function renderFrame(ms){
     const dt=Math.min(Math.max((ms/1000-lastFrame),.001),.033);lastFrame=ms/1000;frameTime+=dt;
     readAudio();
     const size=outputSize(),aspect=size.w/size.h;
-    updateSimulation(dt,aspect);
+    updateFlow(aspect);updateSimulation(dt,aspect);
     gl.bindFramebuffer(gl.FRAMEBUFFER,trailB.fbo);gl.viewport(0,0,trailB.width,trailB.height);
     gl.disable(gl.BLEND);gl.useProgram(fadeProgram);bindTexture(fadeUniforms.uTrail,trailA.texture,0);
     const fade=Math.max(.86,Math.min(.997,settings.trail-audioSmooth.pulse*.075-audioSmooth.bass*.018));
