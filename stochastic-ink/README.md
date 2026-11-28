@@ -1,19 +1,21 @@
-# Stochastic Ink
+# Stochastic Ink — LifeAfterLogic Lab
 
-A WebGPU audiovisual ink and filament experiment for LifeAfterLogic Lab.
-
+**Current build:** v.02  
 **Live page:** https://tmoreno-01.github.io/thelab/stochastic-ink/
+
+## Version history
+
+- [v.02 — WGSL shader fix](./) (current)
+- [v.01 — Initial WebGPU build](./versions/v.01/) (preserved archive)
+
+The exact original v.01 source is preserved at `versions/v.01/source.html`. Previous builds are never overwritten.
 
 ## Visual architecture
 
-The renderer combines four GPU layers:
-
-1. **3D particle advection** — particles move through a time-varying 3D curl field and are projected through a slowly moving camera.
-2. **Coherent filament families** — particles are seeded in groups of 64 with shared family parameters. Their paths diverge progressively to create bundled strands and branching structures.
-3. **Gaussian particle splats** — soft, depth-aware particle billboards add the dense volumetric texture around the fine linework.
-4. **Ink field and feedback** — a domain-warped field adds the dark nucleus, branching ridges, long tendrils and diffuse wash. A persistent feedback buffer lets the structure leave soft trails.
-
-The aim is to create an interconnected, three-dimensional fibrous ink body rather than a conventional audio-reactive particle spray.
+- 3D particle advection through a time-varying curl field and slowly moving perspective camera.
+- Coherent particle families, branching strands and Gaussian particle splats.
+- Domain-warped ink field, dark nucleus, ridges, tendrils and diffuse wash.
+- Persistent feedback for soft temporal trails.
 
 ## Audio
 
