@@ -1,23 +1,22 @@
 # Stochastic Ink — LifeAfterLogic Lab
 
-**Current version: v.06**
+**Current version: v.07**
 
 Live experiment: https://tmoreno-01.github.io/thelab/stochastic-ink/
 
 ## Visual target
 
-The target is the supplied 33-second, 720 × 1280 portrait reference: a dense, irregular ink nucleus with a constantly changing perimeter; thousands of fine particles; tangled looping filaments; translucent smoke; and long, soft wisps. The composition behaves like a living fluid cloud. It must not collapse into evenly spaced spokes or smooth, coherent ribbons.
+The supplied 33-second, 720 × 1280 reference is a shifting, off-centre ink cloud: a dense dark nucleus surrounded by translucent smoke, branching filaments, fine mesh-like membranes and long curved tendrils. It is not a starburst of evenly spaced radial rays. The nucleus moves through the frame while plume directions and internal structure continuously change.
 
-## v.06 — multi-scale curl-noise particle fluid
+## v.07 — bounded ink plumes and particle fluid
 
-- Uses a dedicated 256 × 256 floating-point curl-noise flow texture, regenerated on the GPU each frame.
-- The flow texture combines three spatial scales of warped fractal noise. Its vector field is sampled by 524,288 GPU particle slots stored in floating-point ping-pong state textures.
-- Particles carry current and previous positions. The renderer accumulates both particle marks and their movement segments into ping-pong trail buffers.
-- Six moving, alternating micro-vortices overlap around the central nucleus. They break up broad coherent flow into smaller eddies, tangled loops and irregular filaments.
-- Audio drives the flow texture, vortex strength, outward pressure, particle opacity and size, and trail decay.
-- Low, mid and high audio meters plus a beat-response readout expose the analyser output, making it possible to confirm that the loaded track is reaching the simulation.
-- Audio input accepts MP3, WAV, M4A, OGG and MP4/MOV files containing an audio track.
-- The output stays monochrome on white, with 9:16, 1:1 and 16:9 composition options.
+- Adds a full-screen, multi-scale smoke and filament field based on the reference's dark nucleus, soft plume envelopes, ridged fibres and translucent web.
+- The field uses the same animated curl-noise texture as the particles, so smoke and particle motion share one underlying flow.
+- Retains 524,288 GPU particle slots, but reduces excessive acceleration and maximum particle speed.
+- Adds a soft elliptical containment force and hard safety bounds. Particles respawn from a tightly controlled core/satellite/plume distribution instead of scattering off the edges.
+- Fades particle opacity near the frame boundary, keeping the active composition visible inside the portrait.
+- Raises trail persistence from 0.962 to 0.994 by default, so delicate movement accumulates into visible smoke and filaments rather than disappearing almost immediately.
+- Audio affects plume distortion, flow turbulence, vortex pressure and particle detail. LOW / MID / HIGH meters and a BEAT readout expose the analyser signal.
 
 ## Controls
 
@@ -32,27 +31,28 @@ The target is the supplied 33-second, 720 × 1280 portrait reference: a dense, i
 
 ## Audio
 
-1. Drop an audio file into Audio Input, or choose one from disk. An MP4/MOV with an audio track is also accepted.
+1. Drop an audio file into Audio Input, or choose one from disk. MP4/MOV files with an audio track are accepted.
 2. Press **Play audio**.
-3. Watch the LOW / MID / HIGH meters and the SIGNAL / BEAT readout. They should move while the track plays.
-4. Bass and beat onsets increase vortex force and outward pressure; mids increase fluid turbulence; high frequencies add fine particle movement.
+3. Watch the LOW / MID / HIGH meters and SIGNAL / BEAT readout.
+4. Bass and beat onsets disturb the plume and vortex; mids increase fluid distortion; highs add fine particle motion.
 5. Audio is analysed locally in the browser. Files are never uploaded.
 
 ## Versions
 
-- **v.06** — current multi-scale curl-noise flow texture, moving micro-vortices, GPU particle advection and accumulated trails
-- **v.05** — first GPU fluid-particle advection pass; preserved as a playable archive
-- **v.04** — radial micro-particle / filament experiment; preserved as a playable archive
-- **v.03** — WebGPU filament and membrane study; preserved as a playable archive
-- **v.02** — 3D particle system and shader fix; preserved as a playable archive
-- **v.01** — initial WebGPU build; preserved as a playable archive
+- **v.07** — current reference-driven smoke/filament field with bounded GPU particle fluid
+- **v.06** — multi-scale curl-noise particle fluid; playable archive
+- **v.05** — first GPU fluid-particle advection pass; playable archive
+- **v.04** — radial micro-particle / filament experiment; playable archive
+- **v.03** — WebGPU filament and membrane study; playable archive
+- **v.02** — 3D particle system and shader fix; playable archive
+- **v.01** — initial WebGPU build; playable archive
 
-Earlier builds remain playable from the Version history section on the experiment page. Exact sources are retained in each version's `source.html`.
+Earlier builds remain playable from the Version history section on the experiment page. Each archived version retains its exact source in `source.html`.
 
 ## Technical notes
 
-- WebGL2 is the primary renderer. It requires `EXT_color_buffer_float` for the floating-point flow and particle-state targets.
-- Simulation, flow-field generation, trail accumulation and audio analysis run locally in the browser.
-- The default output is 720 × 1280. Select 1080 for a higher-resolution output.
-- If floating-point GPU targets are unavailable, a lighter Canvas 2D fluid fallback is used rather than a radial-line placeholder.
+- WebGL2 is the primary renderer. It requires `EXT_color_buffer_float` for floating-point flow and particle-state targets.
+- Simulation, smoke-field generation, trail accumulation and audio analysis run locally in the browser.
+- The default output is 720 × 1280. Select 1080 for higher-resolution output.
+- If floating-point GPU targets are unavailable, a lighter Canvas 2D fallback is used.
 - Recording uses the live canvas and browser MediaRecorder support. Audio is included when a track is playing.
