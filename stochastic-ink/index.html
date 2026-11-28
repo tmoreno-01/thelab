@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
 <meta name="robots" content="noindex,nofollow">
-<title>Stochastic Ink — LifeAfterLogic Lab</title>
+<title>Stochastic Ink v.02 — LifeAfterLogic Lab</title>
 <link rel="icon" type="image/svg+xml" href="../media/lifeafterlogic-mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -62,6 +62,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .dot{width:6px;height:6px;border-radius:50%;background:#aaa;display:inline-block;flex:0 0 auto}
 .dot.live{background:#3a9a67;box-shadow:0 0 0 3px #e2f2e8}
 .capture-note{font-size:9px;line-height:1.5;color:#898a84}
+.version-list{display:grid;gap:6px}.version-item{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);text-decoration:none;color:inherit;background:#fff}.version-item:hover{background:#f8f8f6;border-color:#c7c7c0}.version-item.current{background:#f7f7f4;border-color:#c8c8c0}.version-no{font-size:9px;letter-spacing:.08em;color:#777}.version-item strong{font-size:10px;font-weight:500}.version-item em{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#888;font-style:normal}.version-item.current em{color:#28754f}.version-note{font-size:9px;line-height:1.5;color:#888;margin:0}
 .stage{min-width:0;min-height:0;position:relative;overflow:hidden;background:#eeeae0;border:1px solid #deded9;display:grid;place-items:center;padding:12px}
 .canvas-wrap{height:100%;width:100%;display:grid;place-items:center;min-height:0}
 #art{display:block;height:min(79vh,930px);width:auto;max-width:100%;max-height:100%;background:#fff;box-shadow:0 8px 34px rgba(0,0,0,.07)}
@@ -86,12 +87,12 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <img class="mark" src="../media/lifeafterlogic-mark.svg" width="30" height="30" alt="">
 <span class="brand-name">lab</span><span class="brand-sub">Stochastic Ink / 007</span>
 </a>
-<div class="top-meta">WebGPU / Ink dynamics</div>
+<div class="top-meta">WebGPU / Ink dynamics · v.02</div>
 </header>
 <main>
 <aside class="panel">
 <div>
-<div class="eyebrow">Experiment 001 / Audiovisual systems</div>
+<div class="eyebrow">Experiment 007 / Audiovisual systems</div>
 <h1>Stochastic<br>Ink</h1>
 <p class="intro">An evolving 3D particle body of ink. Gaussian splats, fine strands and branching fibre bundles fold around a shifting core. Sound reshapes the volume in real time.</p>
 </div>
@@ -132,6 +133,14 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <div class="capture-note">Records the live GPU canvas at 60fps where supported. Audio is included when a track is playing. Export format depends on browser support.</div>
 <div class="statusline"><span class="dot live" id="gpuDot"></span><span id="gpuStatus">Initialising WebGPU…</span></div>
 </section>
+<section class="section">
+<div class="section-head"><span class="section-title">06 / Version history</span><span class="small-note">Preserved builds</span></div>
+<div class="version-list">
+<div class="version-item current"><span class="version-no">v.02</span><strong>WGSL shader fix</strong><em>Current</em></div>
+<a class="version-item" href="versions/v.01/"><span class="version-no">v.01</span><strong>Initial WebGPU build</strong><em>Archived</em></a>
+</div>
+<p class="version-note">Previous builds stay available as separate playable snapshots. Older versions are never overwritten.</p>
+</section>
 <footer>LifeAfterLogic / Stochastic Ink<br>GPU simulation and audio analysis run locally in your browser. Audio files are never uploaded.</footer>
 </aside>
 <section class="stage" id="stage">
@@ -160,7 +169,7 @@ struct Particle {
   position: vec4<f32>,
   velocity: vec4<f32>,
   previous: vec4<f32>,
-  meta: vec4<f32>,
+  attributes: vec4<f32>,
 };
 struct Params {
   time: f32, dt: f32, aspect: f32, count: f32,
@@ -253,7 +262,7 @@ fn spawnParticle(index: u32, oldSeed: f32) -> Particle {
   p.position = vec4<f32>(pos, 0.0);
   p.velocity = vec4<f32>(velocity, life);
   p.previous = vec4<f32>(pos, hash11(familyF * 11.71 + params.seed * 0.031) + (local - 0.5) * 0.065);
-  p.meta = vec4<f32>(width, opacity, groupType, local);
+  p.attributes = vec4<f32>(width, opacity, groupType, local);
   return p;
 }
 
@@ -294,10 +303,10 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     let satellite = q - vec3<f32>(0.19, 0.135, 0.0);
     let satelliteDir = normalize(satellite + vec3<f32>(0.00001, 0.00002, 0.00003));
     let satelliteTangent = normalize(vec3<f32>(-satelliteDir.y, satelliteDir.x, 0.0));
-    acceleration += satelliteTangent * (0.022 + p.meta.z * 0.03) * exp(-length(satellite) * 2.0);
+    acceleration += satelliteTangent * (0.022 + p.attributes.z * 0.03) * exp(-length(satellite) * 2.0);
     let ageRatio = clamp(p.position.w / max(p.velocity.w, 0.001), 0.0, 1.0);
     let branchGate = smoothstep(0.24, 0.78, ageRatio);
-    let branchPhase = p.meta.w * 6.283 + p.previous.w * 19.0 + params.time * 0.06;
+    let branchPhase = p.attributes.w * 6.283 + p.previous.w * 19.0 + params.time * 0.06;
     let branchForce = vec3<f32>(cos(branchPhase), sin(branchPhase), 0.55 * sin(branchPhase * 1.7));
     acceleration += branchForce * branchGate * (0.012 + params.turbulence * 0.018);
     p.velocity.xyz += acceleration * params.dt;
@@ -442,7 +451,7 @@ fn fbm(p0:vec2<f32>)->f32 {
 </script>
 
 <script type="text/wgsl" id="splat-shader">
-struct Particle { position:vec4<f32>,velocity:vec4<f32>,previous:vec4<f32>,meta:vec4<f32>, };
+struct Particle { position:vec4<f32>,velocity:vec4<f32>,previous:vec4<f32>,attributes:vec4<f32>, };
 struct Params {
   time:f32,dt:f32,aspect:f32,count:f32,low:f32,mid:f32,high:f32,rms:f32,
   turbulence:f32,swirl:f32,spread:f32,persistence:f32,audio:f32,height:f32,width:f32,seed:f32,
@@ -470,7 +479,7 @@ fn projectPoint(point:vec3<f32>)->vec3<f32>{
   if(vertexIndex==3u){corner=vec2<f32>(-1.0,-1.0);}
   if(vertexIndex==4u){corner=vec2<f32>(1.0,1.0);}
   if(vertexIndex==5u){corner=vec2<f32>(-1.0,1.0);}
-  let radius=max(0.34,p.meta.x*0.82)*(2.0/max(params.height,1.0))/projected.z;
+  let radius=max(0.34,p.attributes.x*0.82)*(2.0/max(params.height,1.0))/projected.z;
   let clipCentre=vec2<f32>(projected.x/max(params.aspect,0.1),projected.y);
   let clipOffset=vec2<f32>(corner.x*radius/max(params.aspect,0.1),corner.y*radius);
   let ageIn=smoothstep(0.0,0.45,p.position.w);
@@ -479,8 +488,8 @@ fn projectPoint(point:vec3<f32>)->vec3<f32>{
   var out:VertexOut;
   out.position=vec4<f32>(clipCentre+clipOffset,0.0,1.0);
   out.local=corner;
-  out.alpha=p.meta.y*fade*(0.30+params.rms*params.audio*0.2+params.pulse*0.1)/projected.z;
-  out.tone=select(mix(0.025,0.38,p.meta.z),0.012,p.meta.z>0.93);
+  out.alpha=p.attributes.y*fade*(0.30+params.rms*params.audio*0.2+params.pulse*0.1)/projected.z;
+  out.tone=select(mix(0.025,0.38,p.attributes.z),0.012,p.attributes.z>0.93);
   return out;
 }
 @fragment fn fs(in:VertexOut)->@location(0) vec4<f32>{
@@ -493,7 +502,7 @@ fn projectPoint(point:vec3<f32>)->vec3<f32>{
 </script>
 
 <script type="text/wgsl" id="particle-shader">
-struct Particle { position:vec4<f32>,velocity:vec4<f32>,previous:vec4<f32>,meta:vec4<f32>, };
+struct Particle { position:vec4<f32>,velocity:vec4<f32>,previous:vec4<f32>,attributes:vec4<f32>, };
 struct Params {
   time:f32,dt:f32,aspect:f32,count:f32,low:f32,mid:f32,high:f32,rms:f32,
   turbulence:f32,swirl:f32,spread:f32,persistence:f32,audio:f32,height:f32,width:f32,seed:f32,
@@ -530,7 +539,7 @@ fn projectPoint(point:vec3<f32>)->vec3<f32>{
   if(vertexIndex==5u){along=0.0;side=-1.0;}
   let centre=mix(a,b,along);
   let depth=mix(projectedA.z,projectedB.z,along);
-  let halfWidth=(p.meta.x+params.high*params.audio*0.18)*(2.0/max(params.height,1.0))/depth;
+  let halfWidth=(p.attributes.x+params.high*params.audio*0.18)*(2.0/max(params.height,1.0))/depth;
   let ageIn=smoothstep(0.0,0.45,p.position.w);
   let ageOut=1.0-smoothstep(p.velocity.w*0.68,p.velocity.w,p.position.w);
   let fade=ageIn*ageOut;
@@ -540,8 +549,8 @@ fn projectPoint(point:vec3<f32>)->vec3<f32>{
   var out:VertexOut;
   out.position=vec4<f32>(clip,0.0,1.0);
   out.side=side;
-  out.alpha=p.meta.y*fade*(0.76+params.rms*params.audio*0.55+params.pulse*0.14)/depth;
-  out.tone=select(mix(0.025,0.42,p.meta.z),0.012,p.meta.z>0.93);
+  out.alpha=p.attributes.y*fade*(0.76+params.rms*params.audio*0.55+params.pulse*0.14)/depth;
+  out.tone=select(mix(0.025,0.42,p.attributes.z),0.012,p.attributes.z>0.93);
   return out;
 }
 @fragment fn fs(in:VertexOut)->@location(0) vec4<f32>{
