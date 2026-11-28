@@ -39,7 +39,8 @@ jobs:
           for (const id of [168, 169, 170, 171, 172, 173]) if (!archive.includes('study=' + id)) throw new Error('Archived study missing: ' + id);
           for (const number of ['001','002','003','004','005','006']) if (!gallery.includes('history-no">' + number)) throw new Error('Previous test number missing: ' + number);
           if (!gallery.includes('ALL RESET VERSIONS')) throw new Error('Version selector link missing');
-          if (!engine.includes('v02OrthogonalMotion') || !engine.includes('updateV02ChromaticPackets')) throw new Error('New motion or chromatic system missing');
+          if (!engine.includes('v02OrthogonalMotion?2.25:resetHD?1.5:1')) throw new Error('New studies are not 1.5x denser than previous v.02');
+          if (!engine.includes('updateV02ChromaticPackets')) throw new Error('Chromatic propagation system missing');
           NODE
           node --check /tmp/reset-v02-engine.js
       - name: Browser-render the three studies
@@ -59,7 +60,7 @@ jobs:
                 const errors = [];
                 page.on('pageerror', error => errors.push(error.message));
                 await page.goto('http://127.0.0.1:8765/reset/versions/v.02/source.html?study=' + id + '&preview=1&cpu=1');
-                await page.waitForTimeout(1400);
+                await page.waitForTimeout(1900);
                 const metrics = await page.evaluate(() => {
                   const canvas = document.querySelector('#art');
                   const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
