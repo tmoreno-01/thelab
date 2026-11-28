@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
 <meta name="robots" content="noindex,nofollow">
-<title>Stochastic Ink v.07 — LifeAfterLogic Lab</title>
+<title>Stochastic Ink v.08 — LifeAfterLogic Lab</title>
 <link rel="icon" type="image/svg+xml" href="../media/lifeafterlogic-mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,14 +100,14 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <img class="mark" src="../media/lifeafterlogic-mark.svg" width="30" height="30" alt="">
 <span class="brand-name">lab</span><span class="brand-sub">Stochastic Ink / 007</span>
 </a>
-<div class="top-meta">WebGL2 / bounded ink-plume simulation · v.07</div>
+<div class="top-meta">WebGL2 / audio-gated filament field · v.08</div>
 </header>
 <main>
 <aside class="panel">
 <div>
 <div class="eyebrow">Experiment 007 / Audiovisual systems</div>
 <h1>Stochastic<br>Ink</h1>
-<p class="intro">A shifting ink cloud built around a dense, moving nucleus. A layered smoke field, branching filaments and hundreds of thousands of confined particles create soft plumes, tangled membranes and long curved tendrils. Music disturbs the flow without scattering the structure.</p>
+<p class="intro">A concentrated ink nucleus with thousands of flowing, connected particle filaments. The composition waits for audible music, then expands, folds and contracts with the sound. All paths are continuously bounded; particles cannot escape the frame.</p>
 </div>
 <section class="section">
 <div class="section-head"><span class="section-title">01 / Audio input</span><span class="small-note" id="audioState">No track</span></div>
@@ -133,9 +133,9 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <div class="control"><label class="control-label" for="particles"><span>Particle amount</span><output id="particlesOut">524,288</output></label><input id="particles" type="range" min="65536" max="524288" step="16384" value="524288"></div>
 <div class="control"><label class="control-label" for="turbulence"><span>Fluid turbulence</span><output id="turbulenceOut">1.35</output></label><input id="turbulence" type="range" min="0.2" max="3.0" step=".01" value="1.35"></div>
 <div class="control"><label class="control-label" for="vortex"><span>Vortex strength</span><output id="vortexOut">1.20</output></label><input id="vortex" type="range" min="0" max="2.5" step=".01" value="1.20"></div>
-<div class="control"><label class="control-label" for="spread"><span>Cloud spread</span><output id="spreadOut">1.10</output></label><input id="spread" type="range" min="0.55" max="1.8" step=".01" value="1.10"></div>
+<div class="control"><label class="control-label" for="spread"><span>Cloud spread</span><output id="spreadOut">0.95</output></label><input id="spread" type="range" min="0.55" max="1.8" step=".01" value="0.95"></div>
 <div class="control"><label class="control-label" for="ink"><span>Ink density</span><output id="inkOut">1.35</output></label><input id="ink" type="range" min="0.35" max="2.5" step=".01" value="1.35"></div>
-<div class="control"><label class="control-label" for="trail"><span>Trail persistence</span><output id="trailOut">0.994</output></label><input id="trail" type="range" min="0.985" max="0.998" step=".001" value="0.994"></div>
+<div class="control"><label class="control-label" for="trail"><span>Motion echo</span><output id="trailOut">0.20</output></label><input id="trail" type="range" min="0" max="0.65" step=".01" value="0.20"></div>
 <div class="control"><label class="control-label" for="size"><span>Particle scale</span><output id="sizeOut">1.00</output></label><input id="size" type="range" min="0.45" max="2.5" step=".01" value="1.00"></div>
 <div class="control"><label class="control-label" for="audioInfluence"><span>Audio sensitivity</span><output id="audioInfluenceOut">2.80</output></label><input id="audioInfluence" type="range" min="0" max="5" step=".05" value="2.80"></div>
 <div class="control"><label class="control-label" for="drift"><span>Temporal drift</span><output id="driftOut">1.00</output></label><input id="drift" type="range" min="0.1" max="2.5" step=".01" value="1.00"></div>
@@ -150,12 +150,13 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <div class="section-head"><span class="section-title">05 / Capture</span><span class="small-note">Live output</span></div>
 <div class="transport"><button class="btn primary" id="recordBtn">Start recording</button><button class="btn" id="stillBtn">Save still</button><button class="btn" id="resetBtn">Reset</button></div>
 <div class="capture-note">Records the accumulated GPU particle trails at up to 60fps. Audio is included when a track is playing. Export format depends on browser support.</div>
-<div class="statusline"><span class="dot live" id="gpuDot"></span><span id="gpuStatus">Initialising GPU particle simulation…</span></div>
+<div class="statusline"><span class="dot live" id="gpuDot"></span><span id="gpuStatus">Waiting for audio…</span></div>
 </section>
 <section class="section">
 <div class="section-head"><span class="section-title">06 / Version history</span><span class="small-note">Preserved builds</span></div>
 <div class="version-list">
-<div class="version-item current"><span class="version-no">v.07</span><strong>Bounded ink plumes + particle fluid</strong><em>Current</em></div>
+<div class="version-item current"><span class="version-no">v.08</span><strong>Audio-gated bounded filament field</strong><em>Current</em></div>
+<a class="version-item" href="versions/v.07/"><span class="version-no">v.07</span><strong>Bounded ink plumes + particle fluid</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.06/"><span class="version-no">v.06</span><strong>Multi-scale curl-noise particle fluid</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.05/"><span class="version-no">v.05</span><strong>First GPU fluid particle advection pass</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.04/"><span class="version-no">v.04</span><strong>Micro-particle radial filaments</strong><em>Archived</em></a>
@@ -163,15 +164,15 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <a class="version-item" href="versions/v.02/"><span class="version-no">v.02</span><strong>3D particle system + shader fix</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.01/"><span class="version-no">v.01</span><strong>Initial WebGPU build</strong><em>Archived</em></a>
 </div>
-<p class="version-note">Every previous build remains playable. v.07 combines a reference-driven smoke and filament field with a slower, bounded particle simulation. Particles are kept inside the composition and fade before reaching the frame edges.</p>
+<p class="version-note">v.08 replaces cumulative velocity with bounded, connected, deforming paths. Silence and paused playback hold the composition. All earlier versions are preserved.</p>
 </section>
 <footer>LifeAfterLogic / Stochastic Ink<br>GPU particle simulation and audio analysis run locally in your browser. Audio files are never uploaded.</footer>
 </aside>
 <section class="stage" id="stage">
 <div class="stage-tools"><button class="tool-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Fullscreen">⛶</button></div>
 <div class="canvas-wrap"><canvas id="art" width="720" height="1280"></canvas></div>
-<div class="stage-caption">Fluid ink / <span id="stageResolution">720 × 1280</span></div>
-<div class="overlay" id="overlay"><div class="overlay-card"><strong>Building the particle field</strong>Initialising GPU state textures and the fluid advection pass…</div></div>
+<div class="stage-caption">Audio-gated ink / <span id="stageResolution">720 × 1280</span></div>
+<div class="overlay" id="overlay"><div class="overlay-card"><strong>Preparing audio-gated ink</strong>Initialising the bounded filament renderer…</div></div>
 </section>
 </main>
 </div>
@@ -191,220 +192,90 @@ void main(){
 }
 </script>
 
-<script id="flow-fragment" type="x-shader/x-fragment">
-#version 300 es
-precision highp float;
-in vec2 vUv;
-out vec4 outFlow;
-uniform float uTime,uAspect,uSeed,uTurbulence,uAudio,uBass,uMids,uHighs,uPulse,uDrift;
-float hash21(vec2 p){
-  p=fract(p*vec2(123.34,456.21));
-  p+=dot(p,p+45.32);
-  return fract(p.x*p.y);
-}
-float noise2(vec2 p){
-  vec2 i=floor(p),f=fract(p);
-  f=f*f*(3.0-2.0*f);
-  float a=hash21(i);
-  float b=hash21(i+vec2(1.0,0.0));
-  float c=hash21(i+vec2(0.0,1.0));
-  float d=hash21(i+vec2(1.0,1.0));
-  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
-}
-float fbm(vec2 p){
-  float v=0.0,a=0.5;
-  mat2 rot=mat2(0.80,-0.60,0.60,0.80);
-  for(int i=0;i<3;i++){
-    v+=a*noise2(p);
-    p=rot*p*2.03+vec2(17.1,9.2);
-    a*=0.5;
-  }
-  return v;
-}
-float potential(vec2 p,float t){
-  vec2 warp=vec2(
-    sin(p.y*2.8+t*0.14+uSeed)+0.35*sin(p.y*7.2-p.x*2.1+t*0.19),
-    cos(p.x*2.4-t*0.11+uSeed*0.7)+0.35*cos(p.x*6.7+p.y*3.1-t*0.17)
-  )*vec2(0.18,0.18);
-  warp*=1.0+uAudio*(uMids*0.10+uPulse*0.12);
-  vec2 q=p+warp;
-  return fbm(q*2.5+vec2(t*0.035,-t*0.026)+uSeed)
-       +0.48*fbm(q*6.4+vec2(-t*0.07,t*0.06)+uSeed*1.7)
-       +0.20*fbm(q*13.2+vec2(t*0.10,t*0.08)+uSeed*2.3);
-}
-void main(){
-  vec2 p=(vUv-0.5)*vec2(uAspect,1.0)*2.0;
-  float t=uTime*uDrift;
-  float e=0.008;
-  float a=potential(p+vec2(e,0.0),t);
-  float b=potential(p-vec2(e,0.0),t);
-  float c=potential(p+vec2(0.0,e),t);
-  float d=potential(p-vec2(0.0,e),t);
-  vec2 curl=vec2(c-d,-(a-b))/(2.0*e);
-  float magnitude=length(curl);
-  curl/=1.0+magnitude*0.38;
-  curl*=0.62+uTurbulence*0.28+uAudio*(uMids*0.15+uHighs*0.045);
-  curl+=vec2(-p.y,p.x)*(0.025+uBass*0.018);
-  outFlow=vec4(curl,0.0,1.0);
-}
-</script>
 
-<script id="ink-fragment" type="x-shader/x-fragment">
-#version 300 es
-precision highp float;
-in vec2 vUv;out vec4 fragColor;
-uniform sampler2D uFlow;
-uniform float uTime,uAspect,uSeed,uTurbulence,uSpread,uInk,uAudio,uBass,uMids,uHighs,uPulse,uDrift;
-float hash21(vec2 p){uvec2 v=uvec2(ivec2(floor(p)));uint h=v.x*1597334677u+v.y*3812015801u+uint(max(uSeed,0.0)*1024.0);h^=h>>16u;h*=2246822519u;h^=h>>13u;h*=3266489917u;h^=h>>16u;return float(h&16777215u)/16777215.0;}
-float noise2(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*(3.0-2.0*f);float a=hash21(i),b=hash21(i+vec2(1,0)),c=hash21(i+vec2(0,1)),d=hash21(i+vec2(1,1));return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);}
-float fbm(vec2 p){float s=0.0,a=0.5;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<3;i++){s+=a*noise2(p);p=r*p*2.03+vec2(17.1,9.2);a*=.5;}return s/.875;}
-float ridge(vec2 p,float power){float n=fbm(p);return pow(clamp(1.0-abs(n*2.0-1.0),0.0,1.0),power);}
-float plume(vec2 q,vec2 d,float w,float decay){vec2 s=vec2(-d.y,d.x);float along=dot(q,d),across=dot(q,s);float width=(.022+max(along,0.0)*.205)*w;return exp(-pow(across/max(width,.001),2.0))*smoothstep(-.11,.018,along)*exp(-max(along,0.0)*decay);}
-void main(){
- vec2 p=(vUv-.5)*vec2(uAspect,1.0)*2.0;float t=uTime*uDrift;
- float bass=uBass*uAudio,mids=uMids*uAudio,highs=uHighs*uAudio;
- float energy=clamp(bass*.36+mids*.34+highs*.14+uPulse*.22,0.0,1.25);
- float chaos=.72+uTurbulence*.30+mids*.12;
- vec2 centre=vec2(.12*sin(t*.16+uSeed*.01)+.038*sin(t*.067+uSeed*.013)+.018*bass,.035+.058*cos(t*.12+uSeed*.008)-.014*bass);
- vec2 q=p-centre;
- float n0=fbm(q*2.15+vec2(t*.046,-t*.032)+uSeed*.001);
- float n1=fbm(q*4.35+vec2(-t*.031,t*.039)+uSeed*.0017);
- float n2=fbm(q*8.8+vec2(t*.022,t*.027)+vec2(n0,n1)*1.15);
- vec2 warped=q+vec2(n0-.5,n1-.5)*(.16*chaos+.022*energy)+vec2(n2-.5,n0-.5)*(.06*chaos)+texture(uFlow,vUv).xy*.009;
- float r=length(warped),angle=.28+fract(uSeed*.013)*6.283+t*.041+.12*sin(t*.075+uSeed*.002)+bass*.10;
- vec2 d=vec2(cos(angle),sin(angle));
- vec2 dB=vec2(cos(angle+2.05+.10*sin(t*.11)),sin(angle+2.05+.10*sin(t*.11)));
- vec2 dC=vec2(cos(angle-1.72+.08*cos(t*.09)),sin(angle-1.72+.08*cos(t*.09)));
- vec2 dD=vec2(cos(angle+3.08),sin(angle+3.08));
- float plumeMask=clamp(max(plume(warped,d,1.0,.62),max(plume(warped,dB,.76,.86)*.56,max(plume(warped,dC,.60,1.04)*.38,plume(warped,dD,.30,1.35)*.16)))+.18*exp(-r*5.0),0.0,1.0);
- float radial=exp(-r*(2.65/max(uSpread,.25))),fine=exp(-r*3.7);
- vec2 side=vec2(-d.y,d.x);float along=dot(warped,d),across=dot(warped,side);
- float lA=ridge(vec2(along*5.4+n1*1.7,across*25.0+n0*2.1)+vec2(t*.045,-t*.026),5.0);
- float lB=ridge(vec2(along*9.7+n2*2.4,across*48.0+n1*3.0)+vec2(-t*.031,t*.022),6.5);
- float lC=ridge(vec2(along*17.0+n0*3.1,across*82.0+n2*4.0)+vec2(t*.019,t*.016),8.0);
- float fibres=(lA*.48+lB*.40+lC*.27)*radial*(.012+.988*pow(plumeMask,1.24));
- float web=(ridge(warped*vec2(14,22)+vec2(n0*3,-n1*2.4),4.8)*.36+ridge(warped*vec2(25,38)+vec2(n2*3.2,n1*2.8),7.0)*.25)*fine*pow(plumeMask,1.06);
- float haze=pow(clamp(fbm(warped*vec2(4.6,8.2)+vec2(t*.018,-t*.014)),0.0,1.0),1.72)*exp(-r*2.55)*(.018+.235*plumeMask)*uInk;
- float core=exp(-r*r*190.0)*(.82+.18*n2);
- vec2 sat=warped-vec2(.15+.035*sin(t*.105+uSeed),.10*cos(t*.13+uSeed*.2));
- float satellite=exp(-dot(sat,sat)*220.0)*.22;
- float ink=clamp((core*2.55+satellite+fibres*(.72+uTurbulence*.12+energy*.13)+web*(.52+uTurbulence*.10)+haze*.42)*uInk,0.0,1.8);
- float soft=clamp((haze*.72+web*.13)/(ink+.0001),0.0,1.0);
- float tone=mix(.008,.46,soft);
- float alpha=clamp(pow(ink,.84)*.68+haze*.16,0.0,.88);
- fragColor=vec4(vec3(tone),alpha);
-}
-</script>
-<script id="sim-fragment" type="x-shader/x-fragment">
-#version 300 es
-precision highp float;
-in vec2 vUv;
-out vec4 outState;
-uniform sampler2D uState;
-uniform sampler2D uFlow;
-uniform int uSimWidth;
-uniform float uTime,uDt,uAspect,uTurbulence,uVortex,uSpread,uBass,uMids,uHighs,uPulse,uAudio,uSeed,uDrift;
-float hash1(float x){return fract(sin(x*127.1+uSeed*19.19)*43758.5453123);}
-float rand2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7))+uSeed*19.19)*43758.5453123);}
-vec2 respawn(float id,vec2 centre){
-  float a=max(rand2(vec2(id,1.7)),0.0001);
-  float b=rand2(vec2(id,8.2));
-  float c=rand2(vec2(id,15.9));
-  float d=rand2(vec2(id,22.4));
-  float angle=b*6.28318530718;
-  float radius=sqrt(-2.0*log(a))*0.105;
-  vec2 gaussian=vec2(cos(angle),sin(angle))*radius;
-  float group=c;
-  vec2 p=centre+gaussian*vec2(0.90,1.18);
-  if(group>0.64&&group<0.84)p=centre+vec2(0.13,0.045)+gaussian*0.78;
-  else if(group>=0.84&&group<0.96)p=centre+vec2(-0.14,-0.075)+gaussian*0.74;
-  else if(group>=0.96){
-    float a2=d*6.28318530718;
-    p=centre+vec2(cos(a2),sin(a2))*mix(0.28,0.66,rand2(vec2(id,39.1)));
-  }
-  p.x=clamp(p.x,-uAspect*0.70,uAspect*0.70);p.y=clamp(p.y,-0.74,0.74);
-  return p;
-}
-void main(){
-  ivec2 cell=ivec2(gl_FragCoord.xy);
-  vec4 state=texelFetch(uState,cell,0);
-  vec2 pos=state.xy,previous=state.zw;
-  float id=float(cell.x+cell.y*uSimWidth);
-  float t=uTime*uDrift;
-  vec2 centre=vec2(0.12*sin(t*0.16+uSeed*0.01)+0.038*sin(t*0.067+uSeed*0.013),0.035+0.058*cos(t*0.12+uSeed*0.008));
-  vec2 q=pos-centre;
-  float r2=dot(q,q);
-  vec2 uv=vec2(pos.x/max(uAspect,0.05),pos.y)*0.5+0.5;
-  vec2 flow=texture(uFlow,clamp(uv,vec2(0.002),vec2(0.998))).xy;
-  vec2 force=flow*(0.105+uTurbulence*0.060+uAudio*uMids*0.055+uAudio*uHighs*0.020);
 
-  vec2 tangent=vec2(-q.y,q.x)/sqrt(r2+0.006);
-  float vortexMask=exp(-r2*3.8);
-  force+=tangent*vortexMask*uVortex*(0.055+uAudio*uBass*0.12+uAudio*uPulse*0.19);
 
-  for(int i=0;i<6;i++){
-    float fi=float(i);
-    float direction=(i%2==0)?1.0:-1.0;
-    float angle=fi*1.04719755+t*(direction>0.0?0.13:-0.16)+uSeed*0.08;
-    vec2 vortexCentre=vec2(
-      cos(angle)*(0.13+0.035*sin(t*0.27+fi)),
-      sin(angle)*(0.11+0.030*cos(t*0.31+fi))
-    );
-    vec2 d=q-vortexCentre;
-    float rr=dot(d,d);
-    vec2 localTangent=vec2(-d.y,d.x)/sqrt(rr+0.0018);
-    float localMask=exp(-rr*62.0);
-    force+=localTangent*localMask*direction*(0.065+uAudio*uMids*0.025+uAudio*uPulse*0.035);
-  }
 
-  float audioForce=uAudio*(uBass*0.13+uPulse*0.25);
-  force+=q/sqrt(r2+0.012)*audioForce*0.12;
-  force-=q*max(0.0,length(q)-0.46)*0.36;
-  vec2 ellipse=vec2(pos.x/(uAspect*0.82),pos.y/0.82);float edge=length(ellipse);
-  vec2 edgeNormal=normalize(vec2(pos.x/(uAspect*uAspect*0.82*0.82),pos.y/(0.82*0.82))+vec2(0.00001));
-  force-=edgeNormal*smoothstep(0.55,0.92,edge)*0.58;
-  float idNoise=hash1(id+floor(t*4.0));
-  force+=vec2(cos(idNoise*6.283),sin(idNoise*6.283))*uAudio*uHighs*0.055;
-
-  vec2 velocity=pos-previous;
-  velocity=velocity*0.94+force*uDt*0.045;
-  float speed=length(velocity);
-  if(speed>0.0035)velocity*=0.0035/speed;
-  vec2 nextPos=pos+velocity;
-  float maxRadius=0.70+uSpread*0.075;
-  bool outside=length(nextPos-centre)>maxRadius||abs(nextPos.x)>uAspect*0.90||abs(nextPos.y)>0.90;
-  if(outside){nextPos=respawn(id,centre);velocity=vec2(0.0);}
-  outState=vec4(nextPos,nextPos-velocity);
-}
-</script>
 
 <script id="particle-vertex" type="x-shader/x-vertex">
 #version 300 es
 precision highp float;
-uniform sampler2D uState;uniform int uSimWidth;
-uniform float uAspect,uSeed,uParticleScale,uInk,uBass,uMids,uHighs,uPulse,uRms,uAudio,uTime,uDrift,uLineMode;
+precision highp int;
+uniform float uTime,uAspect,uSeed,uParticleScale,uInk,uBass,uMids,uHighs,uPulse,uRms,uAudio,uLineMode,uSpread,uTurbulence,uVortex,uPopulation,uGate;
 out float vAlpha;out float vTone;
+float h(uint x){x^=x>>16u;x*=0x7feb352du;x^=x>>15u;x*=0x846ca68bu;x^=x>>16u;return float(x&0xffffffu)/16777216.0;}
+float rnd(uint i,uint k){return h(i*1664525u+k*1013904223u+uint(uSeed*1000.0));}
+vec2 rot(vec2 p,float a){float c=cos(a),s=sin(a);return vec2(c*p.x-s*p.y,s*p.x+c*p.y);}
+vec2 bez(vec2 a,vec2 b,vec2 c,vec2 d,float t){float s=1.0-t;return s*s*s*a+3.0*s*s*t*b+3.0*s*t*t*c+t*t*t*d;}
 void main(){
-  int id;float endpoint=1.0;if(uLineMode>0.5){id=gl_VertexID/2;endpoint=float(gl_VertexID%2);}else{id=gl_VertexID;}
-  ivec2 cell=ivec2(id%uSimWidth,id/uSimWidth);vec4 state=texelFetch(uState,cell,0);
-  vec2 pos=mix(state.zw,state.xy,endpoint);
-  float seed=fract(sin(float(id)*127.1+uSeed*19.19)*43758.5453123),speed=length(state.xy-state.zw);
-  vec2 centre=vec2(.12*sin(uTime*uDrift*.16+uSeed*.01)+.038*sin(uTime*uDrift*.067+uSeed*.013),.035+.058*cos(uTime*uDrift*.12+uSeed*.008));
-  float radius=length(state.xy-centre),core=exp(-radius*radius*13.0),air=fract(sin(float(id)*39.7+uSeed*7.1)*24634.6345);
-  float edge=max(abs(pos.x)/(uAspect*.90),abs(pos.y)/.90),edgeFade=1.0-.86*smoothstep(.68,.98,edge);
-  vAlpha=(.030+core*.105+speed*5.2)*(.82+air*.72)*uInk;
-  vAlpha*=.88+uRms*.65+uAudio*(uRms*.50+uPulse*1.20);vAlpha*=edgeFade;
-  if(uLineMode>.5)vAlpha*=.86;else vAlpha*=1.30;
-  vTone=mix(.014,.20,seed);if(core>.45)vTone=mix(.006,.052,seed);
-  gl_Position=vec4(pos.x/max(uAspect,.05),pos.y,0.0,1.0);
-  gl_PointSize=clamp((.72+air*1.12)*uParticleScale*(1.0+uAudio*uHighs*.25+uAudio*uPulse*.42),.65,3.2);
+  bool line=uLineMode>.5;int id=gl_VertexID;uint fam;float s;uint pid=uint(id);
+  if(line){int seg=id/2;fam=uint(seg/48);s=(float(seg%48)+float(id%2))/48.0;}
+  else{fam=uint(id/96);s=(float(id%96)+rnd(pid,77u))/96.0;}
+  float t=uTime;float bass=clamp(uBass*uAudio*.55,0.0,1.5),mid=clamp(uMids*uAudio*.55,0.0,1.5),hi=clamp(uHighs*uAudio*.55,0.0,1.5),hit=clamp(uPulse*uAudio*.6,0.0,1.5);
+  float f0=rnd(fam,1u),f1=rnd(fam,2u),f2=rnd(fam,3u),f3=rnd(fam,4u),f4=rnd(fam,5u),f5=rnd(fam,6u),f6=rnd(fam,7u);
+  float p0=rnd(pid,11u),p1=rnd(pid,12u),p2=rnd(pid,13u);
+  float mainA=.45+6.283*rnd(17u,5u)+.5*sin(t*.37)+.30*sin(t*.73+.8)+.24*bass;
+  uint group=uint(f0*12.0);float g=float(group);
+  float ga=mainA+g*2.399963+.28*sin(t*.65+g*2.1);
+  if(group<5u)ga=mainA+(g-2.0)*.17+.30*sin(t*.47+g*.8);
+  else if(group<8u)ga=mainA+2.55+(g-6.0)*.31+.25*cos(t*.49+g);
+  float length0=.32+.90*rnd(group,23u);float l=length0*(.45+.80*pow(f1,.7));
+  l*=clamp(uSpread,.55,1.8)*(.79+.16*bass+.14*hit);
+  float width=(group<5u?.18:.12)*(f2-.5)*2.0;
+  float bend=(rnd(group,30u)-.5)*1.6+.55*sin(t*.43+g)+width*1.8;
+  float twist=(rnd(group,31u)-.5)*1.3+.40*cos(t*.35+g*1.4);
+  float loop=step(.78,f3);float mist=step(.57,f4);float core=step(f0,.17);
+  if(line)core=0.0;
+  vec2 p;float a=ga+width*(1.1+mid*.35);float chaos=.65+.35*uTurbulence+.22*mid;
+  if(core>.5){
+    float phi=6.283*f1+2.1*s+t*(.45+.22*uVortex)+.25*sin(t+g);
+    float rad=.008+.14*pow(f2,1.75)*(.6+.4*sin(s*3.14159));
+    rad*=1.0+.28*bass+.20*hit;
+    p=vec2(cos(phi),sin(phi))*rad+vec2(.055*sin(f3*6.283+t*.68),.040*cos(f4*6.283-t*.53));
+    p+=vec2(sin(phi*2.0+f5*8.0),cos(phi*3.0+f6*6.0))*.014;
+    vAlpha=.10*(.6+.8*f5);vTone=.025;
+  }else{
+    vec2 start=vec2(.065*sin(f2*6.283+g),.055*cos(f3*6.283+g));
+    vec2 b=vec2(.20*l,(bend*.34+width*.35)*l);
+    vec2 c=vec2(.64*l,(twist*.58+width*.6)*l);
+    vec2 d=vec2(l,(bend*.22+width*.9)*l);
+    if(loop>.5){
+      b=vec2(.38*l,(.35+.36*f5)*l*sign(bend+.00001));
+      c=vec2(.92*l,-(.55+.40*f6)*l*sign(bend+.00001));
+      d=vec2((.30+.45*f2)*l,(.18+.55*f4)*l*sign(twist+.00001));
+    }
+    p=bez(start,b,c,d,s);
+    float taper=sin(3.14159*s)*.6+s*.4;
+    p.y+=sin(s*(5.0+f5*4.0)+g+t*.73)*.043*chaos*taper;
+    p.x+=sin(s*8.0+g*1.7-t*.49)*.024*chaos*taper;
+    p.y+=(f6-.5)*.10*s*s;
+    p=rot(p,a);
+    if(!line){
+      float jitter=(.002+(.015+.040*mist)*s)*(.6+.5*mid);
+      p+=rot(vec2((p0-.5)*jitter,(p1-.5)*jitter*2.0),a);
+    }
+    float fade=pow(1.0-s,.85)*.76+.05;
+    vAlpha=(line?(.012+.024*loop)*(.65+.6*f5):(.032+.043*(1.0-mist)))*fade;
+    if(line)vAlpha*=1.0+uVortex*.13;
+    vTone=mix(.025,.38,mist*.72+f5*.18);
+  }
+  vec2 centre=vec2(.085*sin(t*.39+uSeed*.012)+.035*sin(t*.83),.075*cos(t*.31+uSeed*.008));
+  p=rot(p,.15*sin(t*.27)+.12*mid)+centre;
+  vec2 raw=p*min(uAspect,1.0)/vec2(uAspect,1.0);
+  vec2 clip=.94*tanh(raw/.94);
+  float edge=length(raw-clip);vAlpha*=exp(-edge*3.5);
+  float exposure=clamp(524288.0/max(uPopulation,65536.0),1.0,5.0);
+  vAlpha*=uInk*sqrt(exposure)*uGate*(.9+.22*bass+.15*hit);
+  gl_Position=vec4(clip,0,1);
+  gl_PointSize=clamp((core>.5?.86+.6*p2:mix(.74,2.6,mist*p2*p2))*uParticleScale*(1.0+.13*hi),1.0,3.8);
 }
 </script>
 
 <script id="particle-fragment" type="x-shader/x-fragment">
 #version 300 es
-precision highp float;uniform float uLineMode;in float vAlpha;in float vTone;out vec4 fragColor;
-void main(){float alpha=vAlpha;if(uLineMode<.5){vec2 p=gl_PointCoord-.5;alpha*=exp(-dot(p,p)*15.2);}else alpha*=.78;if(alpha<.001)discard;fragColor=vec4(vec3(vTone),clamp(alpha,0.0,.54));}
+precision highp float;
+uniform float uLineMode;in float vAlpha;in float vTone;out vec4 fragColor;
+void main(){float a=vAlpha;if(uLineMode<.5){vec2 p=gl_PointCoord-.5;a*=exp(-dot(p,p)*9.5);}if(a<.001)discard;fragColor=vec4(vec3(vTone),clamp(a,0.0,.7));}
 </script>
 
 <script id="fade-fragment" type="x-shader/x-fragment">
@@ -438,9 +309,9 @@ const canvas=$("art"),overlay=$("overlay"),audioEl=$("audio");
 const SIM_W=1024,SIM_H=512,SIM_COUNT=SIM_W*SIM_H,FLOW_W=256,FLOW_H=256;
 const ratioMap={portrait:{w:720,h:1280},square:{w:720,h:720},landscape:{w:1280,h:720}};
 const presets={
- smoke:{turbulence:1.35,vortex:1.20,spread:1.10,ink:1.35,trail:.994,size:1.0,audio:2.8,drift:1.0},
- filament:{turbulence:.92,vortex:1.65,spread:1.25,ink:1.52,trail:.996,size:.72,audio:2.3,drift:.78},
- turbulent:{turbulence:2.35,vortex:.72,spread:1.48,ink:1.12,trail:.989,size:1.25,audio:3.8,drift:1.55}
+ smoke:{turbulence:1.35,vortex:1.20,spread:.95,ink:1.35,trail:.20,size:1.0,audio:2.8,drift:1.0},
+ filament:{turbulence:.92,vortex:1.65,spread:1.15,ink:1.52,trail:.32,size:.72,audio:2.3,drift:.78},
+ turbulent:{turbulence:2.35,vortex:.72,spread:1.25,ink:1.12,trail:.12,size:1.25,audio:3.8,drift:1.55}
 };
 let ratioMode="portrait",resolutionScale=720;
 let gl=null,flowProgram=null,inkProgram=null,simProgram=null,particleProgram=null,fadeProgram=null,presentProgram=null,vao=null;
@@ -452,7 +323,7 @@ let audioContext=null,audioSource=null,analyser=null,mediaDestination=null,frequ
 let audioSmooth={bass:0,mid:0,high:0,rms:0,pulse:0},lastBass=0,lastRms=0;
 let audioUrl=null,recorder=null,recordingChunks=[];
 let frameTime=0,lastFrame=0,running=false,fallbackMode=false,frameCounter=0;
-const settings={turbulence:1.35,vortex:1.20,spread:1.10,ink:1.35,trail:.994,size:1.0,audio:2.8,drift:1.0};
+const settings={turbulence:1.35,vortex:1.20,spread:.95,ink:1.35,trail:.20,size:1.0,audio:2.8,drift:1.0};
 const fmt=n=>Number(n).toLocaleString("en-GB");
 function status(message,ok){
   $("gpuStatus").textContent=message;
@@ -465,291 +336,83 @@ function outputSize(){
   if(ratioMode==="landscape")return{w:Math.round(resolutionScale*16/9),h:resolutionScale};
   return{w:resolutionScale,h:resolutionScale};
 }
-function deleteTarget(target){
-  if(!target||!gl)return;
-  if(target.fbo)gl.deleteFramebuffer(target.fbo);
-  if(target.texture)gl.deleteTexture(target.texture);
+function deleteTarget(target){if(target&&gl){gl.deleteFramebuffer(target.fbo);gl.deleteTexture(target.texture);}}
+function makeTarget(w,h){
+ const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+ const fbo=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,texture,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error("Framebuffer incomplete");return{fbo,texture,w,h};
 }
-function makeTarget(width,height,internalFormat,format,type,data,filter){
-  const texture=gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D,texture);
-  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,filter||gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,filter||gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-  gl.texImage2D(gl.TEXTURE_2D,0,internalFormat,width,height,0,format,type,data);
-  const fbo=gl.createFramebuffer();
-  gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,texture,0);
-  const complete=gl.checkFramebufferStatus(gl.FRAMEBUFFER)===gl.FRAMEBUFFER_COMPLETE;
-  if(!complete){gl.deleteFramebuffer(fbo);gl.deleteTexture(texture);throw new Error("GPU framebuffer is incomplete ("+width+"×"+height+")");}
-  return{texture,fbo,width,height};
-}
-function compileShader(type,id){
-  const shader=gl.createShader(type);gl.shaderSource(shader,$(id).textContent);gl.compileShader(shader);
-  if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS)){
-    const message=gl.getShaderInfoLog(shader)||"Unknown shader compilation error";gl.deleteShader(shader);throw new Error(id+": "+message);
-  }
-  return shader;
-}
-function makeProgram(vertexId,fragmentId){
-  const vs=compileShader(gl.VERTEX_SHADER,vertexId),fs=compileShader(gl.FRAGMENT_SHADER,fragmentId);
-  const program=gl.createProgram();gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);
-  gl.deleteShader(vs);gl.deleteShader(fs);
-  if(!gl.getProgramParameter(program,gl.LINK_STATUS)){
-    const message=gl.getProgramInfoLog(program)||"Unknown shader link error";gl.deleteProgram(program);throw new Error(message);
-  }
-  return program;
-}
-function cacheUniforms(program,names){
-  const out={};names.forEach(name=>out[name]=gl.getUniformLocation(program,name));return out;
-}
-function set1(loc,value){if(loc!==null&&loc!==undefined)gl.uniform1f(loc,value);}
-function set1i(loc,value){if(loc!==null&&loc!==undefined)gl.uniform1i(loc,value);}
-function set2(loc,x,y){if(loc!==null&&loc!==undefined)gl.uniform2f(loc,x,y);}
-function bindTexture(loc,texture,unit){
-  gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,texture);set1i(loc,unit);
-}
-function seededRandomFactory(seed){
-  let state=(Math.floor(seed*1000003)>>>0)||1;
-  return function(){state=(state*1664525+1013904223)>>>0;return state/4294967296;};
-}
-function gaussian(rand){
-  const a=Math.max(rand(),0.000001),b=rand();
-  const radius=Math.sqrt(-2*Math.log(a)),angle=b*Math.PI*2;
-  return[radius*Math.cos(angle),radius*Math.sin(angle)];
-}
-function makeInitialState(){
-  const data=new Float32Array(SIM_COUNT*4),rand=seededRandomFactory(seedValue),aspect=outputSize().w/outputSize().h;
-  const centreX=.12*Math.sin(seedValue*.01)+.038*Math.sin(seedValue*.013),centreY=.035+.058*Math.cos(seedValue*.008);
-  const a0=.28+(seedValue*.013-Math.floor(seedValue*.013))*6.283,dx=Math.cos(a0),dy=Math.sin(a0),sx=-dy,sy=dx;
-  for(let i=0;i<SIM_COUNT;i++){
-    const group=rand(),g=gaussian(rand),g2=gaussian(rand);let x=centreX+g[0]*.070,y=centreY+g[1]*.082;
-    if(group>.68&&group<.84){x+=.14+g2[0]*.065;y+=.055+g2[1]*.075;}
-    else if(group>=.84&&group<.96){const along=.17+rand()*.28,across=(rand()-.5)*.105;x+=dx*along+sx*across+g2[0]*.025;y+=dy*along+sy*across+g2[1]*.025;}
-    else if(group>=.96){const a=rand()*Math.PI*2,r=.24+rand()*.16;x+=Math.cos(a)*r;y+=Math.sin(a)*r;}
-    x=Math.max(-aspect*.70,Math.min(aspect*.70,x));y=Math.max(-.74,Math.min(.74,y));
-    const a=a0+(rand()-.5)*2.2,speed=.00035+rand()*.00085,vx=Math.cos(a)*speed+(rand()-.5)*.00045,vy=Math.sin(a)*speed+(rand()-.5)*.00045;
-    const k=i*4;data[k]=x;data[k+1]=y;data[k+2]=x-vx;data[k+3]=y-vy;
-  }
-  return data;
-}
-function initStateTargets(){
-  const data=makeInitialState();
-  deleteTarget(stateA);deleteTarget(stateB);
-  stateA=makeTarget(SIM_W,SIM_H,gl.RGBA32F,gl.RGBA,gl.FLOAT,data,gl.NEAREST);
-  stateB=makeTarget(SIM_W,SIM_H,gl.RGBA32F,gl.RGBA,gl.FLOAT,null,gl.NEAREST);
-  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
-}
-function createFlowTarget(){
-  deleteTarget(flowTarget);
-  flowTarget=makeTarget(FLOW_W,FLOW_H,gl.RGBA16F,gl.RGBA,gl.HALF_FLOAT,null,gl.LINEAR);
-  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
-}
-function clearTrails(){
-  if(!trailA||!trailB)return;
-  gl.bindFramebuffer(gl.FRAMEBUFFER,trailA.fbo);gl.viewport(0,0,trailA.width,trailA.height);
-  gl.clearColor(1,1,1,1);gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.bindFramebuffer(gl.FRAMEBUFFER,trailB.fbo);gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
-}
-function createTrailTargets(){
-  const size=outputSize();
-  deleteTarget(trailA);deleteTarget(trailB);
-  trailA=makeTarget(size.w,size.h,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,null,gl.LINEAR);
-  trailB=makeTarget(size.w,size.h,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,null,gl.LINEAR);
-  clearTrails();
-}
-function resizeRenderer(){
-  const size=outputSize();
-  canvas.width=size.w;canvas.height=size.h;canvas.style.aspectRatio=size.w+" / "+size.h;
-  $("stageResolution").textContent=size.w+" × "+size.h;
-  if(fallbackCanvas){fallbackCanvas.width=size.w;fallbackCanvas.height=size.h;fallbackCanvas.style.aspectRatio=size.w+" / "+size.h;}
-  if(rendererReady)createTrailTargets();
-}
+function compileShader(type,id){const s=gl.createShader(type);gl.shaderSource(s,$(id).textContent.trim());gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(id+": "+gl.getShaderInfoLog(s));return s;}
+function makeProgram(v,f){const a=compileShader(gl.VERTEX_SHADER,v),b=compileShader(gl.FRAGMENT_SHADER,f),p=gl.createProgram();gl.attachShader(p,a);gl.attachShader(p,b);gl.linkProgram(p);gl.deleteShader(a);gl.deleteShader(b);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;}
+function cacheUniforms(program,names){return Object.fromEntries(names.map(n=>[n,gl.getUniformLocation(program,n)]));}
+function set1(loc,v){if(loc!==null&&loc!==undefined)gl.uniform1f(loc,v);}
+function bindTexture(loc,texture){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);if(loc!==null)gl.uniform1i(loc,0);}
+function clearWhite(){if(!gl)return;gl.disable(gl.BLEND);gl.clearColor(1,1,1,1);for(const target of [trailA,trailB,null]){gl.bindFramebuffer(gl.FRAMEBUFFER,target?target.fbo:null);gl.viewport(0,0,target?target.w:canvas.width,target?target.h:canvas.height);gl.clear(gl.COLOR_BUFFER_BIT);}}
+function resizeRenderer(){const s=outputSize();if(canvas.width===s.w&&canvas.height===s.h&&trailA)return;canvas.width=s.w;canvas.height=s.h;canvas.style.aspectRatio=s.w+" / "+s.h;$("stageResolution").textContent=s.w+" × "+s.h;if(!gl)return;deleteTarget(trailA);deleteTarget(trailB);trailA=makeTarget(s.w,s.h);trailB=makeTarget(s.w,s.h);clearWhite();if(started&&rendererReady)drawFrame(0);}
 function initRenderer(){
-  try{
-    gl=canvas.getContext("webgl2",{alpha:false,antialias:false,preserveDrawingBuffer:true,powerPreference:"high-performance"});
-    if(!gl)throw new Error("WebGL2 is unavailable");
-    const floatTargets=gl.getExtension("EXT_color_buffer_float");
-    if(!floatTargets)throw new Error("This browser cannot create floating-point GPU particle state");
-    gl.disable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.disable(gl.SCISSOR_TEST);gl.clearColor(1,1,1,1);
-    vao=gl.createVertexArray();gl.bindVertexArray(vao);
-    flowProgram=makeProgram("screen-vertex","flow-fragment");
-    inkProgram=makeProgram("screen-vertex","ink-fragment");
-    simProgram=makeProgram("screen-vertex","sim-fragment");
-    particleProgram=makeProgram("particle-vertex","particle-fragment");
-    fadeProgram=makeProgram("screen-vertex","fade-fragment");
-    presentProgram=makeProgram("screen-vertex","present-fragment");
-    flowUniforms=cacheUniforms(flowProgram,["uTime","uAspect","uSeed","uTurbulence","uAudio","uBass","uMids","uHighs","uPulse","uDrift"]);
-    inkUniforms=cacheUniforms(inkProgram,["uFlow","uTime","uAspect","uSeed","uTurbulence","uSpread","uInk","uAudio","uBass","uMids","uHighs","uPulse","uDrift"]);
-    simUniforms=cacheUniforms(simProgram,["uState","uFlow","uSimWidth","uTime","uDt","uAspect","uTurbulence","uVortex","uSpread","uBass","uMids","uHighs","uPulse","uAudio","uSeed","uDrift"]);
-    particleUniforms=cacheUniforms(particleProgram,["uState","uSimWidth","uAspect","uSeed","uParticleScale","uInk","uBass","uMids","uHighs","uPulse","uRms","uAudio","uTime","uDrift","uLineMode"]);
-    fadeUniforms=cacheUniforms(fadeProgram,["uTrail","uFade"]);
-    presentUniforms=cacheUniforms(presentProgram,["uTrail"]);
-    resizeRenderer();initStateTargets();createFlowTarget();createTrailTargets();
-    rendererReady=true;overlay.classList.add("hidden");
-    status("GPU ink-fluid simulation active · "+fmt(particleCount)+" particles",true);
-    running=true;lastFrame=performance.now()/1000;requestAnimationFrame(renderFrame);
-    canvas.addEventListener("webglcontextlost",e=>{e.preventDefault();running=false;startFallback("GPU context lost");},{once:true});
-  }catch(error){console.error(error);startFallback(error.message||"GPU initialisation failed");}
+ try{
+  gl=canvas.getContext("webgl2",{alpha:false,antialias:false,preserveDrawingBuffer:true,powerPreference:"high-performance"});if(!gl)throw Error("WebGL2 is unavailable");
+  vao=gl.createVertexArray();gl.bindVertexArray(vao);
+  particleProgram=makeProgram("particle-vertex","particle-fragment");fadeProgram=makeProgram("screen-vertex","fade-fragment");presentProgram=makeProgram("screen-vertex","present-fragment");
+  particleUniforms=cacheUniforms(particleProgram,["uTime","uAspect","uSeed","uParticleScale","uInk","uBass","uMids","uHighs","uPulse","uRms","uAudio","uLineMode","uSpread","uTurbulence","uVortex","uPopulation","uGate"]);
+  fadeUniforms=cacheUniforms(fadeProgram,["uTrail","uFade"]);presentUniforms=cacheUniforms(presentProgram,["uTrail"]);
+  resizeRenderer();rendererReady=true;status("Ready · waiting for audio",true);overlay.classList.add("hidden");requestAnimationFrame(renderFrame);
+  canvas.addEventListener("webglcontextlost",e=>{e.preventDefault();rendererReady=false;status("GPU context lost · reload page",false);});
+ }catch(e){console.error(e);status("Renderer error: "+e.message,false);overlay.classList.remove("hidden");overlay.querySelector(".overlay-card").textContent="GPU renderer could not start: "+e.message;}
 }
-function readAudio(){
-  if(!analyser||!frequencyData||!timeData){
-    audioSmooth.bass*=.92;audioSmooth.mid*=.92;audioSmooth.high*=.92;audioSmooth.rms*=.92;audioSmooth.pulse*=.84;
-    updateAudioMeters();return;
-  }
-  analyser.getByteFrequencyData(frequencyData);analyser.getFloatTimeDomainData(timeData);
-  const nyquist=audioContext.sampleRate/2;
-  const band=(lo,hi)=>{
-    const a=Math.max(1,Math.floor(lo/nyquist*frequencyData.length));
-    const b=Math.min(frequencyData.length-1,Math.ceil(hi/nyquist*frequencyData.length));
-    let sum=0,peak=0,n=0;
-    for(let i=a;i<=b;i++){const v=frequencyData[i]/255;sum+=v*v;peak=Math.max(peak,v);n++;}
-    const rms=n?Math.sqrt(sum/n):0;
-    return Math.max(0,Math.min(1,(rms-.045)*3.25+(peak-.12)*.32));
-  };
-  let sum=0;for(let i=0;i<timeData.length;i++)sum+=timeData[i]*timeData[i];
-  const rawRms=Math.sqrt(sum/timeData.length);
-  const raw={bass:band(35,170),mid:band(170,2400),high:band(2400,12000),rms:Math.max(0,Math.min(1,(rawRms-.008)*6.0))};
-  const bassRise=Math.max(0,raw.bass-lastBass),rmsRise=Math.max(0,raw.rms-lastRms);
-  const pulse=Math.max(bassRise*6.0,rmsRise*8.0);
-  lastBass=raw.bass;lastRms=raw.rms;
-  audioSmooth.bass+=(raw.bass-audioSmooth.bass)*.24;
-  audioSmooth.mid+=(raw.mid-audioSmooth.mid)*.20;
-  audioSmooth.high+=(raw.high-audioSmooth.high)*.23;
-  audioSmooth.rms+=(raw.rms-audioSmooth.rms)*.22;
-  audioSmooth.pulse=Math.max(audioSmooth.pulse*.88,Math.min(1,pulse));
-  updateAudioMeters();
+let started=false,fieldPaused=false,rawRms=0,signalHold=0,gate=0,bandPeak=[.05,.05,.05],lastBand=[0,0,0],lastEnergy=0;
+const clamp01=x=>Math.max(0,Math.min(1,x));
+function readAudio(dt){
+ const playing=!!(analyser&&audioContext&&audioContext.state==="running"&&!audioEl.paused&&!audioEl.ended&&audioEl.readyState>=2);
+ if(!playing){rawRms=0;signalHold=0;for(const k in audioSmooth)audioSmooth[k]*=.85;updateAudioMeters(false);return false;}
+ analyser.getFloatFrequencyData(frequencyData);analyser.getFloatTimeDomainData(timeData);
+ let sum=0;for(const v of timeData)sum+=v*v;rawRms=Math.sqrt(sum/timeData.length);
+ const hz=audioContext.sampleRate/analyser.fftSize;
+ const bounds=[[30,180],[180,2500],[2500,12000]];
+ let flux=0;const values=bounds.map(([lo,hi],j)=>{
+  let sum=0,peak=0,n=0;for(let i=Math.max(1,Math.ceil(lo/hz));i<Math.min(frequencyData.length,Math.ceil(hi/hz));i++){const a=Math.pow(10,Math.max(-120,frequencyData[i])/20);sum+=a*a;peak=Math.max(peak,a);n++;}
+  const energy=.65*Math.sqrt(sum/Math.max(1,n))+.35*peak;
+  bandPeak[j]=Math.max(.002,energy,bandPeak[j]*Math.exp(-dt/3));
+  const value=clamp01(Math.sqrt(Math.max(0,energy-.0003)/bandPeak[j])*.85);
+  flux+=Math.max(0,value-lastBand[j])*(j===0?1.2:.6);lastBand[j]=value;return value;
+ });
+ const energy=clamp01(Math.sqrt(rawRms*3));const pulse=clamp01(flux*2+Math.max(0,energy-lastEnergy)*4);lastEnergy=energy;
+ const smooth=(a,b)=>a+(b-a)*(1-Math.exp(-dt*(b>a?20:7)));
+ ["bass","mid","high"].forEach((k,i)=>audioSmooth[k]=smooth(audioSmooth[k],values[i]));audioSmooth.rms=smooth(audioSmooth.rms,energy);audioSmooth.pulse=Math.max(pulse,audioSmooth.pulse*Math.exp(-dt*6));
+ if(rawRms>.0012)signalHold=.18;else signalHold=Math.max(0,signalHold-dt);
+ const active=signalHold>0;updateAudioMeters(active);return active;
 }
-function updateAudioMeters(){
-  const values=[["bass",audioSmooth.bass],["mid",audioSmooth.mid],["high",audioSmooth.high]];
-  values.forEach(([name,value])=>{
-    $(name+"Bar").style.width=(Math.max(0,Math.min(1,value))*100).toFixed(1)+"%";
-    $(name+"Value").textContent=value.toFixed(2);
-  });
-  const playing=!audioEl.paused&&!audioEl.ended;
-  const energy=Math.max(audioSmooth.bass,audioSmooth.mid,audioSmooth.high,audioSmooth.rms);
-  $("audioReadout").textContent=playing?"SIGNAL "+Math.round(energy*100)+"%  /  BEAT "+Math.round(audioSmooth.pulse*100)+"%":"WAITING FOR AUDIO SIGNAL";
-  $("audioDot").classList.toggle("live",playing&&energy>.025);
-  if(playing&&energy>.025)$("audioState").textContent="Live signal";
-  else if(playing)$("audioState").textContent="Playing";
+function updateAudioMeters(active){
+ for(const [k,v] of [["bass",audioSmooth.bass],["mid",audioSmooth.mid],["high",audioSmooth.high]]){$(k+"Bar").style.width=(clamp01(v)*100).toFixed(1)+"%";$(k+"Value").textContent=v.toFixed(2);}
+ $("audioReadout").textContent=active?"SIGNAL "+Math.round(audioSmooth.rms*100)+"% / BEAT "+Math.round(audioSmooth.pulse*100)+"%":audioEl.paused?"WAITING FOR AUDIO":"SILENCE · FIELD HELD";
+ $("audioDot").classList.toggle("live",active);
 }
-function updateFlow(aspect){
-  gl.bindFramebuffer(gl.FRAMEBUFFER,flowTarget.fbo);
-  gl.viewport(0,0,FLOW_W,FLOW_H);
-  gl.useProgram(flowProgram);
-  set1(flowUniforms.uTime,frameTime);set1(flowUniforms.uAspect,aspect);set1(flowUniforms.uSeed,seedValue);
-  set1(flowUniforms.uTurbulence,settings.turbulence);set1(flowUniforms.uAudio,settings.audio);
-  set1(flowUniforms.uBass,audioSmooth.bass);set1(flowUniforms.uMids,audioSmooth.mid);
-  set1(flowUniforms.uHighs,audioSmooth.high);set1(flowUniforms.uPulse,audioSmooth.pulse);
-  set1(flowUniforms.uDrift,settings.drift);
-  gl.disable(gl.BLEND);gl.drawArrays(gl.TRIANGLES,0,3);
-}
-function updateSimulation(dt,aspect){
-  gl.bindFramebuffer(gl.FRAMEBUFFER,stateB.fbo);gl.viewport(0,0,SIM_W,SIM_H);gl.useProgram(simProgram);
-  bindTexture(simUniforms.uState,stateA.texture,0);bindTexture(simUniforms.uFlow,flowTarget.texture,1);set1i(simUniforms.uSimWidth,SIM_W);
-  set1(simUniforms.uTime,frameTime);set1(simUniforms.uDt,dt);set1(simUniforms.uAspect,aspect);
-  set1(simUniforms.uTurbulence,settings.turbulence);set1(simUniforms.uVortex,settings.vortex);set1(simUniforms.uSpread,settings.spread);
-  set1(simUniforms.uBass,audioSmooth.bass);set1(simUniforms.uMids,audioSmooth.mid);set1(simUniforms.uHighs,audioSmooth.high);
-  set1(simUniforms.uPulse,audioSmooth.pulse);set1(simUniforms.uAudio,settings.audio);set1(simUniforms.uSeed,seedValue);set1(simUniforms.uDrift,settings.drift);
-  gl.disable(gl.BLEND);gl.drawArrays(gl.TRIANGLES,0,3);
-  const temp=stateA;stateA=stateB;stateB=temp;
-}
-function drawInk(aspect){
-  gl.useProgram(inkProgram);bindTexture(inkUniforms.uFlow,flowTarget.texture,0);
-  set1(inkUniforms.uTime,frameTime);set1(inkUniforms.uAspect,aspect);set1(inkUniforms.uSeed,seedValue);
-  set1(inkUniforms.uTurbulence,settings.turbulence);set1(inkUniforms.uSpread,settings.spread);set1(inkUniforms.uInk,settings.ink);
-  set1(inkUniforms.uAudio,settings.audio);set1(inkUniforms.uBass,audioSmooth.bass);set1(inkUniforms.uMids,audioSmooth.mid);
-  set1(inkUniforms.uHighs,audioSmooth.high);set1(inkUniforms.uPulse,audioSmooth.pulse);set1(inkUniforms.uDrift,settings.drift);
-  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.drawArrays(gl.TRIANGLES,0,3);gl.disable(gl.BLEND);
-}
-function drawParticles(aspect){
-  gl.useProgram(particleProgram);bindTexture(particleUniforms.uState,stateA.texture,0);
-  set1i(particleUniforms.uSimWidth,SIM_W);set1(particleUniforms.uAspect,aspect);set1(particleUniforms.uSeed,seedValue);
-  set1(particleUniforms.uParticleScale,settings.size);set1(particleUniforms.uInk,settings.ink);
-  set1(particleUniforms.uBass,audioSmooth.bass);set1(particleUniforms.uMids,audioSmooth.mid);set1(particleUniforms.uHighs,audioSmooth.high);
-  set1(particleUniforms.uPulse,audioSmooth.pulse);set1(particleUniforms.uRms,audioSmooth.rms);set1(particleUniforms.uAudio,settings.audio);set1(particleUniforms.uTime,frameTime);set1(particleUniforms.uDrift,settings.drift);
-  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-  set1(particleUniforms.uLineMode,1);gl.lineWidth(1);gl.drawArrays(gl.LINES,0,particleCount*2);
-  set1(particleUniforms.uLineMode,0);gl.drawArrays(gl.POINTS,0,particleCount);
-  gl.disable(gl.BLEND);
+function drawFrame(dt){
+ const aspect=canvas.width/canvas.height;
+ gl.bindFramebuffer(gl.FRAMEBUFFER,trailB.fbo);gl.viewport(0,0,trailB.w,trailB.h);gl.disable(gl.BLEND);
+ gl.useProgram(fadeProgram);bindTexture(fadeUniforms.uTrail,trailA.texture);set1(fadeUniforms.uFade,dt>0?Math.pow(settings.trail,dt*60):0);gl.drawArrays(gl.TRIANGLES,0,3);
+ gl.useProgram(particleProgram);
+ const values={uTime:frameTime,uAspect:aspect,uSeed:seedValue,uParticleScale:settings.size,uInk:settings.ink,uBass:audioSmooth.bass,uMids:audioSmooth.mid,uHighs:audioSmooth.high,uPulse:audioSmooth.pulse,uRms:audioSmooth.rms,uAudio:settings.audio,uSpread:settings.spread,uTurbulence:settings.turbulence,uVortex:settings.vortex,uPopulation:particleCount,uGate:gate};
+ for(const [k,v] of Object.entries(values))set1(particleUniforms[k],v);
+ gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+ set1(particleUniforms.uLineMode,1);gl.lineWidth(1);gl.drawArrays(gl.LINES,0,Math.max(256,Math.floor(particleCount/328))*96);
+ set1(particleUniforms.uLineMode,0);gl.drawArrays(gl.POINTS,0,particleCount);gl.disable(gl.BLEND);
+ [trailA,trailB]=[trailB,trailA];gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);gl.useProgram(presentProgram);bindTexture(presentUniforms.uTrail,trailA.texture);gl.drawArrays(gl.TRIANGLES,0,3);
 }
 function renderFrame(ms){
-  if(!running||!gl||fallbackMode||!rendererReady)return;
-  try{
-    const dt=Math.min(Math.max((ms/1000-lastFrame),.001),.033);lastFrame=ms/1000;frameTime+=dt;
-    readAudio();
-    const size=outputSize(),aspect=size.w/size.h;
-    updateFlow(aspect);updateSimulation(dt,aspect);
-    gl.bindFramebuffer(gl.FRAMEBUFFER,trailB.fbo);gl.viewport(0,0,trailB.width,trailB.height);
-    gl.disable(gl.BLEND);gl.useProgram(fadeProgram);bindTexture(fadeUniforms.uTrail,trailA.texture,0);
-    const fade=Math.max(.985,Math.min(.998,settings.trail-audioSmooth.pulse*.006-audioSmooth.bass*.002));
-    set1(fadeUniforms.uFade,fade);gl.drawArrays(gl.TRIANGLES,0,3);
-    drawInk(aspect);
-    drawParticles(aspect);
-    const trailTemp=trailA;trailA=trailB;trailB=trailTemp;
-    gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);
-    gl.useProgram(presentProgram);bindTexture(presentUniforms.uTrail,trailA.texture,0);gl.drawArrays(gl.TRIANGLES,0,3);
-    if((frameCounter++%120)===0){const err=gl.getError();if(err!==gl.NO_ERROR)throw new Error("GPU render error "+err);}
-    requestAnimationFrame(renderFrame);
-  }catch(error){console.error(error);running=false;startFallback(error.message||"GPU rendering error");}
+ if(!rendererReady)return;
+ const dt=Math.min(.05,Math.max(.001,lastFrame?ms/1000-lastFrame:1/60));lastFrame=ms/1000;
+ const active=readAudio(dt);
+ if(active&&!fieldPaused){started=true;gate=Math.min(1,gate+dt*5);frameTime+=dt*settings.drift*(.38+.8*audioSmooth.rms+.28*audioSmooth.pulse);drawFrame(dt);if(frameCounter++%120===0){const err=gl.getError();if(err!==gl.NO_ERROR){status("GPU error "+err,false);rendererReady=false;return;}}status("Audio-driven · "+fmt(particleCount)+" particles",true);}
+ else status(fieldPaused?"Field paused":started?"Field held · waiting for sound":"Ready · waiting for audio",true);
+ requestAnimationFrame(renderFrame);
 }
-function randomFallbackState(){
-  const count=12000,arr=new Float32Array(count*4),rand=seededRandomFactory(seedValue);
-  for(let i=0;i<count;i++){
-    const g=gaussian(rand),x=g[0]*.15,y=g[1]*.18,k=i*4;
-    arr[k]=x;arr[k+1]=y;arr[k+2]=x-.001;arr[k+3]=y+.001;
-  }
-  return arr;
-}
-function startFallback(reason){
-  if(fallbackCanvas)return;
-  fallbackMode=true;running=true;canvas.style.display="none";
-  fallbackCanvas=document.createElement("canvas");fallbackCanvas.id="fallbackArt";
-  fallbackCanvas.width=canvas.width;fallbackCanvas.height=canvas.height;
-  canvas.parentNode.insertBefore(fallbackCanvas,canvas.nextSibling);
-  fallbackCtx=fallbackCanvas.getContext("2d",{alpha:false});renderCanvas=fallbackCanvas;
-  fallbackCtx.fillStyle="#fff";fallbackCtx.fillRect(0,0,fallbackCanvas.width,fallbackCanvas.height);
-  fallbackParticles=randomFallbackState();overlay.classList.add("hidden");
-  status("Canvas fallback · "+String(reason).slice(0,45),false);
-  lastFrame=performance.now()/1000;requestAnimationFrame(renderFallback);
-}
-function renderFallback(ms){
-  if(!running||!fallbackCtx)return;
-  const dt=Math.min(Math.max((ms/1000-lastFrame),.001),.033);lastFrame=ms/1000;frameTime+=dt;readAudio();
-  const ctx=fallbackCtx,w=fallbackCanvas.width,h=fallbackCanvas.height,arr=fallbackParticles;
-  ctx.globalAlpha=1;ctx.fillStyle="rgba(255,255,255,0.065)";ctx.fillRect(0,0,w,h);
-  ctx.lineWidth=.55;ctx.lineCap="round";
-  const cx=w*.50,cy=h*.50,amount=Math.min(12000,particleCount);
-  for(let i=0;i<amount;i++){
-    const k=i*4,x=arr[k],y=arr[k+1],vx=x-arr[k+2],vy=y-arr[k+3];
-    const r2=x*x+y*y,angle=Math.atan2(y,x);
-    const curl=Math.sin(y*8+frameTime*.28+seedValue)+Math.cos(x*7-frameTime*.23);
-    const ax=-y/(Math.sqrt(r2)+.08)*.6+curl*.55;
-    const ay=x/(Math.sqrt(r2)+.08)*.6+Math.sin(x*9+frameTime*.18)*.55;
-    const pulse=settings.audio*(audioSmooth.pulse*1.2+audioSmooth.bass*.35);
-    const nx=x+(vx*.985+ax*dt*.075+y/(Math.sqrt(r2)+.08)*pulse*dt*.04);
-    const ny=y+(vy*.985+ay*dt*.075+x/(Math.sqrt(r2)+.08)*pulse*dt*.04);
-    arr[k]=nx;arr[k+1]=ny;arr[k+2]=x;arr[k+3]=y;
-    const px=cx+nx*w*.72,py=cy+ny*h*.62;
-    ctx.strokeStyle="rgba(12,12,12,"+(.018+Math.min(.075,Math.sqrt(vx*vx+vy*vy)*7))+")";
-    ctx.beginPath();ctx.moveTo(cx+x*w*.72,cy+y*h*.62);ctx.lineTo(px,py);ctx.stroke();
-  }
-  ctx.globalAlpha=1;requestAnimationFrame(renderFallback);
-}
-function resetField(newSeed){
-  if(newSeed)seedValue=Math.random()*1000;
-  frameTime=0;lastFrame=performance.now()/1000;
-  if(rendererReady){initStateTargets();clearTrails();}
-  if(fallbackMode){fallbackParticles=randomFallbackState();fallbackCtx.fillStyle="#fff";fallbackCtx.fillRect(0,0,fallbackCanvas.width,fallbackCanvas.height);}
-}
+function resetField(newSeed){if(newSeed)seedValue=Math.random()*1000;started=false;gate=0;frameTime=0;signalHold=0;rawRms=0;lastEnergy=0;lastBand=[0,0,0];bandPeak=[.05,.05,.05];for(const k in audioSmooth)audioSmooth[k]=0;clearWhite();}
 async function ensureAudio(){
   if(!audioContext){
     audioContext=new(window.AudioContext||window.webkitAudioContext)();
     analyser=audioContext.createAnalyser();analyser.fftSize=4096;
-    analyser.minDecibels=-92;analyser.maxDecibels=-18;analyser.smoothingTimeConstant=.42;
-    frequencyData=new Uint8Array(analyser.frequencyBinCount);timeData=new Float32Array(analyser.fftSize);
+    analyser.minDecibels=-92;analyser.maxDecibels=-18;analyser.smoothingTimeConstant=.24;
+    frequencyData=new Float32Array(analyser.frequencyBinCount);timeData=new Float32Array(analyser.fftSize);
     audioSource=audioContext.createMediaElementSource(audioEl);
     mediaDestination=audioContext.createMediaStreamDestination();
     audioSource.connect(analyser);analyser.connect(audioContext.destination);analyser.connect(mediaDestination);
@@ -766,7 +429,7 @@ async function toggleAudio(){
       $("audioDot").classList.add("live");
     }else{
       audioEl.pause();$("playBtn").textContent="Play audio";$("audioState").textContent="Paused";
-      $("audioDot").classList.remove("live");$("audioStatus").textContent="Track paused · particle field continues";
+      $("audioDot").classList.remove("live");$("audioStatus").textContent="Track paused · field held until audio returns";
     }
   }catch(e){$("audioStatus").textContent="Audio could not start: "+e.message;}
 }
@@ -775,7 +438,7 @@ function loadAudio(file){
   const valid=file.type.startsWith("audio/")||file.type.startsWith("video/")||/\.(mp3|wav|m4a|ogg|aac|flac|mp4|mov)$/i.test(file.name);
   if(!valid){$("audioStatus").textContent="Choose an audio file or an MP4 with an audio track";return;}
   if(audioUrl)URL.revokeObjectURL(audioUrl);
-  audioUrl=URL.createObjectURL(file);audioEl.pause();audioEl.src=audioUrl;audioEl.load();
+  audioUrl=URL.createObjectURL(file);audioEl.pause();resetField(false);audioEl.src=audioUrl;audioEl.load();
   $("trackName").textContent=file.name;$("audioState").textContent="Ready";
   $("audioStatus").textContent="Track loaded · press Play audio";
   $("playBtn").disabled=false;$("playBtn").textContent="Play audio";$("audioDot").classList.remove("live");
@@ -802,23 +465,18 @@ function applyPreset(name){
   document.querySelectorAll("#presets button").forEach(b=>b.classList.toggle("active",b.dataset.preset===name));
   resetField(false);
 }
-function pauseField(){
-  running=!running;
-  if(running){
-    lastFrame=performance.now()/1000;requestAnimationFrame(fallbackMode?renderFallback:renderFrame);
-    $("pauseBtn").textContent="Pause field";
-  }else $("pauseBtn").textContent="Resume field";
-}
+function pauseField(){fieldPaused=!fieldPaused;$("pauseBtn").textContent=fieldPaused?"Resume field":"Pause field";}
 function saveStill(){
   if(!renderCanvas.toBlob){$("audioStatus").textContent="Still export is unavailable";return;}
   renderCanvas.toBlob(blob=>{
     if(!blob)return;
     const url=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=url;a.download="lifeafterlogic-stochastic-ink-v05.png";a.click();
+    a.href=url;a.download="lifeafterlogic-stochastic-ink-v08.png";a.click();
     setTimeout(()=>URL.revokeObjectURL(url),20000);
   },"image/png");
 }
-function startRecording(){
+async function startRecording(){
+  if(audioEl.src){try{await ensureAudio();}catch(e){$("audioStatus").textContent=e.message;return;}}
   if(!renderCanvas.captureStream||!window.MediaRecorder){$("audioStatus").textContent="Recording is not supported in this browser";return;}
   try{
     const stream=renderCanvas.captureStream(60);
@@ -831,7 +489,7 @@ function startRecording(){
     recorder.onstop=()=>{
       const type=recorder.mimeType||"video/webm",blob=new Blob(recordingChunks,{type});
       const url=URL.createObjectURL(blob),a=document.createElement("a");
-      a.href=url;a.download="lifeafterlogic-stochastic-ink-v05."+(type.includes("mp4")?"mp4":"webm");a.click();
+      a.href=url;a.download="lifeafterlogic-stochastic-ink-v08."+(type.includes("mp4")?"mp4":"webm");a.click();
       setTimeout(()=>URL.revokeObjectURL(url),30000);
       $("recordBtn").textContent="Start recording";$("recordBtn").classList.add("primary");
       $("audioStatus").textContent="Capture downloaded · "+(type.includes("mp4")?"MP4":"WebM");recorder=null;
@@ -876,7 +534,7 @@ dropzone.addEventListener("drop",e=>{
 });
 audioEl.addEventListener("ended",()=>{
   $("playBtn").textContent="Play audio";$("audioState").textContent="Ended";
-  $("audioDot").classList.remove("live");$("audioStatus").textContent="Track ended · particle field continues";
+  $("audioDot").classList.remove("live");$("audioStatus").textContent="Track ended · field held until audio returns";
 });
 audioEl.addEventListener("error",()=>{$("audioStatus").textContent="This file could not be decoded by the browser";});
 document.addEventListener("visibilitychange",()=>{lastFrame=performance.now()/1000;});
