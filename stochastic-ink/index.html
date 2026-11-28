@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
 <meta name="robots" content="noindex,nofollow">
-<title>Stochastic Ink v.02 — LifeAfterLogic Lab</title>
+<title>Stochastic Ink v.03 — LifeAfterLogic Lab</title>
 <link rel="icon" type="image/svg+xml" href="../media/lifeafterlogic-mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -87,14 +87,14 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <img class="mark" src="../media/lifeafterlogic-mark.svg" width="30" height="30" alt="">
 <span class="brand-name">lab</span><span class="brand-sub">Stochastic Ink / 007</span>
 </a>
-<div class="top-meta">WebGPU / Ink dynamics · v.02</div>
+<div class="top-meta">WebGPU / Fibrous ink simulation · v.03</div>
 </header>
 <main>
 <aside class="panel">
 <div>
 <div class="eyebrow">Experiment 007 / Audiovisual systems</div>
 <h1>Stochastic<br>Ink</h1>
-<p class="intro">An evolving 3D particle body of ink. Gaussian splats, fine strands and branching fibre bundles fold around a shifting core. Sound reshapes the volume in real time.</p>
+<p class="intro">A fluid, fibrous ink structure: hairline filaments stream from a dense shifting nucleus, branching into delicate membranes, smoke and long translucent tendrils. Sound subtly disturbs the flow.</p>
 </div>
 <section class="section">
 <div class="section-head"><span class="section-title">01 / Audio input</span><span class="small-note" id="audioState">No track</span></div>
@@ -110,16 +110,17 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <div class="presets" id="presets"><button class="active" data-preset="filament">Filament</button><button data-preset="bloom">Bloom</button><button data-preset="tangle">Tangle</button></div>
 </section>
 <section class="section">
-<div class="section-head"><span class="section-title">03 / Structure</span><span class="small-note" id="particleReadout">180,000</span></div>
-<div class="control"><label class="control-label" for="particles"><span>Particle population</span><output id="particlesOut">180,000</output></label><input id="particles" type="range" min="40000" max="240000" step="10000" value="180000"></div>
-<div class="control"><label class="control-label" for="density"><span>Filament density</span><output id="densityOut">1.25</output></label><input id="density" type="range" min="0.4" max="2.4" step=".01" value="1.25"></div>
-<div class="control"><label class="control-label" for="turbulence"><span>Flow distortion</span><output id="turbulenceOut">1.05</output></label><input id="turbulence" type="range" min="0" max="2.5" step=".01" value="1.05"></div>
-<div class="control"><label class="control-label" for="spread"><span>Radial spread</span><output id="spreadOut">1.15</output></label><input id="spread" type="range" min="0.45" max="2.2" step=".01" value="1.15"></div>
-<div class="control"><label class="control-label" for="core"><span>Core density</span><output id="coreOut">1.00</output></label><input id="core" type="range" min="0.35" max="2.0" step=".01" value="1.00"></div>
-<div class="control"><label class="control-label" for="filament"><span>Filament detail</span><output id="filamentOut">0.68</output></label><input id="filament" type="range" min="0" max="1" step=".01" value="0.68"></div>
-<div class="control"><label class="control-label" for="wash"><span>Ink diffusion</span><output id="washOut">0.75</output></label><input id="wash" type="range" min="0" max="1.5" step=".01" value="0.75"></div>
-<div class="control"><label class="control-label" for="persistence"><span>Trail persistence</span><output id="persistenceOut">0.997</output></label><input id="persistence" type="range" min="0.985" max="0.999" step=".001" value="0.997"></div>
-<div class="control"><label class="control-label" for="audioInfluence"><span>Audio influence</span><output id="audioInfluenceOut">0.90</output></label><input id="audioInfluence" type="range" min="0" max="2" step=".01" value="0.90"></div>
+<div class="section-head"><span class="section-title">03 / Structure</span><span class="small-note" id="particleReadout">220,000</span></div>
+<div class="control"><label class="control-label" for="particles"><span>Particle population</span><output id="particlesOut">220,000</output></label><input id="particles" type="range" min="40000" max="240000" step="10000" value="220000"></div>
+<div class="control"><label class="control-label" for="density"><span>Filament density</span><output id="densityOut">1.60</output></label><input id="density" type="range" min="0.4" max="2.4" step=".01" value="1.6"></div>
+<div class="control"><label class="control-label" for="turbulence"><span>Flow distortion</span><output id="turbulenceOut">0.88</output></label><input id="turbulence" type="range" min="0" max="2.5" step=".01" value="0.88"></div>
+<div class="control"><label class="control-label" for="spread"><span>Radial spread</span><output id="spreadOut">1.32</output></label><input id="spread" type="range" min="0.45" max="2.2" step=".01" value="1.32"></div>
+<div class="control"><label class="control-label" for="core"><span>Core density</span><output id="coreOut">1.18</output></label><input id="core" type="range" min="0.35" max="2.0" step=".01" value="1.18"></div>
+<div class="control"><label class="control-label" for="filament"><span>Filament detail</span><output id="filamentOut">0.88</output></label><input id="filament" type="range" min="0" max="1" step=".01" value="0.88"></div>
+<div class="control"><label class="control-label" for="web"><span>Membrane webbing</span><output id="webOut">0.38</output></label><input id="web" type="range" min="0" max="1" step=".01" value="0.38"></div>
+<div class="control"><label class="control-label" for="wash"><span>Ink diffusion</span><output id="washOut">0.84</output></label><input id="wash" type="range" min="0" max="1.5" step=".01" value="0.84"></div>
+<div class="control"><label class="control-label" for="persistence"><span>Trail persistence</span><output id="persistenceOut">0.996</output></label><input id="persistence" type="range" min="0.985" max="0.999" step=".001" value="0.996"></div>
+<div class="control"><label class="control-label" for="audioInfluence"><span>Audio influence</span><output id="audioInfluenceOut">0.68</output></label><input id="audioInfluence" type="range" min="0" max="2" step=".01" value="0.68"></div>
 </section>
 <section class="section">
 <div class="section-head"><span class="section-title">04 / Composition</span><span class="small-note">Output ratio</span></div>
@@ -136,10 +137,11 @@ footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
 <section class="section">
 <div class="section-head"><span class="section-title">06 / Version history</span><span class="small-note">Preserved builds</span></div>
 <div class="version-list">
-<div class="version-item current"><span class="version-no">v.02</span><strong>WGSL shader fix</strong><em>Current</em></div>
+<div class="version-item current"><span class="version-no">v.03</span><strong>Fibrous ink + branching membranes</strong><em>Current</em></div>
+<a class="version-item" href="versions/v.02/"><span class="version-no">v.02</span><strong>3D ink system + shader fix</strong><em>Archived</em></a>
 <a class="version-item" href="versions/v.01/"><span class="version-no">v.01</span><strong>Initial WebGPU build</strong><em>Archived</em></a>
 </div>
-<p class="version-note">Previous builds stay available as separate playable snapshots. Older versions are never overwritten.</p>
+<p class="version-note">Every meaningful iteration is preserved as a separate playable build. Earlier versions are never overwritten.</p>
 </section>
 <footer>LifeAfterLogic / Stochastic Ink<br>GPU simulation and audio analysis run locally in your browser. Audio files are never uploaded.</footer>
 </aside>
@@ -160,7 +162,7 @@ struct Params {
   turbulence: f32, swirl: f32, spread: f32, persistence: f32,
   audio: f32, height: f32, width: f32, seed: f32,
   pulse: f32, density: f32, core: f32, ink: f32,
-  wash: f32, filament: f32, drift: f32, pad: f32,
+  wash: f32, filament: f32, drift: f32, web: f32,
 };
 </script>
 
@@ -177,12 +179,14 @@ struct Params {
   turbulence: f32, swirl: f32, spread: f32, persistence: f32,
   audio: f32, height: f32, width: f32, seed: f32,
   pulse: f32, density: f32, core: f32, ink: f32,
-  wash: f32, filament: f32, drift: f32, pad: f32,
+  wash: f32, filament: f32, drift: f32, web: f32,
 };
 @group(0) @binding(0) var<storage, read_write> particles: array<Particle>;
 @group(0) @binding(1) var<uniform> params: Params;
 
-fn hash11(x: f32) -> f32 { return fract(sin(x * 127.1) * 43758.5453123); }
+fn hash11(x: f32) -> f32 {
+  return fract(sin(x * 127.1) * 43758.5453123);
+}
 
 fn curl3(p: vec3<f32>, seed: f32, t: f32) -> vec3<f32> {
   let warped = p + vec3<f32>(
@@ -193,10 +197,11 @@ fn curl3(p: vec3<f32>, seed: f32, t: f32) -> vec3<f32> {
   let ax = warped.y * 1.75 + warped.z * 2.3 + t * 0.13 + seed * 6.283;
   let ay = warped.z * 2.05 + warped.x * 1.55 - t * 0.09 + seed * 4.73;
   let az = warped.x * 1.9 + warped.y * 2.4 + t * 0.07 + seed * 2.9;
-  let vx = 2.4 * cos(az) - 2.05 * cos(ay);
-  let vy = 2.3 * cos(ax) - 1.9 * cos(az);
-  let vz = 1.55 * cos(ay) - 1.75 * cos(ax);
-  return vec3<f32>(vx, vy, vz);
+  return vec3<f32>(
+    2.4 * cos(az) - 2.05 * cos(ay),
+    2.3 * cos(ax) - 1.9 * cos(az),
+    1.55 * cos(ay) - 1.75 * cos(ax)
+  );
 }
 
 fn spawnParticle(index: u32, oldSeed: f32) -> Particle {
@@ -212,56 +217,78 @@ fn spawnParticle(index: u32, oldSeed: f32) -> Particle {
   let r4 = hash11(base + 39.1);
   let r5 = hash11(base + 51.8);
   let groupType = hash11(familyF * 9.731 + params.seed * 0.17);
-  let mainAngle = fract(params.seed * 0.013) * 6.283 + params.time * params.drift * 0.055;
-  var angle = r0 * 6.28318530718;
-  if (groupType < 0.56) {
-    angle = mainAngle + (r1 - 0.5) * 1.45;
-  } else if (groupType < 0.81) {
-    angle = mainAngle + 2.05 + (r1 - 0.5) * 1.05;
-  } else if (groupType < 0.93) {
-    angle = mainAngle - 1.75 + (r1 - 0.5) * 0.8;
-  }
-  angle += (local - 0.5) * 0.18;
-  let direction = normalize(vec3<f32>(cos(angle), sin(angle), (r2 - 0.5) * 0.72));
-  let tangent = normalize(vec3<f32>(-direction.y, direction.x, 0.0));
+
   let driftTime = params.time * params.drift;
+  let mainAngle = fract(params.seed * 0.013) * 6.283
+                + driftTime * 0.036
+                + 0.12 * sin(driftTime * 0.075 + params.seed * 0.003);
+  var angle = r0 * 6.28318530718;
+  if (groupType < 0.62) {
+    angle = mainAngle + (r1 - 0.5) * 1.05;
+  } else if (groupType < 0.83) {
+    angle = mainAngle + 2.12 + (r1 - 0.5) * 0.82;
+  } else if (groupType < 0.94) {
+    angle = mainAngle - 1.72 + (r1 - 0.5) * 0.72;
+  }
+  angle += (local - 0.5) * 0.065;
+
+  let direction = normalize(vec3<f32>(cos(angle), sin(angle), (r2 - 0.5) * 0.38));
+  let tangent = normalize(vec3<f32>(-direction.y, direction.x, 0.0001));
   let bassShift = params.low * params.audio;
   let centre = vec3<f32>(
-    0.045 * sin(driftTime * 0.17 + params.seed * 0.01) + 0.025 * sin(driftTime * 0.071 + params.seed * 0.013) + 0.025 * bassShift,
-    -0.055 + 0.055 * cos(driftTime * 0.13 + params.seed * 0.008) - 0.018 * bassShift,
+    0.038 * sin(driftTime * 0.16 + params.seed * 0.01)
+      + 0.022 * sin(driftTime * 0.067 + params.seed * 0.013)
+      + 0.018 * bassShift,
+    -0.045 + 0.045 * cos(driftTime * 0.12 + params.seed * 0.008)
+      - 0.012 * bassShift,
     0.0
   );
-  let satellite = centre + vec3<f32>(0.19 + 0.035 * sin(driftTime * 0.11 + params.seed), 0.135 * cos(driftTime * 0.14 + params.seed * 0.2), (r4 - 0.5) * 0.24);
+  let satellite = centre + vec3<f32>(
+    0.155 + 0.028 * sin(driftTime * 0.105 + params.seed),
+    0.105 * cos(driftTime * 0.13 + params.seed * 0.2),
+    (r4 - 0.5) * 0.18
+  );
   var source = centre;
-  if (groupType > 0.81 && groupType < 0.93) { source = satellite; }
-  let radius = 0.002 + pow(r2, 2.0) * 0.022;
-  let across = (r4 - 0.5) * (0.014 + local * 0.004);
-  let depthOffset = (r3 - 0.5) * 0.12;
-  let pos = source + direction * radius + tangent * across + vec3<f32>(0.0, 0.0, depthOffset);
-  var velocity = direction * (0.075 + r5 * 0.095) + tangent * (0.035 + r4 * 0.12);
-  velocity.z += (r3 - 0.5) * 0.055;
-  if (groupType < 0.08) { velocity *= 0.72; }
-  if (groupType > 0.93) { velocity *= 0.42; }
-  var life = 7.0 + r5 * 10.0;
-  var width = 0.10 + pow(r3, 2.5) * 0.55;
-  var opacity = 0.055 + r4 * 0.095;
+  if (groupType > 0.83 && groupType < 0.94) {
+    source = satellite;
+  }
+
+  let radius = 0.0015 + pow(r2, 2.15) * 0.014;
+  let across = (local - 0.5) * 0.025 + (r4 - 0.5) * 0.0035;
+  let depthOffset = (r3 - 0.5) * 0.13;
+  let pos = source + direction * radius + tangent * across
+          + vec3<f32>(0.0, 0.0, depthOffset);
+
+  var velocity = direction * (0.092 + r5 * 0.12)
+               + tangent * (0.012 + r4 * 0.055);
+  velocity.z += (r3 - 0.5) * 0.035;
+
+  var life = 12.0 + r5 * 13.0;
+  var width = 0.30 + pow(r3, 2.4) * 0.62;
+  var opacity = 0.038 + r4 * 0.072;
+
   if (groupType < 0.075) {
-    width = 1.15 + r3 * 2.8;
-    opacity = 0.014 + r4 * 0.028;
-    life = 9.0 + r5 * 9.0;
+    width = 1.35 + r3 * 1.7;
+    opacity = 0.012 + r4 * 0.022;
+    life = 16.0 + r5 * 11.0;
+    velocity *= 0.76;
   } else if (groupType < 0.24) {
-    width = 0.48 + r3 * 1.25;
-    opacity = 0.035 + r4 * 0.065;
+    width = 0.62 + r3 * 0.92;
+    opacity = 0.025 + r4 * 0.05;
+    life = 13.0 + r5 * 13.0;
   }
-  if (groupType > 0.93) {
-    width = 0.32 + r3 * 1.0;
-    opacity = 0.12 + r4 * 0.11;
-    life = 2.8 + r5 * 3.6;
+  if (groupType > 0.94) {
+    width = 0.38 + r3 * 0.55;
+    opacity = 0.095 + r4 * 0.09;
+    life = 4.5 + r5 * 5.0;
+    velocity *= 0.58;
   }
+
+  let familySeed = hash11(familyF * 11.71 + params.seed * 0.031);
   var p: Particle;
   p.position = vec4<f32>(pos, 0.0);
   p.velocity = vec4<f32>(velocity, life);
-  p.previous = vec4<f32>(pos, hash11(familyF * 11.71 + params.seed * 0.031) + (local - 0.5) * 0.065);
+  p.previous = vec4<f32>(pos, familySeed + (local - 0.5) * 0.006);
   p.attributes = vec4<f32>(width, opacity, groupType, local);
   return p;
 }
@@ -273,47 +300,68 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
   var p = particles[index];
   let age = p.position.w;
   let life = p.velocity.w;
-  if (age < 0.0 || age > life || abs(p.position.x) > 2.1 || abs(p.position.y) > 2.1 || abs(p.position.z) > 2.0) {
+
+  if (age < 0.0 || age > life
+      || abs(p.position.x) > 2.1
+      || abs(p.position.y) > 2.1
+      || abs(p.position.z) > 2.0) {
     p = spawnParticle(index, p.previous.w);
   } else {
     p.previous = vec4<f32>(p.position.xyz, p.previous.w);
     p.position.w += params.dt;
+
     let driftTime = params.time * params.drift;
-    let bassShift = params.low * params.audio;
+    let bass = params.low * params.audio;
+    let mids = params.mid * params.audio;
+    let highs = params.high * params.audio;
     let centre = vec3<f32>(
-      0.045 * sin(driftTime * 0.17 + params.seed * 0.01) + 0.025 * sin(driftTime * 0.071 + params.seed * 0.013) + 0.025 * bassShift,
-      -0.055 + 0.055 * cos(driftTime * 0.13 + params.seed * 0.008) - 0.018 * bassShift,
+      0.038 * sin(driftTime * 0.16 + params.seed * 0.01)
+        + 0.022 * sin(driftTime * 0.067 + params.seed * 0.013)
+        + 0.018 * bass,
+      -0.045 + 0.045 * cos(driftTime * 0.12 + params.seed * 0.008)
+        - 0.012 * bass,
       0.0
     );
     let q = p.position.xyz - centre;
     let distance = length(q);
     let radial = normalize(q + vec3<f32>(0.00001, 0.00002, 0.00003));
-    let tangent = normalize(vec3<f32>(-radial.y, radial.x, 0.0));
-    let curlA = curl3(q, p.previous.w, params.time * params.drift);
-    let curlB = curl3(q * 2.1 + vec3<f32>(0.21, -0.16, 0.13), p.previous.w + 0.37, params.time * params.drift * 0.72);
-    let bass = params.low * params.audio;
-    let mids = params.mid * params.audio;
-    let highs = params.high * params.audio;
-    var acceleration = curlA * (0.16 * params.turbulence + mids * 0.20);
-    acceleration += curlB * (0.052 * params.turbulence + highs * 0.04);
-    acceleration += tangent * (0.075 * params.swirl + 0.03 * sin(params.time * 0.19 + p.previous.w * 8.0));
-    acceleration += radial * (0.045 * params.spread + bass * 0.12 + params.pulse * 0.11);
-    acceleration -= radial * max(0.0, distance - 1.05) * 0.075;
-    acceleration.z += 0.045 * sin(params.time * 0.16 + p.previous.w * 12.0 + q.x * 2.0);
-    let satellite = q - vec3<f32>(0.19, 0.135, 0.0);
+    let tangent = normalize(vec3<f32>(-radial.y, radial.x, 0.0001));
+
+    let curlA = curl3(q, p.previous.w, driftTime);
+    let curlB = curl3(q * 1.85 + vec3<f32>(0.17, -0.13, 0.11),
+                      p.previous.w + 0.29, driftTime * 0.63);
+    var acceleration = curlA * (0.105 * params.turbulence + mids * 0.105);
+    acceleration += curlB * (0.027 * params.turbulence + highs * 0.018);
+    acceleration += tangent * (0.052 * params.swirl
+                     + 0.018 * sin(driftTime * 0.17 + p.previous.w * 7.0));
+    acceleration += radial * (0.032 * params.spread + bass * 0.075 + params.pulse * 0.045);
+    acceleration -= radial * max(0.0, distance - 0.96) * 0.082;
+    acceleration.z += 0.026 * sin(driftTime * 0.14 + p.previous.w * 10.0 + q.x * 1.7);
+
+    let satellite = q - vec3<f32>(0.155, 0.105, 0.0);
     let satelliteDir = normalize(satellite + vec3<f32>(0.00001, 0.00002, 0.00003));
-    let satelliteTangent = normalize(vec3<f32>(-satelliteDir.y, satelliteDir.x, 0.0));
-    acceleration += satelliteTangent * (0.022 + p.attributes.z * 0.03) * exp(-length(satellite) * 2.0);
+    let satelliteTangent = normalize(vec3<f32>(-satelliteDir.y, satelliteDir.x, 0.0001));
+    acceleration += satelliteTangent * (0.014 + p.attributes.z * 0.018)
+                  * exp(-length(satellite) * 2.6);
+
     let ageRatio = clamp(p.position.w / max(p.velocity.w, 0.001), 0.0, 1.0);
-    let branchGate = smoothstep(0.24, 0.78, ageRatio);
-    let branchPhase = p.attributes.w * 6.283 + p.previous.w * 19.0 + params.time * 0.06;
-    let branchForce = vec3<f32>(cos(branchPhase), sin(branchPhase), 0.55 * sin(branchPhase * 1.7));
-    acceleration += branchForce * branchGate * (0.012 + params.turbulence * 0.018);
+    let branchGate = smoothstep(0.32, 0.82, ageRatio);
+    let branchPhase = (p.attributes.w - 0.5) * 5.4
+                    + p.previous.w * 12.7 + driftTime * 0.052;
+    let branchForce = vec3<f32>(
+      cos(branchPhase),
+      sin(branchPhase),
+      0.28 * sin(branchPhase * 1.6)
+    );
+    acceleration += branchForce * branchGate * (0.005 + params.turbulence * 0.009);
+
     p.velocity.xyz += acceleration * params.dt;
-    p.velocity.xyz *= exp(-0.25 * params.dt);
+    p.velocity.xyz *= exp(-0.235 * params.dt);
     let speed = length(p.velocity.xyz);
-    let maxSpeed = 0.34 + params.turbulence * 0.12 + bass * 0.14 + params.pulse * 0.08;
-    if (speed > maxSpeed) { p.velocity.xyz *= maxSpeed / speed; }
+    let maxSpeed = 0.31 + params.turbulence * 0.085 + bass * 0.095 + params.pulse * 0.045;
+    if (speed > maxSpeed) {
+      p.velocity.xyz *= maxSpeed / speed;
+    }
     p.position.xyz += p.velocity.xyz * params.dt;
   }
   particles[index] = p;
@@ -327,25 +375,75 @@ struct Params {
   turbulence: f32, swirl: f32, spread: f32, persistence: f32,
   audio: f32, height: f32, width: f32, seed: f32,
   pulse: f32, density: f32, core: f32, ink: f32,
-  wash: f32, filament: f32, drift: f32, pad: f32,
+  wash: f32, filament: f32, drift: f32, web: f32,
 };
 @group(0) @binding(0) var oldFrame: texture_2d<f32>;
 @group(0) @binding(1) var linearSampler: sampler;
 @group(0) @binding(2) var<uniform> params: Params;
 struct VertexOut { @builtin(position) position: vec4<f32>, @location(0) uv: vec2<f32>, };
+
 @vertex fn vs(@builtin(vertex_index) index: u32) -> VertexOut {
-  var positions = array<vec2<f32>,3>(vec2<f32>(-1.0,-1.0),vec2<f32>(3.0,-1.0),vec2<f32>(-1.0,3.0));
-  let pos=positions[index]; var out:VertexOut; out.position=vec4<f32>(pos,0.0,1.0); out.uv=vec2<f32>(pos.x*0.5+0.5,0.5-pos.y*0.5); return out;
+  var positions = array<vec2<f32>,3>(
+    vec2<f32>(-1.0,-1.0), vec2<f32>(3.0,-1.0), vec2<f32>(-1.0,3.0)
+  );
+  let pos = positions[index];
+  var out: VertexOut;
+  out.position = vec4<f32>(pos,0.0,1.0);
+  out.uv = vec2<f32>(pos.x*0.5+0.5,0.5-pos.y*0.5);
+  return out;
 }
-@fragment fn fs(in:VertexOut)->@location(0) vec4<f32> {
-  let dx=1.0/max(params.width,1.0); let dy=1.0/max(params.height,1.0);
-  let centre=textureSample(oldFrame,linearSampler,in.uv).rgb;
-  let left=textureSample(oldFrame,linearSampler,in.uv-vec2<f32>(dx,0.0)).rgb;
-  let right=textureSample(oldFrame,linearSampler,in.uv+vec2<f32>(dx,0.0)).rgb;
-  let up=textureSample(oldFrame,linearSampler,in.uv-vec2<f32>(0.0,dy)).rgb;
-  let down=textureSample(oldFrame,linearSampler,in.uv+vec2<f32>(0.0,dy)).rgb;
-  let diffused=mix(centre,(left+right+up+down)*0.25,0.105*params.wash);
-  let faded=mix(vec3<f32>(1.0),diffused,params.persistence);
+
+fn hash21(p: vec2<i32>) -> f32 {
+  let x = bitcast<u32>(p.x);
+  let y = bitcast<u32>(p.y);
+  var h = x*1597334677u + y*3812015801u + u32(max(params.seed,0.0)*1024.0);
+  h = h ^ (h >> 16u);
+  h = h * 2246822519u;
+  h = h ^ (h >> 13u);
+  h = h * 3266489917u;
+  h = h ^ (h >> 16u);
+  return f32(h & 16777215u) / 16777215.0;
+}
+fn noise2(p: vec2<f32>) -> f32 {
+  let i = vec2<i32>(floor(p));
+  let f = fract(p);
+  let u = f*f*(3.0-2.0*f);
+  let a = hash21(i);
+  let b = hash21(i+vec2<i32>(1,0));
+  let c = hash21(i+vec2<i32>(0,1));
+  let d = hash21(i+vec2<i32>(1,1));
+  return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);
+}
+fn fbm(p0: vec2<f32>) -> f32 {
+  var p = p0;
+  var amp = 0.5;
+  var sum = 0.0;
+  for (var i=0u; i<3u; i=i+1u) {
+    sum += amp*noise2(p);
+    p = p*2.03 + vec2<f32>(17.1,9.2);
+    amp *= 0.5;
+  }
+  return sum/0.875;
+}
+
+@fragment fn fs(in: VertexOut) -> @location(0) vec4<f32> {
+  let px = (in.uv-vec2<f32>(0.5))*vec2<f32>(params.aspect,1.0)*4.0;
+  let q = px + vec2<f32>(params.seed*0.001, params.time*0.025);
+  let e = 0.018;
+  let dx = fbm(q+vec2<f32>(e,0.0))-fbm(q-vec2<f32>(e,0.0));
+  let dy = fbm(q+vec2<f32>(0.0,e))-fbm(q-vec2<f32>(0.0,e));
+  let flow = vec2<f32>(dy,-dx) * (0.0045*params.wash*params.dt*60.0);
+  let sampleUV = clamp(in.uv-flow,vec2<f32>(0.001),vec2<f32>(0.999));
+  let centre = textureSample(oldFrame,linearSampler,sampleUV).rgb;
+  let dxUV = vec2<f32>(1.0/max(params.width,1.0),0.0);
+  let dyUV = vec2<f32>(0.0,1.0/max(params.height,1.0));
+  let left = textureSample(oldFrame,linearSampler,sampleUV-dxUV).rgb;
+  let right = textureSample(oldFrame,linearSampler,sampleUV+dxUV).rgb;
+  let up = textureSample(oldFrame,linearSampler,sampleUV-dyUV).rgb;
+  let down = textureSample(oldFrame,linearSampler,sampleUV+dyUV).rgb;
+  let blur = (left+right+up+down)*0.25;
+  let diffused = mix(centre,blur,0.075*params.wash);
+  let faded = mix(vec3<f32>(1.0),diffused,params.persistence);
   return vec4<f32>(faded,1.0);
 }
 </script>
@@ -357,95 +455,137 @@ struct Params {
   turbulence: f32, swirl: f32, spread: f32, persistence: f32,
   audio: f32, height: f32, width: f32, seed: f32,
   pulse: f32, density: f32, core: f32, ink: f32,
-  wash: f32, filament: f32, drift: f32, pad: f32,
+  wash: f32, filament: f32, drift: f32, web: f32,
 };
 @group(0) @binding(0) var<uniform> params: Params;
 struct VertexOut { @builtin(position) position: vec4<f32>, @location(0) uv: vec2<f32>, };
+
 @vertex fn vs(@builtin(vertex_index) index:u32)->VertexOut {
-  var positions=array<vec2<f32>,3>(vec2<f32>(-1.0,-1.0),vec2<f32>(3.0,-1.0),vec2<f32>(-1.0,3.0));
-  let pos=positions[index];var out:VertexOut;out.position=vec4<f32>(pos,0.0,1.0);out.uv=vec2<f32>(pos.x*0.5+0.5,0.5-pos.y*0.5);return out;
+  var positions=array<vec2<f32>,3>(
+    vec2<f32>(-1.0,-1.0),vec2<f32>(3.0,-1.0),vec2<f32>(-1.0,3.0)
+  );
+  let pos=positions[index];
+  var out:VertexOut;
+  out.position=vec4<f32>(pos,0.0,1.0);
+  out.uv=vec2<f32>(pos.x*0.5+0.5,0.5-pos.y*0.5);
+  return out;
 }
+
 fn hash21(p:vec2<i32>)->f32 {
-  let x=bitcast<u32>(p.x);let y=bitcast<u32>(p.y);
+  let x=bitcast<u32>(p.x);
+  let y=bitcast<u32>(p.y);
   var h=x*1597334677u+y*3812015801u+u32(max(params.seed,0.0)*1024.0);
-  h=h^(h>>16u);h=h*2246822519u;h=h^(h>>13u);h=h*3266489917u;h=h^(h>>16u);
+  h=h^(h>>16u);
+  h=h*2246822519u;
+  h=h^(h>>13u);
+  h=h*3266489917u;
+  h=h^(h>>16u);
   return f32(h&16777215u)/16777215.0;
 }
 fn noise2(p:vec2<f32>)->f32 {
-  let i=vec2<i32>(floor(p));let f=fract(p);let u=f*f*(3.0-2.0*f);
-  let a=hash21(i);let b=hash21(i+vec2<i32>(1,0));let c=hash21(i+vec2<i32>(0,1));let d=hash21(i+vec2<i32>(1,1));
+  let i=vec2<i32>(floor(p));
+  let f=fract(p);
+  let u=f*f*(3.0-2.0*f);
+  let a=hash21(i);
+  let b=hash21(i+vec2<i32>(1,0));
+  let c=hash21(i+vec2<i32>(0,1));
+  let d=hash21(i+vec2<i32>(1,1));
   return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);
 }
 fn fbm(p0:vec2<f32>)->f32 {
-  var p=p0;var amplitude=0.5;var value=0.0;
-  for(var i=0u;i<3u;i=i+1u){value+=amplitude*noise2(p);p=p*2.03+vec2<f32>(17.1,9.2);amplitude*=0.5;}
-  return value;
+  var p=p0;
+  var amp=0.5;
+  var sum=0.0;
+  for(var i=0u;i<4u;i=i+1u) {
+    sum+=amp*noise2(p);
+    p=p*2.03+vec2<f32>(17.1,9.2);
+    amp*=0.5;
+  }
+  return sum/0.9375;
 }
+fn ridge(p:vec2<f32>,power:f32)->f32 {
+  let n=fbm(p);
+  let r=clamp(1.0-abs(n*2.0-1.0),0.0,1.0);
+  return pow(r,power);
+}
+fn plume(q:vec2<f32>,direction:vec2<f32>,widthScale:f32,decay:f32)->f32 {
+  let side=vec2<f32>(-direction.y,direction.x);
+  let along=dot(q,direction);
+  let across=dot(q,side);
+  let width=(0.035+max(along,0.0)*0.255)*widthScale;
+  let core=exp(-pow(across/max(width,0.001),2.0));
+  return core*smoothstep(-0.13,0.025,along)*exp(-max(along,0.0)*decay);
+}
+
 @fragment fn fs(in:VertexOut)->@location(0) vec4<f32> {
   let p=(in.uv-vec2<f32>(0.5))*vec2<f32>(params.aspect,1.0)*2.0;
   let t=params.time*params.drift;
-  let bass=params.low*params.audio;let mids=params.mid*params.audio;let highs=params.high*params.audio;
-  let energy=clamp(bass*0.48+mids*0.34+highs*0.18+params.pulse*0.28,0.0,1.5);
-  let chaos=params.turbulence*(0.78+mids*0.7+params.pulse*0.18);
-  let density=params.density*(0.82+highs*0.42);
-  let centre=vec2<f32>(0.045*sin(t*0.17+params.seed*0.01)+0.025*sin(t*0.071+params.seed*0.013),-0.055+0.055*cos(t*0.13+params.seed*0.008))+vec2<f32>(0.025,-0.018)*bass;
+  let bass=params.low*params.audio;
+  let mids=params.mid*params.audio;
+  let highs=params.high*params.audio;
+  let energy=clamp(bass*0.36+mids*0.30+highs*0.16+params.pulse*0.18,0.0,1.2);
+  let chaos=0.62+params.turbulence*0.42+mids*0.18;
+  let centre=vec2<f32>(
+    0.035*sin(t*0.14+params.seed*0.01)+0.022*sin(t*0.061+params.seed*0.013)+0.014*bass,
+    -0.045+0.042*cos(t*0.115+params.seed*0.008)-0.01*bass
+  );
   let q=p-centre;
-  let n0=fbm(q*2.55+vec2<f32>(t*0.075,-t*0.052)+params.seed*0.001);
-  let n1=fbm(q*4.65+vec2<f32>(-t*0.048,t*0.067)+params.seed*0.0017);
-  let n2=fbm(q*8.15+vec2<f32>(t*0.032,t*0.041)+vec2<f32>(n0,n1)*1.7);
-  let warped=q+vec2<f32>(n0-0.5,n1-0.5)*(0.24*chaos+0.045*energy)+vec2<f32>(n2-0.5,n0-0.5)*0.075*chaos;
+  let n0=fbm(q*2.15+vec2<f32>(t*0.046,-t*0.032)+params.seed*0.001);
+  let n1=fbm(q*4.35+vec2<f32>(-t*0.031,t*0.039)+params.seed*0.0017);
+  let n2=fbm(q*8.8+vec2<f32>(t*0.022,t*0.027)+vec2<f32>(n0,n1)*1.15);
+  let n3=fbm(q*15.5+vec2<f32>(-t*0.014,t*0.019)+vec2<f32>(n1,n2)*1.4);
+  let warped=q
+    +vec2<f32>(n0-0.5,n1-0.5)*(0.17*chaos+0.025*energy)
+    +vec2<f32>(n2-0.5,n3-0.5)*(0.065*chaos);
+
+  let angle=0.10+fract(params.seed*0.013)*6.283+t*0.032
+           +0.14*sin(t*0.075+params.seed*0.002);
+  let direction=vec2<f32>(cos(angle),sin(angle));
+  let side=vec2<f32>(-direction.y,direction.x);
+  let u=dot(warped,direction);
+  let v=dot(warped,side);
   let r=length(warped);
-  var a=atan2(warped.y,warped.x);
-  a+=(0.5*(n0+n1)-0.5)*(0.92*chaos);
-  let mainAngle=fract(params.seed*0.013)*6.283+t*0.055;
-  let d1=abs(atan2(sin(a-mainAngle),cos(a-mainAngle)));
-  let d2=abs(atan2(sin(a-mainAngle-2.05),cos(a-mainAngle-2.05)));
-  let d3=abs(atan2(sin(a-mainAngle+1.72),cos(a-mainAngle+1.72)));
-  let lobe=max(exp(-d1*d1*3.5),max(0.62*exp(-d2*d2*4.5),0.32*exp(-d3*d3*4.0)));
-  let anisotropy=0.08+0.92*lobe;
-  let radialEnvelope=exp(-r*(2.9/max(params.spread,0.25)));
-  let webEnvelope=exp(-r*4.0);
-  let hazeEnvelope=exp(-r*1.9);
-  let linePower=mix(31.0,11.5,clamp(params.filament,0.0,1.0));
-  let phaseA=a*(8.5+density*2.4)+r*(16.0+density*6.0)+(n1-0.5)*12.0+t*0.18;
-  let phaseB=a*(14.0+density*3.5)-r*(12.0+density*7.0)+(n0-0.5)*14.0-t*0.13;
-  let phaseC=a*5.8+r*26.0+(n2-0.5)*17.0+t*0.085;
-  let strandsA=pow(clamp(1.0-abs(sin(phaseA)),0.0,1.0),linePower);
-  let strandsB=pow(clamp(1.0-abs(sin(phaseB)),0.0,1.0),linePower+3.0);
-  let strandsC=pow(clamp(1.0-abs(sin(phaseC)),0.0,1.0),linePower+6.0);
-  let ridgeA=1.0-abs(fbm(warped*(17.0+density*5.0)+vec2<f32>(t*0.10,-t*0.07)+n0*2.0)*2.0-1.0);
-  let ridgeB=1.0-abs(fbm(warped*(32.0+density*8.0)+vec2<f32>(-t*0.08,t*0.06)+n1*3.0)*2.0-1.0);
-  let webA=pow(clamp(ridgeA,0.0,1.0),7.0);
-  let webB=pow(clamp(ridgeB,0.0,1.0),9.0);
-  let tendrilPhase=a*(5.0+density*1.1)+r*(8.5+density*2.7)+(n2-0.5)*15.0+sin(a*2.0+t*0.11)*1.3;
-  let tendrils=pow(clamp(1.0-abs(sin(tendrilPhase)),0.0,1.0),16.0);
-  let membranePhase=a*3.8+r*4.9+n1*4.5+t*0.055;
-  let membrane=pow(clamp(1.0-abs(sin(membranePhase)),0.0,1.0),2.5)*radialEnvelope;
-  let coreNoise=0.78+0.22*n2;
-  let core=exp(-r*r*(92.0/max(params.core,0.25)))*coreNoise;
-  let satellite=warped-vec2<f32>(0.19+0.035*sin(t*0.11+params.seed),0.135*cos(t*0.14+params.seed*0.2));
-  let satelliteR=length(satellite);
-  let satelliteCore=exp(-satelliteR*satelliteR*165.0)*0.32;
-  let mainDir=vec2<f32>(cos(mainAngle),sin(mainAngle));
-  let sideDir=vec2<f32>(-mainDir.y,mainDir.x);
-  let along=dot(warped,mainDir);let across=dot(warped,sideDir);
-  let plumeWidth=0.055+max(along,0.0)*0.32;
-  let plume=exp(-(across*across)/(plumeWidth*plumeWidth+0.00001))*smoothstep(-0.18,0.08,along)*exp(-max(along,0.0)*0.55);
-  let secondAngle=mainAngle+2.15;
-  let secondDir=vec2<f32>(cos(secondAngle),sin(secondAngle));
-  let secondSide=vec2<f32>(-secondDir.y,secondDir.x);
-  let along2=dot(warped,secondDir);let across2=dot(warped,secondSide);
-  let plumeWidth2=0.035+max(along2,0.0)*0.19;
-  let plume2=exp(-(across2*across2)/(plumeWidth2*plumeWidth2+0.00001))*smoothstep(-0.12,0.06,along2)*exp(-max(along2,0.0)*0.85);
-  let plumeMask=max(plume,0.42*plume2);
-  let filamentField=(strandsA*0.72+strandsB*0.48+strandsC*0.28+tendrils*0.55)*radialEnvelope*anisotropy*(0.035+0.965*plumeMask);
-  let webField=(webA*0.55+webB*0.36)*webEnvelope*(0.025+0.975*plumeMask);
-  let mist=pow(clamp(n0*0.72+n1*0.28,0.0,1.0),2.2)*hazeEnvelope*0.10*params.wash;
-  let inkAmount=(core*2.5+satelliteCore+filamentField*(0.9+density*0.25+energy*0.24)+webField*(1.0+density*0.2)+tendrils*radialEnvelope*(0.025+0.975*plumeMask)*0.22+membrane*plumeMask*0.18+mist*0.35)*params.ink;
-  let ink=clamp(inkAmount,0.0,2.0);
-  let softRatio=clamp((mist+webField*0.15)/(ink+0.0001),0.0,1.0);
-  let tone=mix(0.012,0.42,softRatio);
-  let alpha=clamp(pow(ink,0.82)*0.60+mist*0.12,0.0,0.92);
+
+  let plumeA=plume(warped,direction,1.0,0.68);
+  let directionB=vec2<f32>(cos(angle+2.08),sin(angle+2.08));
+  let directionC=vec2<f32>(cos(angle-1.63),sin(angle-1.63));
+  let plumeB=plume(warped,directionB,0.72,0.94);
+  let plumeC=plume(warped,directionC,0.54,1.12);
+  let plumeMask=clamp(max(plumeA,max(plumeB*0.48,plumeC*0.29))
+                    +0.16*exp(-r*5.0),0.0,1.0);
+
+  let radialEnvelope=exp(-r*(3.05/max(params.spread,0.25)));
+  let fineEnvelope=exp(-r*4.0);
+  let lineA=ridge(vec2<f32>(u*5.4+n1*1.7,v*28.0+n0*2.1)+vec2<f32>(t*0.045,-t*0.026),5.5);
+  let lineB=ridge(vec2<f32>(u*9.7+n2*2.4,v*51.0+n1*3.0)+vec2<f32>(-t*0.031,t*0.022),7.0);
+  let lineC=ridge(vec2<f32>(u*17.0+n3*3.1,v*88.0+n2*4.0)+vec2<f32>(t*0.019,t*0.016),8.5);
+  let lineD=ridge(vec2<f32>(u*27.0+n2*4.0,v*132.0+n3*4.8),10.0);
+  let fineFibres=(lineA*0.55+lineB*0.46+lineC*0.30+lineD*0.18)
+                 *radialEnvelope*(0.006+0.994*pow(plumeMask,1.28));
+  let webA=ridge(warped*vec2<f32>(15.0,23.0)+vec2<f32>(n0*3.2,-n1*2.5),5.0);
+  let webB=ridge(warped*vec2<f32>(27.0,41.0)+vec2<f32>(n2*3.5,n3*3.0),7.5);
+  let webField=(webA*0.34+webB*0.25)*fineEnvelope
+              *pow(plumeMask,1.12)*params.web;
+
+  let haze=pow(clamp(fbm(warped*vec2<f32>(5.0,9.0)+vec2<f32>(t*0.018,-t*0.014)),0.0,1.0),2.15)
+           *exp(-r*2.9)*(0.004+0.17*plumeMask)*params.wash;
+  let coreNoise=0.84+0.16*n3;
+  let core=exp(-r*r*(245.0/max(params.core,0.22)))*coreNoise;
+  let satellite=warped-vec2<f32>(
+    0.155+0.026*sin(t*0.105+params.seed),
+    0.105*cos(t*0.13+params.seed*0.2)
+  );
+  let satelliteCore=exp(-dot(satellite,satellite)*235.0)*0.24;
+
+  let fibreInk=fineFibres*(0.62+params.density*0.32+energy*0.10)
+              *(0.72+params.filament*0.55);
+  let darkWeb=webField*(0.48+params.density*0.22);
+  let smokeInk=haze*0.34;
+  let inkAmount=(core*2.65+satelliteCore+fibreInk+darkWeb+smokeInk)*params.ink;
+  let ink=clamp(inkAmount,0.0,1.8);
+  let softRatio=clamp((haze*0.62+webField*0.10)/(ink+0.0001),0.0,1.0);
+  let tone=mix(0.009,0.47,softRatio);
+  let alpha=clamp(pow(ink,0.86)*0.60+haze*0.08,0.0,0.88);
   return vec4<f32>(vec3<f32>(tone),alpha);
 }
 </script>
@@ -455,11 +595,16 @@ struct Particle { position:vec4<f32>,velocity:vec4<f32>,previous:vec4<f32>,attri
 struct Params {
   time:f32,dt:f32,aspect:f32,count:f32,low:f32,mid:f32,high:f32,rms:f32,
   turbulence:f32,swirl:f32,spread:f32,persistence:f32,audio:f32,height:f32,width:f32,seed:f32,
-  pulse:f32,density:f32,core:f32,ink:f32,wash:f32,filament:f32,drift:f32,pad:f32,
+  pulse:f32,density:f32,core:f32,ink:f32,wash:f32,filament:f32,drift:f32,web:f32,
 };
 @group(0) @binding(0) var<storage,read> particles:array<Particle>;
 @group(0) @binding(1) var<uniform> params:Params;
-struct VertexOut{@builtin(position) position:vec4<f32>,@location(0) local:vec2<f32>,@location(1) alpha:f32,@location(2) tone:f32,};
+struct VertexOut {
+  @builtin(position) position:vec4<f32>,
+  @location(0) local:vec2<f32>,
+  @location(1) alpha:f32,
+  @location(2) tone:f32,
+};
 fn projectPoint(point:vec3<f32>)->vec3<f32>{
   let ry=0.14*sin(params.time*0.065);
   let x1=point.x*cos(ry)+point.z*sin(ry);
@@ -479,38 +624,112 @@ fn projectPoint(point:vec3<f32>)->vec3<f32>{
   if(vertexIndex==3u){corner=vec2<f32>(-1.0,-1.0);}
   if(vertexIndex==4u){corner=vec2<f32>(1.0,1.0);}
   if(vertexIndex==5u){corner=vec2<f32>(-1.0,1.0);}
-  let radius=max(0.34,p.attributes.x*0.82)*(2.0/max(params.height,1.0))/projected.z;
+  let radius=max(0.28,p.attributes.x*0.68)*(2.0/max(params.height,1.0))/projected.z;
   let clipCentre=vec2<f32>(projected.x/max(params.aspect,0.1),projected.y);
   let clipOffset=vec2<f32>(corner.x*radius/max(params.aspect,0.1),corner.y*radius);
-  let ageIn=smoothstep(0.0,0.45,p.position.w);
-  let ageOut=1.0-smoothstep(p.velocity.w*0.68,p.velocity.w,p.position.w);
+  let ageIn=smoothstep(0.0,0.5,p.position.w);
+  let ageOut=1.0-smoothstep(p.velocity.w*0.72,p.velocity.w,p.position.w);
   let fade=ageIn*ageOut;
   var out:VertexOut;
   out.position=vec4<f32>(clipCentre+clipOffset,0.0,1.0);
   out.local=corner;
-  out.alpha=p.attributes.y*fade*(0.30+params.rms*params.audio*0.2+params.pulse*0.1)/projected.z;
-  out.tone=select(mix(0.025,0.38,p.attributes.z),0.012,p.attributes.z>0.93);
+  out.alpha=p.attributes.y*fade*(0.38+params.rms*params.audio*0.18+params.pulse*0.08)/projected.z;
+  out.tone=select(mix(0.022,0.36,p.attributes.z),0.012,p.attributes.z>0.94);
   return out;
 }
 @fragment fn fs(in:VertexOut)->@location(0) vec4<f32>{
   let r2=dot(in.local,in.local);
-  let gaussian=exp(-r2*5.5);
-  let edge=1.0-smoothstep(0.55,1.0,r2);
-  let alpha=clamp(in.alpha*gaussian*edge,0.0,0.12);
+  let gaussian=exp(-r2*4.8);
+  let edge=1.0-smoothstep(0.62,1.0,r2);
+  let alpha=clamp(in.alpha*gaussian*edge,0.0,0.10);
   return vec4<f32>(vec3<f32>(in.tone),alpha);
 }
 </script>
 
+<script type="text/wgsl" id="membrane-shader">
+struct Particle { position:vec4<f32>,velocity:vec4<f32>,previous:vec4<f32>,attributes:vec4<f32>, };
+struct Params {
+  time:f32,dt:f32,aspect:f32,count:f32,low:f32,mid:f32,high:f32,rms:f32,
+  turbulence:f32,swirl:f32,spread:f32,persistence:f32,audio:f32,height:f32,width:f32,seed:f32,
+  pulse:f32,density:f32,core:f32,ink:f32,wash:f32,filament:f32,drift:f32,web:f32,
+};
+@group(0) @binding(0) var<storage,read> particles:array<Particle>;
+@group(0) @binding(1) var<uniform> params:Params;
+struct VertexOut {
+  @builtin(position) position:vec4<f32>,
+  @location(0) side:f32,
+  @location(1) alpha:f32,
+  @location(2) tone:f32,
+};
+fn projectPoint(point:vec3<f32>)->vec3<f32>{
+  let ry=0.14*sin(params.time*0.065);
+  let x1=point.x*cos(ry)+point.z*sin(ry);
+  let z1=-point.x*sin(ry)+point.z*cos(ry);
+  let rx=0.075*cos(params.time*0.052);
+  let y1=point.y*cos(rx)-z1*sin(rx);
+  let z2=point.y*sin(rx)+z1*cos(rx);
+  let depth=max(1.45,3.55+z2);
+  return vec3<f32>(vec2<f32>(x1,y1)*(2.25/depth),depth);
+}
+@vertex fn vs(@builtin(vertex_index) vertexIndex:u32,@builtin(instance_index) instanceIndex:u32)->VertexOut{
+  let family=instanceIndex/15u;
+  let link=instanceIndex%15u;
+  let base=family*64u+link*4u;
+  let pa=particles[base];
+  let pb=particles[base+4u];
+  let a3=projectPoint(pa.position.xyz);
+  let b3=projectPoint(pb.position.xyz);
+  let a=a3.xy;
+  let b=b3.xy;
+  let delta=b-a;
+  let distance=length(delta);
+  let direction=select(vec2<f32>(1.0,0.0),delta/max(distance,0.000001),distance>0.000001);
+  let normal=vec2<f32>(-direction.y,direction.x);
+  var along=0.0;
+  var side=1.0;
+  if(vertexIndex==1u){along=1.0;side=1.0;}
+  if(vertexIndex==2u){along=1.0;side=-1.0;}
+  if(vertexIndex==3u){along=0.0;side=1.0;}
+  if(vertexIndex==4u){along=1.0;side=-1.0;}
+  if(vertexIndex==5u){along=0.0;side=-1.0;}
+  let centre=mix(a,b,along);
+  let depth=mix(a3.z,b3.z,along);
+  let group=pa.attributes.z;
+  let band=smoothstep(0.13,0.22,group)*(1.0-smoothstep(0.43,0.52,group));
+  let ageA=clamp(pa.position.w/max(pa.velocity.w,0.001),0.0,1.0);
+  let ageB=clamp(pb.position.w/max(pb.velocity.w,0.001),0.0,1.0);
+  let lifeFade=1.0-smoothstep(0.70,1.0,max(ageA,ageB));
+  let spanFade=exp(-distance*3.2);
+  let width=(0.12+params.web*0.11)*(2.0/max(params.height,1.0))/depth;
+  let projected=centre+normal*side*width;
+  let clip=vec2<f32>(projected.x/max(params.aspect,0.1),projected.y);
+  var out:VertexOut;
+  out.position=vec4<f32>(clip,0.0,1.0);
+  out.side=side;
+  out.alpha=band*lifeFade*spanFade*params.web*(0.055+params.density*0.012)/depth;
+  out.tone=0.075;
+  return out;
+}
+@fragment fn fs(in:VertexOut)->@location(0) vec4<f32>{
+  let edge=1.0-smoothstep(0.08,1.0,abs(in.side));
+  return vec4<f32>(vec3<f32>(in.tone),clamp(in.alpha*(0.12+edge*0.88),0.0,0.08));
+}
+</script>
 <script type="text/wgsl" id="particle-shader">
 struct Particle { position:vec4<f32>,velocity:vec4<f32>,previous:vec4<f32>,attributes:vec4<f32>, };
 struct Params {
   time:f32,dt:f32,aspect:f32,count:f32,low:f32,mid:f32,high:f32,rms:f32,
   turbulence:f32,swirl:f32,spread:f32,persistence:f32,audio:f32,height:f32,width:f32,seed:f32,
-  pulse:f32,density:f32,core:f32,ink:f32,wash:f32,filament:f32,drift:f32,pad:f32,
+  pulse:f32,density:f32,core:f32,ink:f32,wash:f32,filament:f32,drift:f32,web:f32,
 };
 @group(0) @binding(0) var<storage,read> particles:array<Particle>;
 @group(0) @binding(1) var<uniform> params:Params;
-struct VertexOut{@builtin(position) position:vec4<f32>,@location(0) side:f32,@location(1) alpha:f32,@location(2) tone:f32,};
+struct VertexOut {
+  @builtin(position) position:vec4<f32>,
+  @location(0) side:f32,
+  @location(1) alpha:f32,
+  @location(2) tone:f32,
+};
 fn projectPoint(point:vec3<f32>)->vec3<f32>{
   let ry=0.14*sin(params.time*0.065);
   let x1=point.x*cos(ry)+point.z*sin(ry);
@@ -528,10 +747,12 @@ fn projectPoint(point:vec3<f32>)->vec3<f32>{
   let projectedB=projectPoint(p.position.xyz);
   let a=projectedA.xy;
   let b=projectedB.xy;
-  let delta=b-a;let distance=length(delta);
+  let delta=b-a;
+  let distance=length(delta);
   let direction=select(vec2<f32>(1.0,0.0),delta/max(distance,0.000001),distance>0.000001);
   let normal=vec2<f32>(-direction.y,direction.x);
-  var along=0.0;var side=1.0;
+  var along=0.0;
+  var side=1.0;
   if(vertexIndex==1u){along=1.0;side=1.0;}
   if(vertexIndex==2u){along=1.0;side=-1.0;}
   if(vertexIndex==3u){along=0.0;side=1.0;}
@@ -539,23 +760,24 @@ fn projectPoint(point:vec3<f32>)->vec3<f32>{
   if(vertexIndex==5u){along=0.0;side=-1.0;}
   let centre=mix(a,b,along);
   let depth=mix(projectedA.z,projectedB.z,along);
-  let halfWidth=(p.attributes.x+params.high*params.audio*0.18)*(2.0/max(params.height,1.0))/depth;
-  let ageIn=smoothstep(0.0,0.45,p.position.w);
-  let ageOut=1.0-smoothstep(p.velocity.w*0.68,p.velocity.w,p.position.w);
+  let halfWidth=(p.attributes.x*(0.72+params.filament*0.30)
+                +params.high*params.audio*0.035)
+                *(2.0/max(params.height,1.0))/depth;
+  let ageIn=smoothstep(0.0,0.5,p.position.w);
+  let ageOut=1.0-smoothstep(p.velocity.w*0.72,p.velocity.w,p.position.w);
   let fade=ageIn*ageOut;
-  let offset=normal*side*halfWidth;
-  let projected=centre+offset;
+  let projected=centre+normal*side*halfWidth;
   let clip=vec2<f32>(projected.x/max(params.aspect,0.1),projected.y);
   var out:VertexOut;
   out.position=vec4<f32>(clip,0.0,1.0);
   out.side=side;
-  out.alpha=p.attributes.y*fade*(0.76+params.rms*params.audio*0.55+params.pulse*0.14)/depth;
-  out.tone=select(mix(0.025,0.42,p.attributes.z),0.012,p.attributes.z>0.93);
+  out.alpha=p.attributes.y*fade*(0.78+params.rms*params.audio*0.28+params.pulse*0.08)/depth;
+  out.tone=select(mix(0.012,0.34,p.attributes.z),0.008,p.attributes.z>0.94);
   return out;
 }
 @fragment fn fs(in:VertexOut)->@location(0) vec4<f32>{
-  let edge=1.0-smoothstep(0.16,1.0,abs(in.side));
-  let alpha=clamp(in.alpha*(0.10+edge*0.90),0.0,0.26);
+  let edge=1.0-smoothstep(0.12,1.0,abs(in.side));
+  let alpha=clamp(in.alpha*(0.08+edge*0.92),0.0,0.23);
   return vec4<f32>(vec3<f32>(in.tone),alpha);
 }
 </script>
@@ -578,20 +800,20 @@ const $=id=>document.getElementById(id);
 const canvas=$("art"),overlay=$("overlay"),audioEl=$("audio");
 const ratioMap={portrait:{w:720,h:1280},square:{w:720,h:720},landscape:{w:1280,h:720}};
 const presets={
-  filament:{density:1.25,turbulence:1.05,spread:1.15,core:1.0,filament:.68,wash:.75,persistence:.997,swirl:.95},
-  bloom:{density:1.65,turbulence:1.42,spread:1.75,core:1.32,filament:.82,wash:1.08,persistence:.996,swirl:1.25},
-  tangle:{density:1.1,turbulence:1.95,spread:.92,core:.78,filament:.95,wash:.52,persistence:.998,swirl:1.65}
+  filament:{density:1.6,turbulence:.88,spread:1.32,core:1.18,filament:.88,wash:.84,persistence:.996,swirl:.82,web:.38},
+  bloom:{density:1.85,turbulence:1.22,spread:1.62,core:1.36,filament:.92,wash:1.05,persistence:.995,swirl:1.12,web:.55},
+  tangle:{density:1.4,turbulence:1.55,spread:1.0,core:1.02,filament:.98,wash:.66,persistence:.997,swirl:1.42,web:.72}
 };
 let ratioMode="portrait",resolutionScale=720,device,context,canvasFormat,sampler;
-let simulationPipeline,feedbackPipeline,fieldPipeline,splatPipeline,particlePipeline,presentPipeline;
-let paramsBuffer,particleBuffer,computeBindGroup,particleBindGroup,fieldBindGroup;
+let simulationPipeline,feedbackPipeline,fieldPipeline,splatPipeline,membranePipeline,particlePipeline,presentPipeline;
+let paramsBuffer,particleBuffer,computeBindGroup,particleBindGroup,membraneBindGroup,fieldBindGroup;
 let trailTextures=[],feedbackBindGroups=[],presentBindGroups=[],readIndex=0;
-let particleCount=180000,seedValue=Math.random()*1000;
+let particleCount=220000,seedValue=Math.random()*1000;
 let audioContext,audioSource,analyser,mediaDestination,frequencyData,timeData;
 let audioSmooth={low:0,mid:0,high:0,rms:0},audioPulse=0,lastLow=0;
 let audioUrl=null,recorder=null,recordingChunks=[];
 let frameTime=0,lastFrame=0,running=false;
-const settings={density:1.25,turbulence:1.05,spread:1.15,core:1.0,filament:.68,wash:.75,persistence:.997,audio:.9,swirl:.95,drift:1.0,ink:1.0};
+const settings={density:1.6,turbulence:.88,spread:1.32,core:1.18,filament:.88,wash:.84,persistence:.996,audio:.68,swirl:.82,drift:1.0,ink:1.0,web:.38};
 const fmt=n=>Number(n).toLocaleString("en-GB");
 function status(message,ok){$("gpuStatus").textContent=message;$("gpuStatus").style.color=ok?"#43835e":"#888";}
 function showError(message){overlay.classList.remove("hidden");overlay.innerHTML="<div class='overlay-card'><strong>WebGPU could not start</strong>"+message+"</div>";status("GPU unavailable",false);}
@@ -599,11 +821,84 @@ function outputSize(){const r=ratioMap[ratioMode];return ratioMode==="portrait"?
 function clearTrails(){if(!device||!trailTextures.length)return;const enc=device.createCommandEncoder();for(const tex of trailTextures){const p=enc.beginRenderPass({colorAttachments:[{view:tex.createView(),loadOp:"clear",storeOp:"store",clearValue:{r:1,g:1,b:1,a:1}}]});p.end();}device.queue.submit([enc.finish()]);}
 function createTargets(){const size=outputSize();canvas.width=size.w;canvas.height=size.h;canvas.style.aspectRatio=size.w+" / "+size.h;$("stageResolution").textContent=size.w+" × "+size.h;if(!device)return;for(const t of trailTextures)t.destroy();trailTextures=[0,1].map(()=>device.createTexture({size:{width:size.w,height:size.h,depthOrArrayLayers:1},format:"rgba8unorm",usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING}));const fl=feedbackPipeline.getBindGroupLayout(0),pl=presentPipeline.getBindGroupLayout(0);feedbackBindGroups=trailTextures.map(t=>device.createBindGroup({layout:fl,entries:[{binding:0,resource:t.createView()},{binding:1,resource:sampler},{binding:2,resource:{buffer:paramsBuffer}}]}));presentBindGroups=trailTextures.map(t=>device.createBindGroup({layout:pl,entries:[{binding:0,resource:t.createView()},{binding:1,resource:sampler}]}));readIndex=0;clearTrails();}
 function initialParticleData(count){const data=new Float32Array(count*16);for(let i=0;i<count;i++){data[i*16+3]=-1;data[i*16+11]=(i*.61803398875)%1;}return data;}
-function createParticles(){if(!device)return;if(particleBuffer)particleBuffer.destroy();particleBuffer=device.createBuffer({size:particleCount*64,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST});device.queue.writeBuffer(particleBuffer,0,initialParticleData(particleCount));computeBindGroup=device.createBindGroup({layout:simulationPipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:particleBuffer}},{binding:1,resource:{buffer:paramsBuffer}}]});particleBindGroup=device.createBindGroup({layout:particlePipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:particleBuffer}},{binding:1,resource:{buffer:paramsBuffer}}]});$("particlesOut").textContent=fmt(particleCount);$("particleReadout").textContent=fmt(particleCount);}
+function createParticles(){if(!device)return;if(particleBuffer)particleBuffer.destroy();particleBuffer=device.createBuffer({size:particleCount*64,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST});device.queue.writeBuffer(particleBuffer,0,initialParticleData(particleCount));const entries=[{binding:0,resource:{buffer:particleBuffer}},{binding:1,resource:{buffer:paramsBuffer}}];computeBindGroup=device.createBindGroup({layout:simulationPipeline.getBindGroupLayout(0),entries});particleBindGroup=device.createBindGroup({layout:particlePipeline.getBindGroupLayout(0),entries});membraneBindGroup=device.createBindGroup({layout:membranePipeline.getBindGroupLayout(0),entries});$("particlesOut").textContent=fmt(particleCount);$("particleReadout").textContent=fmt(particleCount);}
 function resetField(newSeed){if(newSeed)seedValue=Math.random()*1000;if(device){device.queue.writeBuffer(particleBuffer,0,initialParticleData(particleCount));clearTrails();}}
-async function initGPU(){if(!navigator.gpu){showError("This browser does not expose WebGPU. Use an up-to-date Chrome or Edge build with hardware acceleration enabled.");return;}try{const adapter=await navigator.gpu.requestAdapter({powerPreference:"high-performance"});if(!adapter){showError("No compatible GPU adapter was found.");return;}device=await adapter.requestDevice();device.lost.then(()=>showError("The GPU device was lost. Reload to initialise it again."));context=canvas.getContext("webgpu");canvasFormat=navigator.gpu.getPreferredCanvasFormat();context.configure({device,format:canvasFormat,alphaMode:"opaque"});paramsBuffer=device.createBuffer({size:96,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});sampler=device.createSampler({magFilter:"linear",minFilter:"linear",addressModeU:"clamp-to-edge",addressModeV:"clamp-to-edge"});const module=id=>device.createShaderModule({code:$(id).textContent});const sim=module("simulation-shader"),feedback=module("feedback-shader"),field=module("field-shader"),splat=module("splat-shader"),particle=module("particle-shader"),present=module("present-shader");for(const m of [sim,feedback,field,splat,particle,present]){const info=await m.getCompilationInfo();const errors=info.messages.filter(x=>x.type==="error");if(errors.length)throw new Error(errors.map(x=>x.message+" (line "+x.lineNum+")").join("\n"));}simulationPipeline=device.createComputePipeline({layout:"auto",compute:{module:sim,entryPoint:"main"}});feedbackPipeline=device.createRenderPipeline({layout:"auto",vertex:{module:feedback,entryPoint:"vs"},fragment:{module:feedback,entryPoint:"fs",targets:[{format:"rgba8unorm"}]},primitive:{topology:"triangle-list"}});const blend={color:{srcFactor:"src-alpha",dstFactor:"one-minus-src-alpha",operation:"add"},alpha:{srcFactor:"one",dstFactor:"one-minus-src-alpha",operation:"add"}};fieldPipeline=device.createRenderPipeline({layout:"auto",vertex:{module:field,entryPoint:"vs"},fragment:{module:field,entryPoint:"fs",targets:[{format:"rgba8unorm",blend}]},primitive:{topology:"triangle-list"}});splatPipeline=device.createRenderPipeline({layout:"auto",vertex:{module:splat,entryPoint:"vs"},fragment:{module:splat,entryPoint:"fs",targets:[{format:"rgba8unorm",blend}]},primitive:{topology:"triangle-list"}});particlePipeline=device.createRenderPipeline({layout:"auto",vertex:{module:particle,entryPoint:"vs"},fragment:{module:particle,entryPoint:"fs",targets:[{format:"rgba8unorm",blend}]},primitive:{topology:"triangle-list"}});presentPipeline=device.createRenderPipeline({layout:"auto",vertex:{module:present,entryPoint:"vs"},fragment:{module:present,entryPoint:"fs",targets:[{format:canvasFormat}]},primitive:{topology:"triangle-list"}});fieldBindGroup=device.createBindGroup({layout:fieldPipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:paramsBuffer}}]});createParticles();createTargets();overlay.classList.add("hidden");status("WebGPU active · " + fmt(particleCount) + " particles",true);running=true;lastFrame=performance.now()/1000;requestAnimationFrame(renderFrame);}catch(e){console.error(e);showError(String(e.message||e).replace(/\n/g,"<br>"));}}
+async function initGPU(){
+  if(!navigator.gpu){showError("This browser does not expose WebGPU. Use an up-to-date Chrome or Edge build with hardware acceleration enabled.");return;}
+  try{
+    const adapter=await navigator.gpu.requestAdapter({powerPreference:"high-performance"});
+    if(!adapter){showError("No compatible GPU adapter was found.");return;}
+    device=await adapter.requestDevice();
+    device.lost.then(()=>showError("The GPU device was lost. Reload to initialise it again."));
+    context=canvas.getContext("webgpu");
+    canvasFormat=navigator.gpu.getPreferredCanvasFormat();
+    context.configure({device,format:canvasFormat,alphaMode:"opaque"});
+    paramsBuffer=device.createBuffer({size:96,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
+    sampler=device.createSampler({magFilter:"linear",minFilter:"linear",addressModeU:"clamp-to-edge",addressModeV:"clamp-to-edge"});
+    const module=id=>device.createShaderModule({code:$(id).textContent});
+    const sim=module("simulation-shader");
+    const feedback=module("feedback-shader");
+    const field=module("field-shader");
+    const splat=module("splat-shader");
+    const membrane=module("membrane-shader");
+    const particle=module("particle-shader");
+    const present=module("present-shader");
+    for(const m of [sim,feedback,field,splat,membrane,particle,present]){
+      const info=await m.getCompilationInfo();
+      const errors=info.messages.filter(x=>x.type==="error");
+      if(errors.length)throw new Error(errors.map(x=>x.message+" (line "+x.lineNum+")").join("\n"));
+    }
+    simulationPipeline=device.createComputePipeline({layout:"auto",compute:{module:sim,entryPoint:"main"}});
+    feedbackPipeline=device.createRenderPipeline({layout:"auto",vertex:{module:feedback,entryPoint:"vs"},fragment:{module:feedback,entryPoint:"fs",targets:[{format:"rgba8unorm"}]},primitive:{topology:"triangle-list"}});
+    const blend={color:{srcFactor:"src-alpha",dstFactor:"one-minus-src-alpha",operation:"add"},alpha:{srcFactor:"one",dstFactor:"one-minus-src-alpha",operation:"add"}};
+    fieldPipeline=device.createRenderPipeline({layout:"auto",vertex:{module:field,entryPoint:"vs"},fragment:{module:field,entryPoint:"fs",targets:[{format:"rgba8unorm",blend}]},primitive:{topology:"triangle-list"}});
+    splatPipeline=device.createRenderPipeline({layout:"auto",vertex:{module:splat,entryPoint:"vs"},fragment:{module:splat,entryPoint:"fs",targets:[{format:"rgba8unorm",blend}]},primitive:{topology:"triangle-list"}});
+    membranePipeline=device.createRenderPipeline({layout:"auto",vertex:{module:membrane,entryPoint:"vs"},fragment:{module:membrane,entryPoint:"fs",targets:[{format:"rgba8unorm",blend}]},primitive:{topology:"triangle-list"}});
+    particlePipeline=device.createRenderPipeline({layout:"auto",vertex:{module:particle,entryPoint:"vs"},fragment:{module:particle,entryPoint:"fs",targets:[{format:"rgba8unorm",blend}]},primitive:{topology:"triangle-list"}});
+    presentPipeline=device.createRenderPipeline({layout:"auto",vertex:{module:present,entryPoint:"vs"},fragment:{module:present,entryPoint:"fs",targets:[{format:canvasFormat}]},primitive:{topology:"triangle-list"}});
+    fieldBindGroup=device.createBindGroup({layout:fieldPipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:paramsBuffer}}]});
+    createParticles();
+    createTargets();
+    overlay.classList.add("hidden");
+    status("WebGPU active · "+fmt(particleCount)+" particles + filament web",true);
+    running=true;
+    lastFrame=performance.now()/1000;
+    requestAnimationFrame(renderFrame);
+  }catch(e){console.error(e);showError(String(e.message||e).replace(/\n/g,"<br>"));}
+}
 function readAudio(){if(!analyser||!frequencyData||!timeData){audioSmooth.low*=.94;audioSmooth.mid*=.94;audioSmooth.high*=.94;audioSmooth.rms*=.94;audioPulse*=.88;return;}analyser.getByteFrequencyData(frequencyData);analyser.getByteTimeDomainData(timeData);const nyquist=audioContext.sampleRate/2;const band=(lo,hi)=>{const a=Math.max(1,Math.floor(lo/nyquist*frequencyData.length)),b=Math.min(frequencyData.length-1,Math.ceil(hi/nyquist*frequencyData.length));let s=0,n=0;for(let i=a;i<=b;i++){s+=frequencyData[i]/255;n++;}return n?s/n:0;};let sum=0;for(let i=0;i<timeData.length;i++){const v=(timeData[i]-128)/128;sum+=v*v;}const raw={low:band(35,160),mid:band(160,2200),high:band(2200,11000),rms:Math.sqrt(sum/timeData.length)};const rise=Math.max(0,raw.low-lastLow);lastLow=raw.low;audioPulse=Math.max(audioPulse*.88,Math.min(1.0,rise*7.0));audioSmooth.low+=(raw.low-audioSmooth.low)*.19;audioSmooth.mid+=(raw.mid-audioSmooth.mid)*.16;audioSmooth.high+=(raw.high-audioSmooth.high)*.2;audioSmooth.rms+=(raw.rms-audioSmooth.rms)*.16;}
-function renderFrame(ms){if(!running||!device)return;const now=ms/1000,dt=Math.min(Math.max(now-lastFrame,.001),.033);lastFrame=now;frameTime+=dt;readAudio();const size=outputSize();const values=new Float32Array([frameTime,dt,size.w/size.h,particleCount,audioSmooth.low,audioSmooth.mid,audioSmooth.high,audioSmooth.rms,settings.turbulence,settings.swirl,settings.spread,settings.persistence,settings.audio,size.h,size.w,seedValue,audioPulse,settings.density,settings.core,settings.ink,settings.wash,settings.filament,settings.drift,0]);device.queue.writeBuffer(paramsBuffer,0,values);const write=1-readIndex;const enc=device.createCommandEncoder();const cp=enc.beginComputePass();cp.setPipeline(simulationPipeline);cp.setBindGroup(0,computeBindGroup);cp.dispatchWorkgroups(Math.ceil(particleCount/256));cp.end();const fade=enc.beginRenderPass({colorAttachments:[{view:trailTextures[write].createView(),loadOp:"clear",storeOp:"store",clearValue:{r:1,g:1,b:1,a:1}}]});fade.setPipeline(feedbackPipeline);fade.setBindGroup(0,feedbackBindGroups[readIndex]);fade.draw(3);fade.end();const art=enc.beginRenderPass({colorAttachments:[{view:trailTextures[write].createView(),loadOp:"load",storeOp:"store"}]});art.setPipeline(fieldPipeline);art.setBindGroup(0,fieldBindGroup);art.draw(3);art.setPipeline(splatPipeline);art.setBindGroup(0,particleBindGroup);art.draw(6,particleCount);art.setPipeline(particlePipeline);art.setBindGroup(0,particleBindGroup);art.draw(6,particleCount);art.end();const present=enc.beginRenderPass({colorAttachments:[{view:context.getCurrentTexture().createView(),loadOp:"clear",storeOp:"store",clearValue:{r:1,g:1,b:1,a:1}}]});present.setPipeline(presentPipeline);present.setBindGroup(0,presentBindGroups[write]);present.draw(3);present.end();device.queue.submit([enc.finish()]);readIndex=write;requestAnimationFrame(renderFrame);}
+function renderFrame(ms){
+  if(!running||!device)return;
+  const now=ms/1000,dt=Math.min(Math.max(now-lastFrame,.001),.033);
+  lastFrame=now;frameTime+=dt;readAudio();
+  const size=outputSize();
+  const values=new Float32Array([
+    frameTime,dt,size.w/size.h,particleCount,
+    audioSmooth.low,audioSmooth.mid,audioSmooth.high,audioSmooth.rms,
+    settings.turbulence,settings.swirl,settings.spread,settings.persistence,
+    settings.audio,size.h,size.w,seedValue,audioPulse,settings.density,
+    settings.core,settings.ink,settings.wash,settings.filament,settings.drift,settings.web
+  ]);
+  device.queue.writeBuffer(paramsBuffer,0,values);
+  const write=1-readIndex;
+  const enc=device.createCommandEncoder();
+  const cp=enc.beginComputePass();
+  cp.setPipeline(simulationPipeline);cp.setBindGroup(0,computeBindGroup);
+  cp.dispatchWorkgroups(Math.ceil(particleCount/256));cp.end();
+  const fade=enc.beginRenderPass({colorAttachments:[{view:trailTextures[write].createView(),loadOp:"clear",storeOp:"store",clearValue:{r:1,g:1,b:1,a:1}}]});
+  fade.setPipeline(feedbackPipeline);fade.setBindGroup(0,feedbackBindGroups[readIndex]);fade.draw(3);fade.end();
+  const art=enc.beginRenderPass({colorAttachments:[{view:trailTextures[write].createView(),loadOp:"load",storeOp:"store"}]});
+  art.setPipeline(fieldPipeline);art.setBindGroup(0,fieldBindGroup);art.draw(3);
+  art.setPipeline(splatPipeline);art.setBindGroup(0,particleBindGroup);art.draw(6,particleCount);
+  art.setPipeline(membranePipeline);art.setBindGroup(0,membraneBindGroup);art.draw(6,Math.floor(particleCount/64)*15);
+  art.setPipeline(particlePipeline);art.setBindGroup(0,particleBindGroup);art.draw(6,particleCount);
+  art.end();
+  const present=enc.beginRenderPass({colorAttachments:[{view:context.getCurrentTexture().createView(),loadOp:"clear",storeOp:"store",clearValue:{r:1,g:1,b:1,a:1}}]});
+  present.setPipeline(presentPipeline);present.setBindGroup(0,presentBindGroups[write]);present.draw(3);present.end();
+  device.queue.submit([enc.finish()]);
+  readIndex=write;
+  requestAnimationFrame(renderFrame);
+}
 async function ensureAudio(){if(!audioContext){audioContext=new(window.AudioContext||window.webkitAudioContext)();analyser=audioContext.createAnalyser();analyser.fftSize=2048;analyser.smoothingTimeConstant=.78;frequencyData=new Uint8Array(analyser.frequencyBinCount);timeData=new Uint8Array(analyser.fftSize);audioSource=audioContext.createMediaElementSource(audioEl);mediaDestination=audioContext.createMediaStreamDestination();audioSource.connect(analyser);analyser.connect(audioContext.destination);analyser.connect(mediaDestination);}if(audioContext.state==="suspended")await audioContext.resume();}
 async function toggleAudio(){if(!audioEl.src){$("audioStatus").textContent="Choose an MP3 first";return;}try{await ensureAudio();if(audioEl.paused){await audioEl.play();$("playBtn").textContent="Pause audio";$("audioState").textContent="Playing";$("audioDot").classList.add("live");$("audioStatus").textContent="Bass, mids and high frequencies are driving the ink";}else{audioEl.pause();$("playBtn").textContent="Play audio";$("audioState").textContent="Paused";$("audioDot").classList.remove("live");$("audioStatus").textContent="Track paused · field continues";}}catch(e){$("audioStatus").textContent="Audio could not start: "+e.message;}}
 function loadAudio(file){if(!file)return;if(!file.type.startsWith("audio/")&&!/\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(file.name)){$("audioStatus").textContent="Please choose an audio file";return;}if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=URL.createObjectURL(file);audioEl.pause();audioEl.src=audioUrl;audioEl.load();$("trackName").textContent=file.name;$("audioState").textContent="Ready";$("audioStatus").textContent="Track loaded · press Play audio";$("playBtn").disabled=false;$("playBtn").textContent="Play audio";$("audioDot").classList.remove("live");}
@@ -617,7 +912,7 @@ function startRecording(){if(!canvas.captureStream||!window.MediaRecorder){$("au
 function stopRecording(){if(recorder&&recorder.state!=="inactive")recorder.stop();}
 $("audioFile").addEventListener("change",e=>loadAudio(e.target.files[0]));$("playBtn").addEventListener("click",toggleAudio);$("pauseBtn").addEventListener("click",pauseField);$("seedBtn").addEventListener("click",()=>resetField(true));$("resetBtn").addEventListener("click",()=>resetField(false));$("recordBtn").addEventListener("click",()=>recorder?stopRecording():startRecording());$("stillBtn").addEventListener("click",saveStill);
 $("particles").addEventListener("input",e=>$("particlesOut").textContent=fmt(Number(e.target.value)));$("particles").addEventListener("change",e=>{particleCount=Number(e.target.value);if(device){createParticles();resetField(false);status("WebGPU active · "+fmt(particleCount)+" particles",true);}});
-["density","turbulence","spread","core","filament","wash","persistence","audioInfluence"].forEach(id=>$(id).addEventListener("input",e=>setSetting(id,e.target.value)));
+["density","turbulence","spread","core","filament","wash","web","persistence","audioInfluence"].forEach(id=>$(id).addEventListener("input",e=>setSetting(id,e.target.value)));
 $("presets").addEventListener("click",e=>{const b=e.target.closest("button[data-preset]");if(b)applyPreset(b.dataset.preset);});$("ratioButtons").addEventListener("click",e=>{const b=e.target.closest("button[data-ratio]");if(b)setRatio(b.dataset.ratio);});$("resolution").addEventListener("change",e=>setResolution(e.target.value));
 $("fullscreenBtn").addEventListener("click",()=>{const el=$("stage");if(!document.fullscreenElement&&el.requestFullscreen)el.requestFullscreen();else if(document.exitFullscreen)document.exitFullscreen();});
 const dropzone=$("dropzone");dropzone.addEventListener("dragover",e=>{e.preventDefault();dropzone.classList.add("drag");});dropzone.addEventListener("dragleave",()=>dropzone.classList.remove("drag"));dropzone.addEventListener("drop",e=>{e.preventDefault();dropzone.classList.remove("drag");const f=Array.from(e.dataTransfer.files).find(x=>x.type.startsWith("audio/")||/\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(x.name));loadAudio(f);});
