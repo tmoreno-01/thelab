@@ -579,7 +579,7 @@ function init(){
 function resize(){
  let r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=Math.max(2,Math.round(r.width*d));canvas.height=Math.max(2,Math.round(r.height*d));
  // Identical crisp lattice pitch in preview and fullscreen; preserve current state.
- let k=Math.min(1,(quality?2300:1500)/canvas.width,(quality?1400:950)/canvas.height),density=Math.sqrt(7.2)*(resetHD?1.5:1)*(serpentineStudy?Math.sqrt(1.1):1);let nw=Math.max(30,Math.round(canvas.width*k*density/5.07)),nh=Math.max(24,Math.round(canvas.height*k*density/5.07));
+ let k=Math.min(1,(quality?2300:1500)/canvas.width,(quality?1400:950)/canvas.height),density=Math.sqrt(7.2)*(v02OrthogonalMotion?2.25:resetHD?1.5:1)*(serpentineStudy?Math.sqrt(1.1):1);let nw=Math.max(30,Math.round(canvas.width*k*density/5.07)),nh=Math.max(24,Math.round(canvas.height*k*density/5.07));
  // The simulation lattice is born once in the preview. Fullscreen and later viewport
  // resizes only change the display surface: never rebuild the live field, agents,
  // pigment roots, feedback regions or GPU history textures.
@@ -1335,6 +1335,7 @@ function sense(){
 }
 
 // RESET MOTION SYSTEM ---------------------------------------------------------
+// RESET 007–009: large diagonal sweeps are excluded; broad motion fields stay cardinal and compact.
 // Independent, memory-bearing movement agents travel through the existing
 // binary structure. Their paths are orthogonal, spatially distributed and
 // deliberately unlike a full-frame feedback displacement.
