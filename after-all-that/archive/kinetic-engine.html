@@ -1024,7 +1024,7 @@ function serpentineFindStart(){
 function serpentineCreateAgent(){
  const p=serpentineFindStart(),family=resetProfile.colours.slice(),colourIndex=R(family.length);
  serpentineEvents++;
- return {id:serpentineEvents,x:p.x,y:p.y,dir:R(4),stepSize:2+R(3),step:3,interval:range(serpentineProfile.tempo[0],serpentineProfile.tempo[1]),
+ return {id:serpentineEvents,x:p.x,y:p.y,dir:R(4),stepSize:Math.floor(range(serpentineProfile.step[0],serpentineProfile.step[1]+1)),step:3,interval:range(serpentineProfile.tempo[0],serpentineProfile.tempo[1]),
   next:age+range(.12,.32),maxSteps:Math.floor(range(serpentineProfile.steps[0],serpentineProfile.steps[1]+1)),steps:0,run:0,maxRun:Math.floor(range(serpentineProfile.run[0],serpentineProfile.run[1]+1)),
   turns:0,stuck:0,tone:binary(field[p.y*W+p.x]),trail:[],born:age,expires:Infinity,finished:false,
   phase:range(0,Math.PI*2),seed:1+R(1000000),strength:serpentineProfile.strength*range(.90,1.08),family,colourIndex,colour:family[colourIndex],energy:range(.78,1.12)};
@@ -1079,11 +1079,11 @@ function updateSerpentineSystem(dt){
   a.colour=a.family[a.colourIndex];a.tone=binary(field[a.y*W+a.x]);
   const node={fromX:oldX,fromY:oldY,x:a.x,y:a.y,dir,distance:step,born:age,life:range(serpentineProfile.trail[0],serpentineProfile.trail[1]),
    width:turned||random()<serpentineProfile.width?1:0,phase:range(0,Math.PI*2),seed:a.seed+a.steps*7919,
-   colour:a.colour,strength:a.strength*range(.88,1.10),displace:Math.floor(range(serpentineProfile.displace[0],serpentineProfile.displace[1]+1)),wobble:range(.15,.85),turned};
+   colour:a.colour,strength:a.strength*clamp(a.energy,.72,1.16)*range(.88,1.10),displace:Math.floor(range(serpentineProfile.displace[0],serpentineProfile.displace[1]+1)),wobble:range(.15,.85),turned};
   a.trail.push(node);if(a.trail.length>serpentineProfile.maxTrail)a.trail.shift();
   for(let k=0;k<=step;k++){const x=oldX+v[0]*k,y=oldY+v[1]*k;serpentineMemory[resetTile(x,y)]=age;}
   a.steps++;serpentineSteps++;a.energy=clamp(a.energy+(choice.edge-.42)*.10,.55,1.25);
-  a.next=age+a.interval*range(.82,1.18);
+  a.next=age+a.interval*range(.82,1.18)*clamp(1.08-(a.energy-.78)*.22,.78,1.08);
   if(a.steps>=a.maxSteps){a.finished=true;a.expires=age+serpentineProfile.trail[1];}
  }
 }
