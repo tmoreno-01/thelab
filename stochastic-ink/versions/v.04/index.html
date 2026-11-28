@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex,nofollow">
+<title>Stochastic Ink v.04 — LifeAfterLogic Lab</title>
+<link rel="icon" type="image/svg+xml" href="../media/lifeafterlogic-mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--paper:#f6f6f4;--white:#fff;--ink:#151515;--muted:#777873;--line:#e4e4e0;--soft:#f0f0ed}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:"Poppins",Helvetica,Arial,sans-serif}
+body{min-height:100svh}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{min-height:100svh;display:grid;grid-template-rows:82px minmax(0,1fr)}
+.topbar{height:82px;padding:0 25px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:20px;background:rgba(255,255,255,.84)}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit}
+.mark{width:30px;height:30px;display:block}
+.brand-name{font-size:21px;font-weight:700;letter-spacing:-.065em}
+.brand-sub{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-left:4px}
+.top-meta{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+main{min-height:0;display:grid;grid-template-columns:320px minmax(0,1fr);gap:13px;padding:13px}
+.panel{min-height:0;overflow:auto;background:var(--white);border:1px solid var(--line);padding:20px 19px 16px;display:flex;flex-direction:column;gap:17px}
+.eyebrow{font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:35px;line-height:.94;letter-spacing:-2px;font-weight:500;margin:8px 0 0}
+.intro{font-size:11px;line-height:1.6;color:#777970;margin:10px 0 0;max-width:270px}
+.section{border-top:1px solid var(--line);padding-top:13px;display:flex;flex-direction:column;gap:11px}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.section-title{font-size:9px;text-transform:uppercase;letter-spacing:.15em;color:#6d6e68}
+.small-note{font-size:9px;color:#999a94;font-variant-numeric:tabular-nums}
+.dropzone{position:relative;border:1px dashed #c6c7c0;background:#fbfbfa;padding:12px;display:flex;align-items:center;gap:11px;min-height:63px;transition:background .18s,border-color .18s}
+.dropzone.drag{background:#f0f0eb;border-color:#555}
+.drop-icon{width:29px;height:29px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;font-size:16px;flex:0 0 auto}
+.drop-copy{min-width:0;display:flex;flex-direction:column;gap:4px}
+.drop-copy strong{font-size:11px;font-weight:500}
+.drop-copy span{font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:205px}
+.file-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.transport{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}
+.btn{min-height:34px;border:1px solid #d6d7d1;background:#fff;color:#222;padding:0 9px;font-size:9px;letter-spacing:.09em;text-transform:uppercase;transition:background .16s,border .16s}
+.btn:hover{background:#f1f1ed;border-color:#aaa}
+.btn.primary{background:#191919;border-color:#191919;color:#fff}
+.btn.primary:hover{background:#383838}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.wide{width:100%}
+.control{display:flex;flex-direction:column;gap:5px}
+.control-label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:10px}
+.control-label output{font-variant-numeric:tabular-nums;color:#777970}
+input[type=range]{width:100%;height:3px;appearance:none;background:#deded9;outline:none;margin:5px 0 3px}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:#202020;border:0}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#202020;border:0}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.presets button,.segmented button{height:31px;background:#fff;border:1px solid var(--line);font-size:9px;color:#666;letter-spacing:.02em}
+.presets button.active,.segmented button.active{background:#1b1b1b;color:#fff;border-color:#1b1b1b}
+.segmented{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.select{width:100%;height:33px;border:1px solid var(--line);background:#fff;padding:0 9px;font-size:10px;color:#222}
+.statusline{display:flex;align-items:center;gap:7px;font-size:9px;color:#777970;min-height:14px}
+.dot{width:6px;height:6px;border-radius:50%;background:#aaa;display:inline-block;flex:0 0 auto}
+.dot.live{background:#3a9a67;box-shadow:0 0 0 3px #e2f2e8}
+.capture-note{font-size:9px;line-height:1.5;color:#898a84}
+.version-list{display:grid;gap:6px}.version-item{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);text-decoration:none;color:inherit;background:#fff}.version-item:hover{background:#f8f8f6;border-color:#c7c7c0}.version-item.current{background:#f7f7f4;border-color:#c8c8c0}.version-no{font-size:9px;letter-spacing:.08em;color:#777}.version-item strong{font-size:10px;font-weight:500}.version-item em{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#888;font-style:normal}.version-item.current em{color:#28754f}.version-note{font-size:9px;line-height:1.5;color:#888;margin:0}
+.stage{min-width:0;min-height:0;position:relative;overflow:hidden;background:#eeeae0;border:1px solid #deded9;display:grid;place-items:center;padding:12px}
+.canvas-wrap{height:100%;width:100%;display:grid;place-items:center;min-height:0}
+#art,#fallbackArt{display:block;height:min(79vh,930px);width:auto;max-width:100%;max-height:100%;aspect-ratio:9 / 16;background:#fff;box-shadow:0 8px 34px rgba(0,0,0,.07)}
+.stage-tools{position:absolute;top:13px;right:13px;display:flex;gap:5px;z-index:2}
+.tool-btn{width:34px;height:34px;border:1px solid rgba(0,0,0,.12);background:rgba(255,255,255,.88);color:#222;font-size:14px}
+.tool-btn:hover{background:#fff}
+.stage-caption{position:absolute;left:16px;bottom:13px;font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#85867f;pointer-events:none}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;text-align:center;pointer-events:none;padding:25px}
+.overlay-card{max-width:275px;background:rgba(255,255,255,.9);padding:14px 17px;border:1px solid rgba(0,0,0,.08);font-size:10px;line-height:1.55;color:#666}
+.overlay-card strong{display:block;font-size:12px;color:#222;font-weight:500;margin-bottom:4px}
+.hidden{display:none!important}
+footer{font-size:8px;color:#999a94;line-height:1.55;margin-top:auto}
+@media(max-width:900px){main{grid-template-columns:285px minmax(0,1fr);padding:9px;gap:9px}.panel{padding:17px 15px}#art,#fallbackArt{height:min(76vh,850px)}}
+@media(max-width:680px){.app{grid-template-rows:72px auto}.topbar{height:72px;padding:0 20px}.top-meta{font-size:8px}main{display:flex;flex-direction:column;padding:8px;gap:8px}.stage{order:0;min-height:58svh;padding:8px}.panel{order:1;overflow:visible}.canvas-wrap{min-height:56svh}#art,#fallbackArt{height:56svh;max-height:660px;max-width:100%}.stage-caption{font-size:8px;left:10px;bottom:9px}.stage-tools{top:8px;right:8px}.tool-btn{width:32px;height:32px}.panel{gap:15px}.intro{max-width:100%}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+<a class="brand" href="../../../" aria-label="LifeAfterLogic lab home">
+<img class="mark" src="../../../media/lifeafterlogic-mark.svg" width="30" height="30" alt="">
+<span class="brand-name">lab</span><span class="brand-sub">Stochastic Ink / 007</span>
+</a>
+<div class="top-meta">Archived build / v.04</div>
+</header>
+<main>
+<aside class="panel">
+<div>
+<div class="eyebrow">Experiment 007 / Audiovisual systems</div>
+<h1>Stochastic<br>Ink</h1>
+<p class="intro">A high-density ink study built from minute particles, hairline fibres and drifting smoke. Fine strands gather into dark knots, branch into irregular meshes and dissolve into open white space.</p>
+</div>
+<section class="section">
+<div class="section-head"><span class="section-title">01 / Audio input</span><span class="small-note" id="audioState">No track</span></div>
+<div class="dropzone" id="dropzone">
+<div class="drop-icon">↥</div><div class="drop-copy"><strong>Drop an MP3 or choose audio</strong><span id="trackName">MP3 · WAV · M4A · OGG</span></div>
+<input class="file-input" id="audioFile" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg">
+</div>
+<div class="transport"><button class="btn primary" id="playBtn" disabled>Play audio</button><button class="btn" id="pauseBtn">Pause field</button><button class="btn" id="seedBtn">New form</button></div>
+<div class="statusline"><span class="dot" id="audioDot"></span><span id="audioStatus">Choose a track to activate audio reactivity</span></div>
+</section>
+<section class="section">
+<div class="section-head"><span class="section-title">02 / Form presets</span><span class="small-note">Starting points</span></div>
+<div class="presets" id="presets"><button class="active" data-preset="filament">Filament</button><button data-preset="bloom">Bloom</button><button data-preset="tangle">Tangle</button></div>
+</section>
+<section class="section">
+<div class="section-head"><span class="section-title">03 / Structure</span><span class="small-note" id="particleReadout">480,000</span></div>
+<div class="control"><label class="control-label" for="particles"><span>Particle amount</span><output id="particlesOut">480,000</output></label><input id="particles" type="range" min="40000" max="800000" step="20000" value="480000"></div>
+<div class="control"><label class="control-label" for="density"><span>Filament density</span><output id="densityOut">1.22</output></label><input id="density" type="range" min="0.4" max="2.4" step=".01" value="1.22"></div>
+<div class="control"><label class="control-label" for="turbulence"><span>Flow distortion</span><output id="turbulenceOut">0.76</output></label><input id="turbulence" type="range" min="0" max="2.5" step=".01" value="0.76"></div>
+<div class="control"><label class="control-label" for="spread"><span>Radial spread</span><output id="spreadOut">1.34</output></label><input id="spread" type="range" min="0.45" max="2.2" step=".01" value="1.34"></div>
+<div class="control"><label class="control-label" for="core"><span>Core density</span><output id="coreOut">0.92</output></label><input id="core" type="range" min="0.35" max="2.0" step=".01" value="0.92"></div>
+<div class="control"><label class="control-label" for="filament"><span>Filament weight</span><output id="filamentOut">0.34</output></label><input id="filament" type="range" min="0" max="1" step=".01" value="0.34"></div>
+<div class="control"><label class="control-label" for="web"><span>Fine mesh detail</span><output id="webOut">0.32</output></label><input id="web" type="range" min="0" max="1" step=".01" value="0.32"></div>
+<div class="control"><label class="control-label" for="wash"><span>Smoke softness</span><output id="washOut">0.78</output></label><input id="wash" type="range" min="0" max="1.5" step=".01" value="0.78"></div>
+<div class="control"><label class="control-label" for="persistence"><span>Flow stability</span><output id="persistenceOut">0.72</output></label><input id="persistence" type="range" min="0" max="1" step=".01" value="0.72"></div>
+<div class="control"><label class="control-label" for="audioInfluence"><span>Audio influence</span><output id="audioInfluenceOut">0.58</output></label><input id="audioInfluence" type="range" min="0" max="2" step=".01" value="0.58"></div>
+</section>
+<section class="section">
+<div class="section-head"><span class="section-title">04 / Composition</span><span class="small-note">Output ratio</span></div>
+<div class="segmented" id="ratioButtons"><button type="button" class="active" data-ratio="portrait">9:16</button><button type="button" data-ratio="square">1:1</button><button type="button" data-ratio="landscape">16:9</button></div>
+<label class="control-label" for="resolution"><span>Render resolution</span></label>
+<select class="select" id="resolution"><option value="720">720 / Preview</option><option value="1080">1080 / High resolution</option></select>
+</section>
+<section class="section">
+<div class="section-head"><span class="section-title">05 / Capture</span><span class="small-note">Live output</span></div>
+<div class="transport"><button class="btn primary" id="recordBtn">Start recording</button><button class="btn" id="stillBtn">Save still</button><button class="btn" id="resetBtn">Reset</button></div>
+<div class="capture-note">Records the live particle canvas at 60fps where supported. Audio is included when a track is playing. Export format depends on browser support.</div>
+<div class="statusline"><span class="dot live" id="gpuDot"></span><span id="gpuStatus">Archived v.04 renderer</span></div>
+</section>
+<section class="section">
+<div class="section-head"><span class="section-title">06 / Version history</span><span class="small-note">Preserved builds</span></div>
+<div class="version-list">
+<div class="version-item current"><span class="version-no">v.04</span><strong>Micro-particle ink renderer</strong><em>Archived</em></div>
+<a class="version-item" href="../v.03/"><span class="version-no">v.03</span><strong>WebGPU filament + membrane study</strong><em>Archived</em></a>
+<a class="version-item" href="../v.02/"><span class="version-no">v.02</span><strong>3D particle system + shader fix</strong><em>Archived</em></a>
+<a class="version-item" href="../v.01/"><span class="version-no">v.01</span><strong>Initial WebGPU build</strong><em>Archived</em></a>
+</div>
+<p class="version-note">Earlier versions remain playable snapshots. The current renderer uses a dedicated micro-particle pass and a visible fallback if the GPU renderer cannot initialise.</p>
+</section>
+<footer>LifeAfterLogic / Stochastic Ink<br>WebGL2 particle rendering and audio analysis run locally in your browser. Audio files are never uploaded.</footer>
+</aside>
+<section class="stage" id="stage">
+<div class="stage-tools"><button class="tool-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Fullscreen">⛶</button></div>
+<div class="canvas-wrap"><canvas id="art" width="720" height="1280"></canvas></div>
+<div class="stage-caption">Ink field / <span id="stageResolution">720 × 1280</span></div>
+<div class="overlay" id="overlay"><div class="overlay-card"><strong>Building the ink field</strong>Compiling the WebGL2 ink and particle shaders…</div></div>
+</section>
+</main>
+</div>
+<audio id="audio" preload="auto"></audio>
+
+<script id="field-vertex" type="x-shader/x-vertex">
+#version 300 es
+precision highp float;
+out vec2 vUv;
+void main(){
+  vec2 p;
+  if(gl_VertexID==0) p=vec2(-1.0,-1.0);
+  else if(gl_VertexID==1) p=vec2(3.0,-1.0);
+  else p=vec2(-1.0,3.0);
+  gl_Position=vec4(p,0.0,1.0);
+  vUv=p*0.5+0.5;
+}
+</script>
+<script id="field-fragment" type="x-shader/x-fragment">
+#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 fragColor;
+uniform vec2 uResolution;
+uniform float uTime,uAspect,uSeed,uChaos,uDensity,uSpread,uCore,uLineWeight,uInk,uWash,uWeb,uAudio,uBass,uMids,uHighs,uSwirl,uDrift,uStability;
+float hash21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float noise2(vec2 p){
+  vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
+  float a=hash21(i),b=hash21(i+vec2(1.0,0.0)),c=hash21(i+vec2(0.0,1.0)),d=hash21(i+vec2(1.0,1.0));
+  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
+}
+float fbm(vec2 p){
+  float v=0.0,a=0.5;mat2 rot=mat2(0.80,-0.60,0.60,0.80);
+  for(int i=0;i<4;i++){v+=a*noise2(p);p=rot*p*2.03+vec2(17.1,9.2);a*=0.5;}
+  return v;
+}
+float plume(vec2 q,vec2 direction,float widthScale,float decay){
+  vec2 side=vec2(-direction.y,direction.x);
+  float along=dot(q,direction),across=dot(q,side);
+  float width=(0.026+max(along,0.0)*0.235)*widthScale;
+  return exp(-pow(across/max(width,0.001),2.0))*smoothstep(-0.14,0.015,along)*exp(-max(along,0.0)*decay);
+}
+float ridge(float n,float power){return pow(clamp(1.0-abs(n*2.0-1.0),0.0,1.0),power);}
+void main(){
+  vec2 p=(vUv-0.5)*vec2(uAspect,1.0)*2.0;
+  float t=uTime*uDrift;
+  float bass=clamp(uBass*uAudio*5.0,0.0,1.0),mids=clamp(uMids*uAudio*4.0,0.0,1.0),highs=clamp(uHighs*uAudio*5.0,0.0,1.0);
+  float energy=clamp(bass*0.52+mids*0.33+highs*0.15,0.0,1.0);
+  float stability=mix(1.28,0.68,clamp(uStability,0.0,1.0));
+  float chaos=uChaos*(0.78+mids*0.75)*stability,density=uDensity*(0.82+highs*0.55);
+  vec2 centre=vec2(0.045*sin(t*0.15+uSeed)+0.028*sin(t*0.067+uSeed*1.7),-0.045+0.043*cos(t*0.12+uSeed*0.83));
+  centre+=vec2(0.024,-0.018)*bass;
+  vec2 q=p-centre;
+  float n0=fbm(q*2.6+vec2(t*0.075,-t*0.052)+uSeed);
+  float n1=fbm(q*4.7+vec2(-t*0.048,t*0.067)+uSeed*1.31);
+  float n2=fbm(q*8.2+vec2(t*0.032,t*0.041)+n0*2.0);
+  float n3=fbm(q*14.4+vec2(-t*0.021,t*0.029)+n1*2.3);
+  vec2 warped=q+vec2(n0-0.5,n1-0.5)*(0.20*chaos+0.055*energy);
+  warped+=vec2(n2-0.5,n0-0.5)*(0.065*chaos)+vec2(n3-0.5,n2-0.5)*(0.018*chaos);
+  float r=length(warped),angle=atan(warped.y,warped.x);
+  float mainAngle=0.10+0.53*sin(t*0.12+uSeed*0.2)+0.17*cos(t*0.064+uSeed*0.31);
+  mainAngle+=uSwirl*0.10*sin(t*0.17+uSeed*0.13);
+  float angularNoise=fbm(vec2(angle*2.35,r*5.0)+vec2(t*0.035,uSeed*0.3));
+  angle-=mainAngle;angle+=(angularNoise-0.5)*(0.95*chaos);
+  float radialEnvelope=exp(-r*(1.42/max(uSpread,0.2)));
+  float linePower=mix(34.0,15.0,clamp(uLineWeight,0.0,1.0));
+  float phaseA=angle*(11.0+density*3.7)+r*(19.0+density*7.0)+(n1-0.5)*8.0+t*0.19;
+  float phaseB=angle*(17.0+density*4.8)-r*(14.0+density*8.5)+(n0-0.5)*11.0-t*0.13;
+  float phaseC=angle*7.0+r*31.0+(n2-0.5)*15.0+t*0.08;
+  float phaseD=angle*(25.0+density*5.5)+r*(43.0+density*9.0)+(n3-0.5)*13.0-t*0.06;
+  float strandsA=pow(clamp(1.0-abs(sin(phaseA)),0.0,1.0),linePower);
+  float strandsB=pow(clamp(1.0-abs(sin(phaseB)),0.0,1.0),linePower+5.0);
+  float strandsC=pow(clamp(1.0-abs(sin(phaseC)),0.0,1.0),linePower+9.0);
+  float strandsD=pow(clamp(1.0-abs(sin(phaseD)),0.0,1.0),linePower+14.0);
+  vec2 dirA=vec2(cos(mainAngle),sin(mainAngle)),dirB=vec2(cos(mainAngle+2.12),sin(mainAngle+2.12)),dirC=vec2(cos(mainAngle-1.46),sin(mainAngle-1.46));
+  float plumeA=plume(warped,dirA,1.0,0.68),plumeB=plume(warped,dirB,0.72,0.94),plumeC=plume(warped,dirC,0.55,1.10);
+  float plumeMask=clamp(max(plumeA,max(plumeB*0.28,plumeC*0.15)),0.0,1.0);
+  float strandEnvelope=radialEnvelope*(0.045+0.955*plumeMask);
+  float ridgeA=ridge(fbm(warped*(22.0+density*8.0)+vec2(t*0.10,-t*0.07)+n0*2.0),8.0);
+  float ridgeB=ridge(fbm(warped*(43.0+density*13.0)+vec2(-t*0.08,t*0.06)+n1*3.0),10.0);
+  float ridgeC=ridge(fbm(warped*(72.0+density*15.0)+vec2(t*0.045,t*0.052)+n2*4.0),12.0);
+  float webA=ridgeA*0.34+ridgeB*0.24+ridgeC*0.12;
+  float tendrilPhase=angle*(6.5+density*1.2)+r*(10.5+density*3.0)+(n2-0.5)*12.0;
+  float tendrils=pow(clamp(1.0-abs(sin(tendrilPhase)),0.0,1.0),15.0);
+  float coreNoise=fbm(warped*19.0+vec2(t*0.04,-t*0.03));
+  float core=exp(-r*r*(190.0/max(uCore,0.25)))*(0.68+0.32*coreNoise);
+  vec2 satellite=warped-vec2(0.22+0.045*sin(t*0.11+uSeed),0.16*cos(t*0.14+uSeed*0.2));
+  float satelliteCore=exp(-dot(satellite,satellite)*185.0)*0.15;
+  float longPhase=angle*5.8+r*7.2+(n3-0.5)*4.0+t*0.06;
+  float longThreads=pow(clamp(1.0-abs(sin(longPhase)),0.0,1.0),18.0);
+  float filaments=(strandsA*0.55+strandsB*0.38+strandsC*0.22+strandsD*0.13+tendrils*0.36+longThreads*0.18)*strandEnvelope;
+  float mesh=webA*radialEnvelope*(0.025+0.975*plumeMask)*uWeb;
+  float mistNoise=fbm(warped*7.0+vec2(t*0.035,-t*0.026));
+  vec2 sideA=vec2(-dirA.y,dirA.x);
+  float alongA=dot(warped,dirA),acrossA=dot(warped,sideA);
+  float smokeWidth=0.075+max(alongA,0.0)*0.42;
+  float plumeSmoke=exp(-pow(acrossA/max(smokeWidth,0.001),2.0))
+                  *smoothstep(-0.16,0.04,alongA)*exp(-max(alongA,0.0)*0.72);
+  float mist=(pow(clamp(mistNoise,0.0,1.0),2.0)*radialEnvelope*0.14
+             +plumeSmoke*0.15+plumeB*0.025+plumeC*0.018)*uWash;
+  float microNoise=fbm(warped*vec2(96.0,143.0)+vec2(t*0.012,-t*0.016)+n3*3.0);
+  float particulate=pow(clamp((microNoise-0.70)/0.30,0.0,1.0),4.0)*radialEnvelope*0.12;
+  float ink=core*0.98+satelliteCore+filaments*(0.58+density*0.30+energy*0.42)+mesh*0.34+mist*0.22+particulate;
+  ink=clamp(ink*uInk,0.0,1.0);
+  float dark=smoothstep(0.018,0.72,ink)*0.94;
+  float wash=clamp(ink*0.40+mist*0.42+mesh*0.05,0.0,0.28);
+  float value=1.0-max(dark,wash);
+  float grain=(noise2(vUv*uResolution*0.035+t*0.12)-0.5)*0.009;
+  value=clamp(value+grain,0.0,1.0);
+  fragColor=vec4(vec3(value),1.0);
+}
+</script>
+<script id="particle-vertex" type="x-shader/x-vertex">
+#version 300 es
+precision highp float;
+uniform float uTime,uAspect,uSeed,uDensity,uSpread,uAudio,uBass,uMids,uHighs,uDrift,uSwirl,uParticleScale,uLineMode;
+out float vAlpha;
+out float vTone;
+float hash1(float x){return fract(sin(x*127.1+uSeed*19.19)*43758.5453123);}
+void main(){
+  int familyIndex,stepIndex;
+  float local;
+  if(uLineMode>0.5){
+    int segment=gl_VertexID/2;
+    familyIndex=segment/127;
+    stepIndex=segment%127;
+    local=(float(stepIndex)+float(gl_VertexID%2))/127.0;
+  }else{
+    familyIndex=gl_VertexID/8;
+    stepIndex=gl_VertexID%8;
+    local=float(stepIndex)/7.0;
+  }
+  float family=float(familyIndex);
+  float base=family*0.754877666+uSeed*0.03171;
+  float h0=hash1(base+1.7),h1=hash1(base+8.2),h2=hash1(base+15.9);
+  float h3=hash1(base+22.4),h4=hash1(base+39.1),h5=hash1(base+51.8);
+  float group=hash1(family*9.731+uSeed*0.17),t=uTime*uDrift;
+  float bass=uBass*uAudio,mids=uMids*uAudio,highs=uHighs*uAudio;
+  float mainAngle=0.10+0.53*sin(t*0.12+uSeed*0.2)+0.17*cos(t*0.064+uSeed*0.31);
+  mainAngle+=uSwirl*0.10*sin(t*0.17+uSeed*0.13);
+  float angle=h0*6.28318530718;
+  if(group<0.70)angle=mainAngle+(h1-0.5)*0.24;
+  else if(group<0.83)angle=mainAngle+2.12+(h1-0.5)*0.38;
+  else if(group<0.91)angle=mainAngle-1.46+(h1-0.5)*0.34;
+  vec2 direction=vec2(cos(angle),sin(angle));
+  float fullLength=(0.74+h2*0.82)*uSpread;
+  if(group>0.91)fullLength=pow(h2,1.62)*0.52;
+  float totalLength=local*fullLength;
+  float target=local*9.0;
+  float stepLength=fullLength/9.0;
+  vec2 centre=vec2(
+    0.045*sin(t*0.15+uSeed)+0.028*sin(t*0.067+uSeed*1.7)+0.014*bass,
+    -0.045+0.043*cos(t*0.12+uSeed*0.83)-0.010*bass
+  );
+  vec2 pos=centre;
+  for(int k=0;k<9;k++){
+    if(float(k)>=target)break;
+    float s=(float(k)+0.5)/9.0;
+    float nA=sin(pos.y*5.3+pos.x*2.1+t*0.11+h3*6.283)
+             +0.35*sin(pos.x*12.3-pos.y*7.1+t*0.17+h5*6.283);
+    float nB=cos(pos.x*4.7-pos.y*3.0-t*0.09+h4*6.283)
+             +0.35*cos(pos.y*10.8+pos.x*6.5-t*0.13+h2*6.283);
+    vec2 curl=normalize(vec2(nA,nB)+vec2(0.0001));
+    vec2 tangent=vec2(-direction.y,direction.x);
+    float bend=sin(s*4.7+h5*6.283+t*0.045);
+    float loopBend=(group>0.83&&group<0.91)?0.42:0.11;
+    direction=normalize(direction+curl*(0.28+uDensity*0.03)+tangent*(loopBend*bend));
+    float portion=min(1.0,target-float(k));
+    pos+=direction*stepLength*portion;
+    pos+=vec2((h0-0.5)*0.016,(h1-0.5)*0.020)*(float(k)+1.0)/9.0;
+  }
+  vec2 side=vec2(-direction.y,direction.x);
+  float across=(h3-0.5)*(0.0015+totalLength*0.026);
+  across+=sin(local*7.5+h5*6.283+t*0.07)*0.018*totalLength;
+  pos+=side*across;
+  pos+=vec2(sin(pos.y*5.7+t*0.06+h4*6.283),cos(pos.x*6.3-t*0.05+h5*6.283))*0.010*totalLength;
+
+  float haze=group>0.91?1.0:0.0;
+  float strandFade=exp(-totalLength*(0.48/max(uSpread,0.25)));
+  float groupOpacity=group<0.83?0.047:(group<0.91?0.043:0.014);
+  float pointBoost=uLineMode>0.5?0.78:1.0;
+  vAlpha=groupOpacity*strandFade*(0.62+h4*0.82)*(0.78+uDensity*0.15)
+         *(0.90+bass*0.20+mids*0.12)*(1.0-haze*0.20)*pointBoost;
+  vTone=mix(0.10,0.38,h5);
+  if(totalLength<0.14)vTone=mix(0.025,0.13,h5);
+  gl_Position=vec4(pos.x/max(uAspect,0.1),pos.y,0.0,1.0);
+  gl_PointSize=clamp((0.62+h3*0.82)*uParticleScale,0.55,1.7);
+}
+</script>
+<script id="particle-fragment" type="x-shader/x-fragment">
+#version 300 es
+precision highp float;
+uniform float uLineMode;
+in float vAlpha;
+in float vTone;
+out vec4 fragColor;
+void main(){
+  float alpha=vAlpha;
+  if(uLineMode<0.5){
+    vec2 p=gl_PointCoord-0.5;
+    float r=dot(p,p)*4.0;
+    alpha*=exp(-r*4.6);
+  }
+  if(alpha<0.002)discard;
+  fragColor=vec4(vec3(vTone),alpha);
+}
+</script>
+
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const canvas=$("art"),overlay=$("overlay"),audioEl=$("audio");
+const ratioMap={portrait:{w:720,h:1280},square:{w:720,h:720},landscape:{w:1280,h:720}};
+const presets={
+  filament:{density:1.22,turbulence:.76,spread:1.34,core:.92,filament:.34,wash:.78,persistence:.72,swirl:.82,web:.32},
+  bloom:{density:1.62,turbulence:1.02,spread:1.62,core:1.18,filament:.48,wash:1.02,persistence:.62,swirl:1.05,web:.48},
+  tangle:{density:1.46,turbulence:1.42,spread:1.12,core:1.0,filament:.58,wash:.72,persistence:.80,swirl:1.36,web:.62}
+};
+let ratioMode="portrait",resolutionScale=720;
+let gl=null,fieldProgram=null,particleProgram=null,vao=null;
+let fieldUniforms={},particleUniforms={};
+let fallbackCanvas=null,fallbackCtx=null,renderCanvas=canvas;
+let particleCount=480000,seedValue=Math.random()*1000;
+let audioContext,audioSource,analyser,mediaDestination,frequencyData,timeData;
+let audioSmooth={low:0,mid:0,high:0,rms:0},audioPulse=0,lastLow=0;
+let audioUrl=null,recorder=null,recordingChunks=[];
+let frameTime=0,lastFrame=0,running=false,fallbackMode=false,frameCounter=0;
+const settings={density:1.22,turbulence:.76,spread:1.34,core:.92,filament:.34,wash:.78,persistence:.72,audio:.58,swirl:.82,drift:1.0,ink:1.0,web:.32};
+const fmt=n=>Number(n).toLocaleString("en-GB");
+function status(message,ok){
+  $("gpuStatus").textContent=message;$("gpuStatus").style.color=ok?"#43835e":"#8b795f";
+  $("gpuDot").classList.toggle("live",!!ok);
+}
+function outputSize(){
+  if(ratioMode==="portrait")return{w:resolutionScale,h:Math.round(resolutionScale*16/9)};
+  if(ratioMode==="landscape")return{w:Math.round(resolutionScale*16/9),h:resolutionScale};
+  return{w:resolutionScale,h:resolutionScale};
+}
+function resizeRenderer(){
+  const size=outputSize();
+  canvas.width=size.w;canvas.height=size.h;canvas.style.aspectRatio=size.w+" / "+size.h;
+  $("stageResolution").textContent=size.w+" × "+size.h;
+  if(gl&&!fallbackMode)gl.viewport(0,0,size.w,size.h);
+  if(fallbackCanvas){fallbackCanvas.width=size.w;fallbackCanvas.height=size.h;fallbackCanvas.style.aspectRatio=size.w+" / "+size.h;}
+}
+function compileShader(type,id){
+  const shader=gl.createShader(type);gl.shaderSource(shader,$(id).textContent);gl.compileShader(shader);
+  if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS)){
+    const message=gl.getShaderInfoLog(shader)||"Unknown shader compilation error";gl.deleteShader(shader);throw new Error(id+": "+message);
+  }
+  return shader;
+}
+function makeProgram(vertexId,fragmentId){
+  const vs=compileShader(gl.VERTEX_SHADER,vertexId),fs=compileShader(gl.FRAGMENT_SHADER,fragmentId);
+  const program=gl.createProgram();gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);
+  gl.deleteShader(vs);gl.deleteShader(fs);
+  if(!gl.getProgramParameter(program,gl.LINK_STATUS)){
+    const message=gl.getProgramInfoLog(program)||"Unknown shader link error";gl.deleteProgram(program);throw new Error(message);
+  }
+  return program;
+}
+function cacheUniforms(program,names){
+  const out={};names.forEach(name=>out[name]=gl.getUniformLocation(program,name));return out;
+}
+function set1(loc,value){if(loc!==null&&loc!==undefined)gl.uniform1f(loc,value);}
+function set2(loc,x,y){if(loc!==null&&loc!==undefined)gl.uniform2f(loc,x,y);}
+function initRenderer(){
+  try{
+    gl=canvas.getContext("webgl2",{alpha:false,antialias:true,preserveDrawingBuffer:true,powerPreference:"high-performance"});
+    if(!gl)throw new Error("WebGL2 is unavailable in this browser");
+    fieldProgram=makeProgram("field-vertex","field-fragment");
+    particleProgram=makeProgram("particle-vertex","particle-fragment");
+    vao=gl.createVertexArray();gl.bindVertexArray(vao);
+    gl.disable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.disable(gl.SCISSOR_TEST);gl.clearColor(1,1,1,1);
+    fieldUniforms=cacheUniforms(fieldProgram,["uResolution","uTime","uAspect","uSeed","uChaos","uDensity","uSpread","uCore","uLineWeight","uInk","uWash","uWeb","uAudio","uBass","uMids","uHighs","uSwirl","uDrift","uStability"]);
+    particleUniforms=cacheUniforms(particleProgram,["uTime","uAspect","uSeed","uDensity","uSpread","uAudio","uBass","uMids","uHighs","uDrift","uSwirl","uParticleScale","uLineMode"]);
+    resizeRenderer();overlay.classList.add("hidden");
+    status("WebGL2 active · "+fmt(particleCount)+" micro-particles",true);
+    running=true;lastFrame=performance.now()/1000;
+    canvas.addEventListener("webglcontextlost",e=>{e.preventDefault();running=false;startFallback("GPU context lost");},{once:true});
+    requestAnimationFrame(renderFrame);
+  }catch(error){console.error(error);startFallback(error.message||"GPU initialisation failed");}
+}
+function readAudio(){
+  if(!analyser||!frequencyData||!timeData){
+    audioSmooth.low*=.94;audioSmooth.mid*=.94;audioSmooth.high*=.94;audioSmooth.rms*=.94;audioPulse*=.88;return;
+  }
+  analyser.getByteFrequencyData(frequencyData);analyser.getByteTimeDomainData(timeData);
+  const nyquist=audioContext.sampleRate/2;
+  const band=(lo,hi)=>{
+    const a=Math.max(1,Math.floor(lo/nyquist*frequencyData.length)),b=Math.min(frequencyData.length-1,Math.ceil(hi/nyquist*frequencyData.length));
+    let sum=0,n=0;for(let i=a;i<=b;i++){sum+=frequencyData[i]/255;n++;}return n?sum/n:0;
+  };
+  let sum=0;for(let i=0;i<timeData.length;i++){const v=(timeData[i]-128)/128;sum+=v*v;}
+  const raw={low:band(35,160),mid:band(160,2200),high:band(2200,11000),rms:Math.sqrt(sum/timeData.length)};
+  const rise=Math.max(0,raw.low-lastLow);lastLow=raw.low;audioPulse=Math.max(audioPulse*.88,Math.min(1.0,rise*7.0));
+  audioSmooth.low+=(raw.low-audioSmooth.low)*.19;audioSmooth.mid+=(raw.mid-audioSmooth.mid)*.16;
+  audioSmooth.high+=(raw.high-audioSmooth.high)*.2;audioSmooth.rms+=(raw.rms-audioSmooth.rms)*.16;
+}
+function renderFrame(ms){
+  if(!running||!gl||fallbackMode)return;
+  try{
+    const dt=Math.min(Math.max(ms/1000-lastFrame,.001),.033);lastFrame=ms/1000;frameTime+=dt;readAudio();
+    const size=outputSize(),aspect=size.w/size.h;
+    gl.viewport(0,0,canvas.width,canvas.height);gl.clear(gl.COLOR_BUFFER_BIT);gl.disable(gl.BLEND);
+    gl.useProgram(fieldProgram);
+    set2(fieldUniforms.uResolution,size.w,size.h);set1(fieldUniforms.uTime,frameTime);set1(fieldUniforms.uAspect,aspect);
+    set1(fieldUniforms.uSeed,seedValue);set1(fieldUniforms.uChaos,settings.turbulence);set1(fieldUniforms.uDensity,settings.density);
+    set1(fieldUniforms.uSpread,settings.spread);set1(fieldUniforms.uCore,settings.core);set1(fieldUniforms.uLineWeight,settings.filament);
+    set1(fieldUniforms.uInk,settings.ink);set1(fieldUniforms.uWash,settings.wash);set1(fieldUniforms.uWeb,settings.web);
+    set1(fieldUniforms.uAudio,settings.audio);set1(fieldUniforms.uBass,audioSmooth.low);set1(fieldUniforms.uMids,audioSmooth.mid);
+    set1(fieldUniforms.uHighs,audioSmooth.high);set1(fieldUniforms.uSwirl,settings.swirl);set1(fieldUniforms.uDrift,settings.drift);
+    set1(fieldUniforms.uStability,settings.persistence);gl.drawArrays(gl.TRIANGLES,0,3);
+    gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.useProgram(particleProgram);
+    set1(particleUniforms.uTime,frameTime);set1(particleUniforms.uAspect,aspect);set1(particleUniforms.uSeed,seedValue);
+    set1(particleUniforms.uDensity,settings.density);set1(particleUniforms.uSpread,settings.spread);set1(particleUniforms.uAudio,settings.audio);
+    set1(particleUniforms.uBass,audioSmooth.low);set1(particleUniforms.uMids,audioSmooth.mid);set1(particleUniforms.uHighs,audioSmooth.high);
+    set1(particleUniforms.uDrift,settings.drift);set1(particleUniforms.uSwirl,settings.swirl);
+    set1(particleUniforms.uParticleScale,1.0+settings.filament*.18);
+    const familyCount=Math.floor(particleCount/128);
+    set1(particleUniforms.uLineMode,1.0);gl.lineWidth(1.0);gl.drawArrays(gl.LINES,0,familyCount*127*2);
+    set1(particleUniforms.uLineMode,0.0);gl.drawArrays(gl.POINTS,0,familyCount*8);
+    gl.disable(gl.BLEND);
+    if((frameCounter++%60)===0){const gpuError=gl.getError();if(gpuError!==gl.NO_ERROR)throw new Error("WebGL renderer error "+gpuError);}
+    requestAnimationFrame(renderFrame);
+  }catch(error){console.error(error);running=false;startFallback(error.message||"GPU rendering error");}
+}
+function hash(n){const x=Math.sin(n*127.1+seedValue*19.19)*43758.5453123;return x-Math.floor(x);}
+function startFallback(reason){
+  if(fallbackCanvas)return;
+  fallbackMode=true;running=true;canvas.style.display="none";
+  fallbackCanvas=document.createElement("canvas");fallbackCanvas.id="fallbackArt";
+  fallbackCanvas.width=canvas.width;fallbackCanvas.height=canvas.height;
+  canvas.parentNode.insertBefore(fallbackCanvas,canvas.nextSibling);
+  fallbackCtx=fallbackCanvas.getContext("2d",{alpha:false});renderCanvas=fallbackCanvas;resizeRenderer();
+  overlay.classList.add("hidden");status("Canvas fallback active · "+String(reason).slice(0,48),false);
+  lastFrame=performance.now()/1000;requestAnimationFrame(renderFallback);
+}
+function renderFallback(ms){
+  if(!running||!fallbackCtx)return;
+  const dt=Math.min(Math.max(ms/1000-lastFrame,.001),.033);lastFrame=ms/1000;frameTime+=dt;readAudio();
+  const ctx=fallbackCtx,w=fallbackCanvas.width,h=fallbackCanvas.height;
+  ctx.globalAlpha=1;ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
+  const cx=w*(.48+.025*Math.sin(frameTime*.14+seedValue)),cy=h*(.50+.025*Math.cos(frameTime*.12+seedValue*.8));
+  const maxR=Math.max(w,h)*.45;
+  for(let i=0;i<4;i++){
+    const radius=maxR*(.20+i*.19),g=ctx.createRadialGradient(cx,cy,0,cx,cy,radius);
+    g.addColorStop(0,"rgba(15,15,15,"+(.035-i*.006)+")");g.addColorStop(.42,"rgba(20,20,20,"+(.018-i*.003)+")");g.addColorStop(1,"rgba(20,20,20,0)");
+    ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  }
+  const baseAngle=.1+.53*Math.sin(frameTime*.12+seedValue*.2)+.17*Math.cos(frameTime*.064+seedValue*.31);
+  ctx.lineCap="round";
+  for(let i=0;i<260;i++){
+    const group=hash(i*7.13);let angle=hash(i*11.7)*Math.PI*2;
+    if(group<.62)angle=baseAngle+(hash(i*17.1)-.5)*.48;
+    else if(group<.82)angle=baseAngle+2.12+(hash(i*17.1)-.5)*.58;
+    else if(group<.94)angle=baseAngle-1.46+(hash(i*17.1)-.5)*.52;
+    const length=maxR*(.16+Math.pow(hash(i*23.8),.65)*.9)*settings.spread,dx=Math.cos(angle),dy=Math.sin(angle),sideX=-dy,sideY=dx;
+    const bend=(hash(i*29.4)-.5)*length*.16,wave=(hash(i*31.7)-.5)*length*.08;
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.bezierCurveTo(cx+dx*length*.26+sideX*bend,cy+dy*length*.26+sideY*bend,cx+dx*length*.72+sideX*wave,cy+dy*length*.72+sideY*wave,cx+dx*length,cy+dy*length);
+    ctx.strokeStyle="rgba(8,8,8,"+(.018+hash(i*41.9)*.07)+")";ctx.lineWidth=.22+hash(i*43.2)*.65;ctx.stroke();
+  }
+  ctx.fillStyle="#111";const count=Math.min(particleCount,18000);
+  for(let i=0;i<count;i++){
+    const family=Math.floor(i/48),local=(i%48)/47,base=family*.754877666+seedValue*.03171;
+    const h0=hash(base+1.7),h1=hash(base+8.2),h2=hash(base+15.9),h3=hash(base+22.4),group=hash(family*9.731+seedValue*.17);
+    let angle=h0*Math.PI*2;if(group<.62)angle=baseAngle+(h1-.5)*.48;else if(group<.82)angle=baseAngle+2.12+(h1-.5)*.58;else if(group<.94)angle=baseAngle-1.46+(h1-.5)*.52;
+    let radius=Math.pow(local,1.06)*(.78+h2*.68);if(group>.94)radius=Math.pow(h2,1.75)*.42;
+    const dx=Math.cos(angle),dy=Math.sin(angle),across=(h3-.5)*(.003+radius*.055);
+    const x=cx+(dx*radius-dy*across)*h*.50,y=cy+(dy*radius+dx*across)*h*.50;
+    ctx.globalAlpha=(group>.94?.022:.055)*Math.exp(-radius*.5)*(.65+h0*.8);
+    const size=.45+hash(i*5.3)*.55;ctx.fillRect(x,y,size,size);
+  }
+  ctx.globalAlpha=1;requestAnimationFrame(renderFallback);
+}
+function resetField(newSeed){if(newSeed)seedValue=Math.random()*1000;frameTime=0;if(fallbackCtx)fallbackCtx.clearRect(0,0,fallbackCanvas.width,fallbackCanvas.height);}
+async function ensureAudio(){
+  if(!audioContext){
+    audioContext=new(window.AudioContext||window.webkitAudioContext)();analyser=audioContext.createAnalyser();analyser.fftSize=2048;analyser.smoothingTimeConstant=.78;
+    frequencyData=new Uint8Array(analyser.frequencyBinCount);timeData=new Uint8Array(analyser.fftSize);
+    audioSource=audioContext.createMediaElementSource(audioEl);mediaDestination=audioContext.createMediaStreamDestination();
+    audioSource.connect(analyser);analyser.connect(audioContext.destination);analyser.connect(mediaDestination);
+  }
+  if(audioContext.state==="suspended")await audioContext.resume();
+}
+async function toggleAudio(){
+  if(!audioEl.src){$("audioStatus").textContent="Choose an MP3 first";return;}
+  try{
+    await ensureAudio();
+    if(audioEl.paused){await audioEl.play();$("playBtn").textContent="Pause audio";$("audioState").textContent="Playing";$("audioDot").classList.add("live");$("audioStatus").textContent="Bass, mids and high frequencies are driving the ink";}
+    else{audioEl.pause();$("playBtn").textContent="Play audio";$("audioState").textContent="Paused";$("audioDot").classList.remove("live");$("audioStatus").textContent="Track paused · field continues";}
+  }catch(e){$("audioStatus").textContent="Audio could not start: "+e.message;}
+}
+function loadAudio(file){
+  if(!file)return;
+  if(!file.type.startsWith("audio/")&&!/\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(file.name)){$("audioStatus").textContent="Please choose an audio file";return;}
+  if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=URL.createObjectURL(file);audioEl.pause();audioEl.src=audioUrl;audioEl.load();
+  $("trackName").textContent=file.name;$("audioState").textContent="Ready";$("audioStatus").textContent="Track loaded · press Play audio";
+  $("playBtn").disabled=false;$("playBtn").textContent="Play audio";$("audioDot").classList.remove("live");
+}
+function setRatio(mode){ratioMode=mode;document.querySelectorAll("#ratioButtons button").forEach(b=>b.classList.toggle("active",b.dataset.ratio===mode));resizeRenderer();}
+function setResolution(value){resolutionScale=Number(value);resizeRenderer();}
+function setSetting(id,value){
+  const name=id==="audioInfluence"?"audio":id;settings[name]=Number(value);
+  const out=$(id+"Out");if(out)out.textContent=Number(value).toFixed(2);
+}
+function applyPreset(name){
+  const preset=presets[name];if(!preset)return;
+  Object.keys(preset).forEach(key=>{settings[key]=preset[key];const input=$(key);if(input)input.value=preset[key];const out=$(key+"Out");if(out)out.textContent=Number(preset[key]).toFixed(2);});
+  document.querySelectorAll("#presets button").forEach(b=>b.classList.toggle("active",b.dataset.preset===name));resetField(false);
+}
+function pauseField(){
+  running=!running;
+  if(running){lastFrame=performance.now()/1000;requestAnimationFrame(fallbackMode?renderFallback:renderFrame);$("pauseBtn").textContent="Pause field";}
+  else $("pauseBtn").textContent="Resume field";
+}
+function saveStill(){
+  const target=renderCanvas;if(!target.toBlob){$("audioStatus").textContent="Still export is unavailable";return;}
+  target.toBlob(blob=>{if(!blob)return;const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="lifeafterlogic-stochastic-ink.png";a.click();setTimeout(()=>URL.revokeObjectURL(url),20000);},"image/png");
+}
+function startRecording(){
+  const target=renderCanvas;if(!target.captureStream||!window.MediaRecorder){$("audioStatus").textContent="Recording is not supported in this browser";return;}
+  try{
+    const stream=target.captureStream(60);if(mediaDestination){const track=mediaDestination.stream.getAudioTracks()[0];if(track)stream.addTrack(track);}
+    const types=["video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"],mime=types.find(t=>MediaRecorder.isTypeSupported(t))||"";
+    recorder=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:22000000}:{videoBitsPerSecond:22000000});recordingChunks=[];
+    recorder.ondataavailable=e=>{if(e.data&&e.data.size)recordingChunks.push(e.data);};
+    recorder.onstop=()=>{
+      const type=recorder.mimeType||"video/webm",blob=new Blob(recordingChunks,{type}),url=URL.createObjectURL(blob),a=document.createElement("a");
+      a.href=url;a.download="lifeafterlogic-stochastic-ink."+(type.includes("mp4")?"mp4":"webm");a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
+      $("recordBtn").textContent="Start recording";$("recordBtn").classList.add("primary");$("audioStatus").textContent="Capture downloaded · "+(type.includes("mp4")?"MP4":"WebM");recorder=null;
+    };
+    recorder.start(1000);$("recordBtn").textContent="Stop & download";$("recordBtn").classList.remove("primary");$("audioStatus").textContent="Recording canvas at up to 60fps";
+  }catch(e){$("audioStatus").textContent="Could not start recording: "+e.message;}
+}
+function stopRecording(){if(recorder&&recorder.state!=="inactive")recorder.stop();}
+
+$("audioFile").addEventListener("change",e=>loadAudio(e.target.files[0]));
+$("playBtn").addEventListener("click",toggleAudio);$("pauseBtn").addEventListener("click",pauseField);
+$("seedBtn").addEventListener("click",()=>resetField(true));$("resetBtn").addEventListener("click",()=>resetField(false));
+$("recordBtn").addEventListener("click",()=>recorder?stopRecording():startRecording());$("stillBtn").addEventListener("click",saveStill);
+$("particles").addEventListener("input",e=>{
+  particleCount=Number(e.target.value);$("particlesOut").textContent=fmt(particleCount);$("particleReadout").textContent=fmt(particleCount);
+  status((fallbackMode?"Canvas fallback":"WebGL2 active")+" · "+fmt(particleCount)+" micro-particles",!fallbackMode);
+});
+$("particles").addEventListener("change",e=>{particleCount=Number(e.target.value);$("particlesOut").textContent=fmt(particleCount);$("particleReadout").textContent=fmt(particleCount);});
+["density","turbulence","spread","core","filament","wash","web","persistence","audioInfluence"].forEach(id=>$(id).addEventListener("input",e=>setSetting(id,e.target.value)));
+$("presets").addEventListener("click",e=>{const b=e.target.closest("button[data-preset]");if(b)applyPreset(b.dataset.preset);});
+$("ratioButtons").addEventListener("click",e=>{const b=e.target.closest("button[data-ratio]");if(b)setRatio(b.dataset.ratio);});
+$("resolution").addEventListener("change",e=>setResolution(e.target.value));
+$("fullscreenBtn").addEventListener("click",()=>{const el=$("stage");if(!document.fullscreenElement&&el.requestFullscreen)el.requestFullscreen();else if(document.exitFullscreen)document.exitFullscreen();});
+const dropzone=$("dropzone");
+dropzone.addEventListener("dragover",e=>{e.preventDefault();dropzone.classList.add("drag");});
+dropzone.addEventListener("dragleave",()=>dropzone.classList.remove("drag"));
+dropzone.addEventListener("drop",e=>{e.preventDefault();dropzone.classList.remove("drag");const f=Array.from(e.dataTransfer.files).find(x=>x.type.startsWith("audio/")||/\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(x.name));loadAudio(f);});
+audioEl.addEventListener("ended",()=>{$("playBtn").textContent="Play audio";$("audioState").textContent="Ended";$("audioDot").classList.remove("live");$("audioStatus").textContent="Track ended · field continues";});
+document.addEventListener("visibilitychange",()=>{lastFrame=performance.now()/1000;});
+window.addEventListener("beforeunload",()=>{if(audioUrl)URL.revokeObjectURL(audioUrl);});
+window.addEventListener("resize",resizeRenderer);
+initRenderer();
+})();
+</script>
+</body>
+</html>
