@@ -25,11 +25,11 @@ jobs:
           const match = engine.match(/<script>([\s\S]*?)<\/script>/);
           if (!match) throw new Error('RESET engine script is missing');
           fs.writeFileSync('/tmp/reset-v02-engine.js', match[1]);
-          for (const id of [177, 178, 179]) {
-            if (!engine.includes(String(id) + ' —')) throw new Error('Missing study ' + id);
+          for (const title of ['010 — Relay Spine', '011 — Cluster Grammar', '012 — Signal Weather']) {
+            if (!engine.includes(title)) throw new Error('Missing study title ' + title);
           }
           const gallery = fs.readFileSync('reset/versions/v.02/index.html', 'utf8');
-          for (const id of [174, 175, 176]) {
+          for (const id of [177, 178, 179]) {
             if (!gallery.includes('data-study="' + id + '"')) throw new Error('Gallery missing study ' + id);
           }
           for (const file of ['reset/versions/v.02/index.html', 'reset/index.html']) {
@@ -56,16 +56,18 @@ jobs:
           (async () => {
             const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
             try {
-              for (const id of [174, 175, 176]) {
+              for (const id of [177, 178, 179]) {
                 const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
                 const errors = [];
                 page.on('pageerror', error => errors.push(error.message));
                 await page.goto('http://127.0.0.1:8765/reset/versions/v.02/source.html?study=' + id + '&preview=1');
-                await page.waitForTimeout(1900);
+                await page.waitForFunction(() => document.querySelector('canvas.graph-gpu')?.width > 0, null, { timeout: 15000 });
+                await page.waitForTimeout(2400);
                 const metrics = await page.evaluate(() => {
                   const canvas = document.querySelector('canvas.graph-gpu');
                   if (!canvas) throw new Error('Graph GPU canvas missing');
                   const gl = canvas.getContext('webgl2');
+                  if (!gl) throw new Error('Graph WebGL2 context missing');
                   const pixels = new Uint8Array(canvas.width * canvas.height * 4);
                   gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
                   let dark = 0, light = 0, colour = 0;
