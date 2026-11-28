@@ -379,7 +379,7 @@ let particleCount=480000,seedValue=Math.random()*1000;
 let audioContext,audioSource,analyser,mediaDestination,frequencyData,timeData;
 let audioSmooth={low:0,mid:0,high:0,rms:0},audioPulse=0,lastLow=0;
 let audioUrl=null,recorder=null,recordingChunks=[];
-let frameTime=0,lastFrame=0,running=false,fallbackMode=false;
+let frameTime=0,lastFrame=0,running=false,fallbackMode=false,frameCounter=0;
 const settings={density:1.22,turbulence:.76,spread:1.34,core:.92,filament:.34,wash:.78,persistence:.72,audio:.58,swirl:.82,drift:1.0,ink:1.0,web:.32};
 const fmt=n=>Number(n).toLocaleString("en-GB");
 function status(message,ok){
@@ -475,7 +475,9 @@ function renderFrame(ms){
     const familyCount=Math.floor(particleCount/128);
     set1(particleUniforms.uLineMode,1.0);gl.lineWidth(1.0);gl.drawArrays(gl.LINES,0,familyCount*127*2);
     set1(particleUniforms.uLineMode,0.0);gl.drawArrays(gl.POINTS,0,familyCount*8);
-    gl.disable(gl.BLEND);requestAnimationFrame(renderFrame);
+    gl.disable(gl.BLEND);
+    if((frameCounter++%60)===0){const gpuError=gl.getError();if(gpuError!==gl.NO_ERROR)throw new Error("WebGL renderer error "+gpuError);}
+    requestAnimationFrame(renderFrame);
   }catch(error){console.error(error);running=false;startFallback(error.message||"GPU rendering error");}
 }
 function hash(n){const x=Math.sin(n*127.1+seedValue*19.19)*43758.5453123;return x-Math.floor(x);}
