@@ -515,7 +515,7 @@ function initStateTargets(){
 }
 function createFlowTarget(){
   deleteTarget(flowTarget);
-  flowTarget=makeTarget(FLOW_W,FLOW_H,gl.RGBA32F,gl.RGBA,gl.FLOAT,null,gl.LINEAR);
+  flowTarget=makeTarget(FLOW_W,FLOW_H,gl.RGBA16F,gl.RGBA,gl.HALF_FLOAT,null,gl.LINEAR);
   gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 }
 function clearTrails(){
