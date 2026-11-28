@@ -1,0 +1,41 @@
+name: Validate RESET v.02
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'reset/versions/v.02/source.html'
+      - 'reset/versions/v.02/index.html'
+      - 'reset/versions/v.02/archive.html'
+      - 'reset/index.html'
+      - '.github/workflows/reset-v02-validation.yml'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check engine syntax and study wiring
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const engine = fs.readFileSync('reset/versions/v.02/source.html', 'utf8');
+          const match = engine.match(/<script>([\\s\\S]*?)<\\/script>/);
+          if (!match) throw new Error('RESET engine script is missing');
+          fs.writeFileSync('/tmp/reset-v02-engine.js', match[1]);
+          for (const id of [171, 172, 173]) {
+            if (!engine.includes(String(id) + ' —')) throw new Error('Missing study ' + id);
+          }
+          const gallery = fs.readFileSync('reset/versions/v.02/index.html', 'utf8');
+          for (const id of [171, 172, 173]) {
+            if (!gallery.includes('data-study="' + id + '"')) throw new Error('Gallery missing study ' + id);
+          }
+          for (const file of ['reset/versions/v.02/index.html', 'reset/index.html']) {
+            if (/cargo/i.test(fs.readFileSync(file, 'utf8'))) throw new Error('Unexpected legacy wording in ' + file);
+          }
+          const archive = fs.readFileSync('reset/versions/v.02/archive.html', 'utf8');
+          for (const id of [168, 169, 170]) if (!archive.includes('study=' + id)) throw new Error('Archived study missing: ' + id);
+          NODE
+          node --check /tmp/reset-v02-engine.js
