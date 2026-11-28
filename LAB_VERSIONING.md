@@ -22,4 +22,4 @@ This applies to all LifeAfterLogic Lab experiments: existing projects when they 
 
 ## Current example
 
-`stochastic-ink/` follows this structure: v.01, v.02 and v.03 are preserved as playable archives, with v.04 preserved as an archive and v.05 as the current WebGL2 fluid particle-advection iteration.
+`stochastic-ink/` follows this structure: v.01, v.02 and v.03 are preserved as playable archives, with v.04 and v.05 preserved as playable archives and v.06 as the current WebGL2 curl-noise fluid particle-advection iteration.
