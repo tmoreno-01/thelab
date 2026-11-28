@@ -91,8 +91,8 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
  function chooseSession(){
   const usable=atlas.filter(a=>a.paths.length),fav=memory.directions.length&&R()<.22?pick(memory.directions):null;
   let ids=fav?fav.sources.filter(id=>usable.some(a=>a.id===id)):[];
-  const required=usable.filter(a=>a.family==="cartographic"||a.family==="geological");
-  for(const a of required.slice(0,2))if(!ids.includes(a.id))ids.push(a.id);
+  const required=[usable.find(a=>a.family==="cartographic"),usable.find(a=>a.family==="geological")].filter(Boolean);
+  for(const a of required)if(!ids.includes(a.id))ids.push(a.id);
   let pool=usable.filter(a=>!ids.includes(a.id));for(let i=pool.length-1;i>0;i--){let j=Math.floor(R()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
   while(ids.length<Math.min(6,usable.length)&&pool.length){let candidate=pool.shift(),same=ids.some(id=>usable.find(a=>a.id===id)?.family===candidate.family);if(same&&R()<.38&&pool.length>1){pool.push(candidate);continue;}ids.push(candidate.id);}
   if(ids.length<3)ids=usable.slice(0,Math.min(6,usable.length)).map(a=>a.id);
@@ -222,6 +222,9 @@ function create(canvas,seed=(Math.random()*4294967295)>>>0,onStatus=()=>{}){
     let primaryDur=0;
     if(lineage.grammar==="fracture"&&R()<lineage.fragment){const pieces=fracturePath(raw,2+Math.floor(R()*3));for(const piece of pieces){const d=queueStroke(ops,piece,width*rand(.78,1.08),color,start+Math.floor(rand(0,8)),"fracture",{...pa,palette,colourOn,colourStrength,tempo:lineage.tempo});if(!primaryDur)primaryDur=d;}fractures+=pieces.length;}
     else primaryDur=queueStroke(ops,raw,width,color,start,"primary",{...pa,palette,colourOn,colourStrength,tempo:lineage.tempo});
+    if(R()<.24){ops.push({p:raw,w:width*rand(3.2,8.4),color:pick(palette.colours),start:start+Math.floor(rand(0,8)),dur:Math.max(2,Math.min(primaryDur,24)),wash:true,alpha:rand(.035,.095),fill:false});}
+    if(closed&&R()<.18){ops.push({p:raw,w:0,color:pick(palette.colours),start:start+Math.floor(rand(1,10)),dur:Math.max(2,Math.min(primaryDur,24)),wash:true,alpha:rand(.035,.10),fill:true,closed:true});}
+
     if(lineage.grammar==="strata"&&R()<lineage.strata){for(let k=0;k<1+Math.floor(R()*2);k++){const shifted=offsetPath(fragment(raw,rand(0,.06),rand(.66,.98)),rand(-13,13));if(shifted.length>5)queueStroke(ops,shifted,Math.max(.52,width*rand(.35,.62)),color===INK?WHITE:INK,start+Math.floor(rand(8,32)),"strata",{...pa,palette,colourOn,colourStrength,tempo:lineage.tempo});}}
     if(lineage.grammar==="branch"&&R()<lineage.branch){const donor=choosePath(b,usedB)||choosePath(c,usedC);if(donor){const donorRaw=transformPath(donor,cx+rand(-rx*.24,rx*.24),cy+rand(-ry*.24,ry*.24),rx*rand(.40,.82),ry*rand(.40,.82),ang+rand(-1.4,1.4),R()<.5,warpAmount*.8),branch=branchFrom(raw,donorRaw,rand(.18,.82),rand(-1.2,1.2),rand(.55,1.12));if(branch.length>5){queueStroke(ops,branch,Math.max(.55,width*rand(.42,.74)),color,start+primaryDur+Math.floor(rand(2,12)),"branch",{...pa,palette,colourOn,colourStrength,tempo:lineage.tempo});branches++;}}}
     if(closed&&q.round<.58&&pa.area>85&&R()<.16){ops.push({p:raw,w:width,color,start:start+Math.floor(rand(0,5)),dur:primaryDur,fill:true,closed:true});}
