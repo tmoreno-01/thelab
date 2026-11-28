@@ -1,31 +1,39 @@
 # Lantern Field / 001
 
-A real-time field of floating paper sky lanterns, developed as a LifeAfterLogic lab experiment.
+A real-time study of light transmitted through thin, irregular paper.
 
-## Visual system
+## Current renderer
 
-- 180 instanced lantern envelopes on desktop (88 on touch devices), each with its own rise rate, drift, rotation, paper tint and light flicker.
-- Thin rice-paper envelope with a procedural fibre texture, panel seams, wrinkles and a curved bamboo support cage.
-- Three independently learned internal-light lobes, combined per frame with a small neural network evaluated in the vertex shader.
-- Soft neighbouring-lantern bounce approximation, warm flame cores, halo sprites, star field, faint nebula, bloom and depth of field.
-- Drag to orbit; wheel to dolly; pause, glow and fullscreen controls.
+The previous version used an over-bright synthetic neural glow and a flame placed outside the envelope. That was not a faithful representation of the Cocoon reference, so the renderer has been rebuilt around an internal light field.
 
-## Neural lighting technique
+- 112 instanced paper lanterns on desktop (48 on touch devices; 28 in browser-test mode).
+- A tapered, softly irregular envelope with paper grain, fibres, creases, eight panel seams and a curved bamboo frame.
+- Three animated internal emitter samples, evaluated per fragment in the paper's local coordinate system.
+- Inverse-square source falloff, angle-dependent Beer–Lambert absorption, warm spectral attenuation and a broad scattering term.
+- Paper thickness varies with procedural grain and creasing; the bamboo ribs and seams reduce transmitted light.
+- A restrained cool exterior fill keeps the unlit paper visible without washing out the transmitted light.
+- Drag to orbit; wheel to dolly; pause, inside-light intensity and fullscreen controls.
 
-This takes inspiration from the neural precomputed-radiance-transfer method described in the Cocoon project by Akella. Rather than evaluating a large lighting equation from scratch for every pixel, a compact squared-ReLU MLP predicts the thin-paper transmission response from local position, normal, view direction and a paper-thickness feature. The three learned output lobes correspond to three interior light regions. The network weights are stored in `prt-weights.json` and sampled from a floating-point GPU texture; the model runs in the lantern vertex shader.
+## Relationship to Cocoon
 
-**Important distinction:** the first model is trained against a physically based synthetic thin-sheet reference (Beer–Lambert absorption, angular transmission and forward scattering). It is not yet a Cycles-rendered ground-truth bake like the original Cocoon. The training script is included in `train_prt.py`. A higher-fidelity next step would render the paper lantern in Blender Cycles with separate interior light groups, then train against those samples.
+This is an independent thin-sheet lighting study inspired by the 'lantern.html' work in [Akella's Cocoon project](https://github.com/akella/codevember-2026/tree/main/20-cocoon).
+
+The reference does more than add an emissive glow: it renders the silk shell, fibres and internal emitters in Blender Cycles with separate light groups, trains networks against those path-traced samples, and evaluates the learned response in WebGPU. Its lantern variant also computes a live field for the internal lamp and the pupa's visibility through the silk.
+
+**The current LifeAfterLogic version is not yet a Cycles-trained neural PRT implementation.** It now uses an explicit real-time thin-sheet transmission model so the internal sources genuinely light the paper envelope. The old synthetic MLP and its weights are no longer used by the live renderer. The next fidelity step is a Blender Cycles bake of this envelope with separate internal light groups, followed by a compact neural model trained against those renders.
+
+Useful reference files:
+- 'bake/render_inner.py' — Cycles renders of internal lights in separate light groups
+- 'bake/train_inner.py' — network training against the Cycles output
+- 'src/rain/field.wgsl' — live internal-light field and pupa visibility
+- 'src/rain/lantern.ts' — learned internal-light response and warm scattering
 
 ## Run locally
 
 Serve the repository root over HTTP (ES modules and fetch require a server):
 
-```bash
+~~~bash
 python3 -m http.server 8000
-```
+~~~
 
-Open `http://localhost:8000/lanterns/`.
-
-## Reference
-
-The technique is inspired by the description in [Akella's Cocoon project](https://github.com/akella/codevember-2026/tree/main/20-cocoon), especially its neural light transport, separate internal illumination and real-time GPU inference. This experiment is an independent implementation; it does not copy the Cocoon geometry, model weights or source shaders.
+Open http://localhost:8000/lanterns/.
