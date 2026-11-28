@@ -1,54 +1,55 @@
 # Stochastic Ink — LifeAfterLogic Lab
 
-**Current version: v.03**
+**Current version: v.04**
 
 Live experiment: https://tmoreno-01.github.io/thelab/stochastic-ink/
 
-## Visual direction
+## Visual target
 
-The supplied audiovisual reference is a moving ink/fibre structure, not a conventional particle cloud: a compact dark nucleus, hair-thin radiating strands, branching parallel fibres, occasional translucent membrane webs and soft grey smoke against large areas of white negative space.
+The supplied 33-second portrait reference is a moving ink structure on a near-white field: a compact, irregular black nucleus; fine hair-like fibres; long, delicate strands that loop and branch; small dense intersections; and translucent grey smoke. The structure changes direction and silhouette over time without filling the whole frame.
 
-v.03 changes the underlying rendering and simulation to pursue that visual language.
+## v.04 — micro-particle filament renderer
 
-## v.03 changes
-
-- **Longer coherent filament families:** 64-particle bundles share correlated flow seeds, tighter initial alignment and longer lifetimes. They gradually diverge into fine branches rather than behaving like an even spray.
-- **Anisotropic ink field:** the old polar sine-wave bands are replaced by domain-warped, multi-scale ridged noise concentrated inside a few evolving plume structures. The field now leaves more white negative space.
-- **Flowing feedback:** the previous frame is subtly advected through a curl-like field before diffusion and decay, giving the ink a more fluid, suspended quality.
-- **Membrane web renderer:** a new GPU pass draws delicate cross-links between selected filament-family strands to create occasional woven, translucent structures.
-- **Layered rendering:** soft particle splats, membrane cross-links and hairline motion trails are composited over the evolving ink field.
-- **Audio response:** bass, mids, highs and transients still influence the system, but the default audio gain is restrained so the structure does not simply pulse to the beat.
-
-## Audio
-
-1. Drop an MP3, WAV, M4A or OGG file into Audio Input, or click to choose a local file.
-2. Press **Play audio**.
-3. Low frequencies influence the nucleus and radial spread; mids influence flow distortion; highs add fine movement; transients add short impulses.
-4. Audio is analysed locally with the Web Audio API. Files are not uploaded.
+- Replaces the previous WebGPU-only renderer with a WebGL2 field shader and a connected micro-particle / filament pass.
+- Uses actual generated particle positions as the vertices of continuous hairline strands, with a smaller point pass for fine particulate grain.
+- The default population is **480,000**; the slider controls the generated strand population up to **800,000**.
+- The field shader layers compact ink, irregular radial fibres, fine ridged mesh, wisps and a directional smoke wash.
+- Particle families follow a changing curl field, so their strands bend, diverge and occasionally loop rather than forming rigid straight spokes.
+- The output stays monochrome with a white background and large negative-space areas.
+- Audio analysis continues locally in the browser; bass, mids and highs subtly influence the flow.
+- If WebGL2 cannot initialise or the context is lost, a Canvas 2D fallback takes over instead of leaving the stage blank.
 
 ## Controls
 
 - Filament, Bloom and Tangle presets
-- Particle population
+- Particle amount: 40,000–800,000
 - Filament density, flow distortion, radial spread and core density
-- Filament detail and membrane webbing
-- Ink diffusion and trail persistence
+- Filament weight, fine mesh detail, smoke softness and flow stability
 - Audio influence
 - 9:16, 1:1 and 16:9 output
 - Preview and high-resolution output
 - Save PNG stills or record the canvas with audio
 
+## Audio
+
+1. Drop an MP3, WAV, M4A or OGG file into Audio Input, or choose a local file.
+2. Press **Play audio**.
+3. Low frequencies influence the nucleus and spread; mids influence flow distortion; highs add fine movement.
+4. Audio is analysed locally with the Web Audio API. Files are not uploaded.
+
 ## Versions
 
-- **v.03** — current fibrous ink field, correlated filament families and membrane web renderer
-- **v.02** — 3D particle system and WGSL reserved-keyword fix; preserved as a playable archive
+- **v.04** — current WebGL2 micro-particle renderer, connected curved filaments and Canvas 2D fallback
+- **v.03** — WebGPU filament and membrane study; preserved as a playable archive
+- **v.02** — 3D particle system and shader fix; preserved as a playable archive
 - **v.01** — initial WebGPU build
 
-Earlier versions remain playable from the Version history section on the experiment page.
+Earlier builds remain playable from the Version history section on the experiment page.
 
 ## Technical notes
 
-- WebGPU is required. Current Chrome or Edge with hardware acceleration is recommended.
+- WebGL2 is the primary renderer. Current Chrome, Edge and Safari builds are recommended.
 - The simulation and audio analysis run locally in the browser.
-- The default particle count is 220,000. Reduce it if the device struggles.
-- The live MediaRecorder capture is not a mathematically seamless loop renderer; deterministic loop rendering remains a future improvement.
+- The default output is 720 × 1280. Select 1080 for a higher-resolution output.
+- The fallback is deliberately lighter than the GPU renderer; it prioritises a visible, moving composition if the GPU path is unavailable.
+- Recording uses the live canvas and browser MediaRecorder support.
