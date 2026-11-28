@@ -39,3 +39,43 @@ jobs:
           for (const id of [168, 169, 170]) if (!archive.includes('study=' + id)) throw new Error('Archived study missing: ' + id);
           NODE
           node --check /tmp/reset-v02-engine.js
+      - name: Browser-render the three studies
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          python3 -m http.server 8765 >/tmp/reset-v02-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+            try {
+              for (const id of [171, 172, 173]) {
+                const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
+                const errors = [];
+                page.on('pageerror', error => errors.push(error.message));
+                await page.goto('http://127.0.0.1:8765/reset/versions/v.02/source.html?study=' + id + '&preview=1&cpu=1');
+                await page.waitForTimeout(1400);
+                const metrics = await page.evaluate(() => {
+                  const canvas = document.querySelector('#art');
+                  const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+                  let dark = 0, light = 0, colour = 0;
+                  for (let i = 0; i < pixels.length; i += 4) {
+                    const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
+                    if (r < 35 && g < 35 && b < 35) dark++;
+                    else if (r > 190 && g > 190 && b > 190) light++;
+                    else colour++;
+                  }
+                  return { width: canvas.width, height: canvas.height, dark, light, colour };
+                });
+                if (errors.length) throw new Error('Study ' + id + ' runtime errors: ' + errors.join('; '));
+                if (metrics.dark < 1000 || metrics.light < 1000) throw new Error('Study ' + id + ' rendered blank or incomplete: ' + JSON.stringify(metrics));
+                console.log('Study ' + id + ' rendered: ' + JSON.stringify(metrics));
+                await page.close();
+              }
+            } finally {
+              await browser.close();
+            }
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
