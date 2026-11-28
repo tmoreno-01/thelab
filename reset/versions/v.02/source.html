@@ -1,8 +1,8 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lifeafterlogic / Structural Evolution</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efeee9}canvas{display:block;width:100%;height:100%;image-rendering:pixelated}#err{position:fixed;left:10px;bottom:10px;color:#777;font:10px monospace;pointer-events:none}</style></head><body><canvas id="art"></canvas><div id="err"></div><script>
 "use strict";
 // RESET v.02: seeded architectural composition, evolving local structures and chromatic inheritance.
-const q=new URLSearchParams(location.search),study=q.get('study')||'pressure',requestedStudy=Number(study),v02Study=requestedStudy>=171&&requestedStudy<=173,chromaticStudy=requestedStudy>=168&&requestedStudy<=173,resetStudy=requestedStudy>=148&&requestedStudy<=173,resetHD=requestedStudy>=154&&requestedStudy<=173,kineticStudy=requestedStudy>=157&&requestedStudy<=173,localPatchStudy=(requestedStudy>=160&&requestedStudy<=162)||requestedStudy===172,localFeedbackStudy=(requestedStudy>=163&&requestedStudy<=165)||(requestedStudy>=168&&requestedStudy<=173),serpentineStudy=(requestedStudy>=166&&requestedStudy<=167)||requestedStudy===173,testNumber=({139:136,140:137,141:138,142:136,143:137,144:138,145:136,146:137,147:138,148:136,149:137,150:138,151:136,152:137,153:138}[requestedStudy]||requestedStudy),mode=study==='reorganisation'?1:(study==='fault'||[124,125,126,127,128,129,130,131,132,136,137,138].includes(testNumber))?2:0;
-document.title='lifeafterlogic / reset / '+({148:'148 — Signal Crawl',149:'149 — Distributed Intelligence',150:'150 — Restless Matter',151:'151 — Chromatic Wake',152:'152 — Inherited Current',153:'153 — Structural Bloom',154:'154 — Signal Ecology',155:'155 — Distributed Disturbance',156:'156 — Living Faultfield',157:'157 — Kinetic Menagerie',158:'158 — Chemotactic Polyphony',159:'159 — Elastic Excitable Matter',160:'160 — Local Sorting',161:'161 — Displaced Strata',162:'162 — Recursive Feedback',163:'163 — Recursive Drift',164:'164 — Signal Afterimage',165:'165 — Feedback Organism',166:'166 — Path Memory',167:'167 — Chromatic Current',168:'168 — Patchwork Signals',169:'169 — Chromatic Inheritance',170:'170 — Residual Grammar',171:'171 — Grid Ecology',172:'172 — Signal Fracture',173:'173 — Living Syntax',139:'139 — Local Feedback / Optimised',140:'140 — Chromatic Feedback / Optimised',141:'141 — Unstable Feedback / Optimised',142:'142 — Recursive Tissue',143:'143 — Mutable Syntax',144:'144 — Unstable Ecology',145:'145 — Distributed Instinct',146:'146 — Mutual Disturbance',147:'147 — Restless Matter'}[requestedStudy]||({124:'124 — Slip Memory',125:'125 — Phase Slip',126:'126 — Residual Current',127:'127 — Local Current',128:'128 — Counterflow',129:'129 — Phase Inheritance',130:'130 — Local Matter',131:'131 — Unstable Matter',132:'132 — Phase Turbulence',136:'136 — Local Feedback',137:'137 — Chromatic Feedback',138:'138 — Unstable Feedback'}[testNumber]||['121 — Pressure Memory','122 — Reorganisation','123 — Living Fault'][mode]));
+const q=new URLSearchParams(location.search),study=q.get('study')||'pressure',requestedStudy=Number(study),v02Study=requestedStudy>=171&&requestedStudy<=176,chromaticStudy=requestedStudy>=168&&requestedStudy<=176,resetStudy=requestedStudy>=148&&requestedStudy<=176,resetHD=requestedStudy>=154&&requestedStudy<=176,kineticStudy=requestedStudy>=157&&requestedStudy<=176,localPatchStudy=(requestedStudy>=160&&requestedStudy<=162)||requestedStudy===172||requestedStudy===175,localFeedbackStudy=(requestedStudy>=163&&requestedStudy<=165)||(requestedStudy>=168&&requestedStudy<=176),serpentineStudy=(requestedStudy>=166&&requestedStudy<=167)||requestedStudy===173||requestedStudy===176,v02OrthogonalMotion=requestedStudy>=174&&requestedStudy<=176,testNumber=({139:136,140:137,141:138,142:136,143:137,144:138,145:136,146:137,147:138,148:136,149:137,150:138,151:136,152:137,153:138}[requestedStudy]||requestedStudy),mode=study==='reorganisation'?1:(study==='fault'||[124,125,126,127,128,129,130,131,132,136,137,138].includes(testNumber))?2:0;
+document.title='lifeafterlogic / reset / '+({148:'148 — Signal Crawl',149:'149 — Distributed Intelligence',150:'150 — Restless Matter',151:'151 — Chromatic Wake',152:'152 — Inherited Current',153:'153 — Structural Bloom',154:'154 — Signal Ecology',155:'155 — Distributed Disturbance',156:'156 — Living Faultfield',157:'157 — Kinetic Menagerie',158:'158 — Chemotactic Polyphony',159:'159 — Elastic Excitable Matter',160:'160 — Local Sorting',161:'161 — Displaced Strata',162:'162 — Recursive Feedback',163:'163 — Recursive Drift',164:'164 — Signal Afterimage',165:'165 — Feedback Organism',166:'166 — Path Memory',167:'167 — Chromatic Current',168:'168 — Patchwork Signals',169:'169 — Chromatic Inheritance',170:'170 — Residual Grammar',171:'171 — Grid Ecology',172:'172 — Signal Fracture',173:'173 — Living Syntax',174:'174 — Lattice Drift',175:'175 — Patch Relay',176:'176 — Signal Weather',139:'139 — Local Feedback / Optimised',140:'140 — Chromatic Feedback / Optimised',141:'141 — Unstable Feedback / Optimised',142:'142 — Recursive Tissue',143:'143 — Mutable Syntax',144:'144 — Unstable Ecology',145:'145 — Distributed Instinct',146:'146 — Mutual Disturbance',147:'147 — Restless Matter'}[requestedStudy]||({124:'124 — Slip Memory',125:'125 — Phase Slip',126:'126 — Residual Current',127:'127 — Local Current',128:'128 — Counterflow',129:'129 — Phase Inheritance',130:'130 — Local Matter',131:'131 — Unstable Matter',132:'132 — Phase Turbulence',136:'136 — Local Feedback',137:'137 — Chromatic Feedback',138:'138 — Unstable Feedback'}[testNumber]||['121 — Pressure Memory','122 — Reorganisation','123 — Living Fault'][mode]));
 const canvas=document.getElementById('art'),ctx=canvas.getContext('2d',{alpha:false}),small=document.createElement('canvas'),sc=small.getContext('2d',{alpha:false});
 const palette=[[239,238,232],[19,20,21],[41,75,204],[201,43,30],[201,140,22],[14,119,109],[91,161,199],[222,94,82],[194,203,83],[145,112,181],[76,150,133],[216,169,104]];
 const resetFadePalette=Array.from({length:12},()=>[[],[]]);
@@ -17,7 +17,7 @@ for(let i=0;i<=8192;i++)waveTable[i]=Math.sin(i/waveFactor);
 function waveSin(v){let t=v*waveFactor,b=Math.floor(t),i=b&8191;return waveTable[i]+(waveTable[i+1]-waveTable[i])*(t-b);}
 function waveCos(v){return waveSin(v+Math.PI*.5);}
 function fastHypot(x,y){return Math.sqrt(x*x+y*y);}
-const mapInterval=resetStudy?([148,151,154,157,160,163,166,168,171].includes(requestedStudy)?.12:[149,152,155,158,161,164,167,169,170,172,173].includes(requestedStudy)?.10:.085):requestedStudy===145?.083:requestedStudy===146?.075:.066;
+const mapInterval=resetStudy?([148,151,154,157,160,163,166,168,171,174,176].includes(requestedStudy)?.12:[149,152,155,158,161,164,167,169,170,172,173,175].includes(requestedStudy)?.10:.085):requestedStudy===145?.083:requestedStudy===146?.075:.066;
 const resetProfile=requestedStudy===148
  ?{agents:10,trail:19,cell:[3,5],step:[.085,.145],modes:6,modeTime:[2.8,5.2],trailLife:1.65,incidentGap:[2.0,3.0],incidentCap:2,incidentRadius:[5,9],incidentLife:[1.4,2.6],interaction:.08,feedbackArea:.055,colours:[2,6,10],colourCycle:24,colourLife:8.5,colourCap:.032,colourShoulder:1}
  :requestedStudy===149
@@ -202,10 +202,31 @@ const serpentineProfile=requestedStudy===173
  :requestedStudy===166
   ?{first:[2.8,4.2],interval:[8.5,12.5],steps:[30,40],step:[2,3],tempo:[.068,.096],trail:[1.9,2.5],maxTrail:42,strength:.76,turnColour:.58,colourChance:.10,run:[3,8],width:.24,displace:[1,3]}
   :{first:[2.5,3.9],interval:[7.8,11.5],steps:[32,42],step:[2,4],tempo:[.064,.092],trail:[2.0,2.6],maxTrail:44,strength:.79,turnColour:.66,colourChance:.14,run:[3,7],width:.28,displace:[1,3]};
+
+if(v02OrthogonalMotion){
+ if(requestedStudy===174){
+  Object.assign(resetProfile,{agents:17,trail:29,cell:[2,4],step:[.050,.098],modes:10,modeTime:[.88,2.15],trailLife:2.45,incidentGap:[.72,1.42],incidentCap:5,incidentRadius:[5,10],incidentLife:[1.7,3.0],interaction:.29,feedbackArea:.052,colours:[2,6,10],colourCycle:25,colourLife:11,colourCap:.018,colourShoulder:1,regionCols:18,regionRows:13,regionMemory:7,inheritNearby:true,colourStart:1.2,colourReveal:5.4});
+  Object.assign(motionProfile,{gain:.58,radius:.46,speed:.82,pixelScale:1.42,slots:2,weights:[1.3,1.25,1.2,1.0,1.25,.8,1.2,1.15],initial:[2,6]});
+  Object.assign(kineticProfile,{agents:74,behaviours:20,species:7,zones:15,trail:15,modeTime:[2.2,5.4],speed:[.065,.17],chem:true,chemW:160,chemH:102,chains:10,chainMax:20,chainLength:11,excitable:true,exciteW:136,exciteH:86,branch:.026,trailLife:[2.0,4.8],density:1.08});
+  Object.assign(localFeedbackProfile,{coverage:.17,maxPatches:20,area:[.0045,.012],life:[3.2,6.2],gap:[.11,.22],modes:[0,1,4,6,9],modeTime:[.68,1.55],lag:[1,3],strength:.94,shift:[4,13],step:1,edgeBias:.76,drift:.12});
+ }else if(requestedStudy===175){
+  Object.assign(resetProfile,{agents:22,trail:35,cell:[2,4],step:[.042,.084],modes:10,modeTime:[.62,1.62],trailLife:2.75,incidentGap:[.50,1.02],incidentCap:7,incidentRadius:[6,12],incidentLife:[1.9,3.5],interaction:.43,feedbackArea:.068,colours:[2,6,10],colourCycle:21,colourLife:13,colourCap:.026,colourShoulder:1,regionCols:20,regionRows:14,regionMemory:8,inheritNearby:true,colourStart:.8,colourReveal:4.1});
+  Object.assign(motionProfile,{gain:.66,radius:.50,speed:.90,pixelScale:1.48,slots:3,weights:[1.25,1.3,1.35,1.0,1.3,.82,1.25,1.2],initial:[6,2,7]});
+  Object.assign(kineticProfile,{agents:94,behaviours:22,species:8,zones:18,trail:17,modeTime:[1.6,4.2],speed:[.07,.19],chem:true,chemW:176,chemH:112,chains:14,chainMax:26,chainLength:12,excitable:true,exciteW:152,exciteH:96,branch:.038,trailLife:[2.1,5.0],density:1.12});
+  Object.assign(localPatchProfile,{coverage:.19,gap:[.15,.27],life:[2.6,4.6],area:[.009,.020],modes:[0,1,2,4],modeTime:[.58,1.22],strength:.96,maxPatches:19,rowStep:2,pixelStep:2,maxRun:38,shift:[7,18],block:[5,13]});
+  Object.assign(localFeedbackProfile,{coverage:.205,maxPatches:25,area:[.004,.013],life:[2.6,5.5],gap:[.075,.16],modes:[0,1,4,6,9],modeTime:[.46,1.08],lag:[1,4],strength:1.06,shift:[6,18],step:1,edgeBias:.68,drift:.18});
+ }else{
+  Object.assign(resetProfile,{agents:19,trail:32,cell:[2,4],step:[.046,.09],modes:10,modeTime:[.74,1.86],trailLife:2.85,incidentGap:[.58,1.18],incidentCap:6,incidentRadius:[6,12],incidentLife:[2.0,3.6],interaction:.38,feedbackArea:.060,colours:[2,6,10],colourCycle:29,colourLife:11.5,colourCap:.016,colourShoulder:0,regionCols:19,regionRows:14,regionMemory:8,inheritNearby:true,colourStart:1.8,colourReveal:6.5});
+  Object.assign(motionProfile,{gain:.54,radius:.44,speed:.78,pixelScale:1.40,slots:2,weights:[1.2,1.15,1.25,1.0,1.2,.86,1.15,1.12],initial:[2,6]});
+  Object.assign(kineticProfile,{agents:86,behaviours:21,species:8,zones:18,trail:17,modeTime:[1.8,4.8],speed:[.06,.18],chem:true,chemW:168,chemH:108,chains:12,chainMax:24,chainLength:13,excitable:true,exciteW:144,exciteH:92,branch:.034,trailLife:[2.1,5.0],density:1.10});
+  Object.assign(localFeedbackProfile,{coverage:.18,maxPatches:22,area:[.004,.012],life:[3.0,6.0],gap:[.09,.18],modes:[0,1,4,6,9],modeTime:[.56,1.28],lag:[1,3],strength:.99,shift:[5,15],step:1,edgeBias:.74,drift:.14});
+  Object.assign(serpentineProfile,{first:[1.3,2.4],interval:[5.5,8.2],steps:[40,54],step:[2,4],tempo:[.046,.074],trail:[2.2,3.0],maxTrail:64,strength:.90,turnColour:.80,colourChance:.24,run:[2,6],width:.32,displace:[1,3]});
+ }
+}
 let W=0,H=0,field,rgba,rgba32=null,active=[],agents=[],memory=[],used=new Set(),last=0,lastDraw=0,age=0,next=0,nextSense=0,paused=false,quality=!q.has('preview'),seed=(q.has('seed')?Number(q.get('seed'))>>>0:crypto.getRandomValues(new Uint32Array(1))[0])||1;
 let v02Chromatic=false;
 let trials=0,accepted=0,finished=0,colourBirths=0,inherited=0,refusals=0,changes=0,previous=null,focus=-1,nextFocus=0,colonies=[],morphChanges=0,flowChanges=0,colonyCount=0,nextMorph=0,fronts=[],nextFront=0,frontCount=0,frontEdits=0,microSlips=[],nextSlip=0,slipHistory=[],slipEvents=0,slipPairs=0,renderField=null,flowPockets=[],nextFlow=0,flowHistory=[],flowEvents=0,flowCells=0,motionFields=[],motionSource=null,motionX=null,motionY=null,motionStrength=null,motionMemory=null,motionErase=null,motionColour=null,motionHue=null,motionIndices=null,motionIndexCount=0,motionMapReady=false,nextMotionMap=0,motionEvents=0,motionTouched=0,motionMoved=0,motionActive=0,feedbackFields=[],feedbackHistory=[],feedbackModeUse=new Uint16Array(40),feedbackRecent=[],nextFeedback=0,feedbackPrevious=null,feedbackReady=false,feedbackEvents=0,feedbackTouched=0,feedbackMoved=0,feedbackActive=0,resetAgents=[],resetIncidents=[],resetRegions=[],resetHeat=null,resetVisitedAt=null,resetLastMode=null,resetSource=null,resetWriteStamp=null,resetStamp=0,resetHeatClock=0,resetModeUse=new Uint16Array(10),resetModeRecent=[],resetNextIncident=0,resetEvents=0,resetMoved=0,resetSteps=0,resetInteractions=0,resetColour=null,resetColourTouched=null,resetColourListed=null,resetColourIndices=[],resetColourCells=0,resetColourBirths=0,resetColourTransfers=0,pigmentEvents=[],pigmentHistory=[],pigmentFamilyUse=new Uint16Array(5),pigmentRecent=[],nextPigment=0,pigmentEventCount=0,pigmentTransitions=0,kineticAgents=[],kineticChains=[],kineticZones=[],kineticPheromone=[],kineticPheromoneNext=[],kineticGrayU=null,kineticGrayV=null,kineticGrayUNext=null,kineticGrayVNext=null,kineticExcite=null,kineticExciteNext=null,kineticW=0,kineticH=0,kineticClock=0,kineticChemClock=0,kineticExciteClock=0,kineticNextChem=0,kineticNextExcite=0,kineticNextBranch=0,kineticSteps=0,kineticDeposits=0,kineticBranches=0,kineticModeChanges=0,kineticChemSteps=0,kineticExciteSteps=0,kineticChainSegments=0,kineticRenderNodes=0,localPatches=[],localPatchNext=0,localPatchEvents=0,localPatchWrites=0,localFeedbackPatches=[],localFeedbackMemory=[],localFeedbackNext=0,localFeedbackEvents=0,localFeedbackWrites=0,localFeedbackHistory=[],localFeedbackHistoryHead=-1,localFeedbackHistoryReady=false,localFeedbackBase=null;
-let serpentineAgents=[],serpentineMemory=null,serpentineNext=0,serpentineEvents=0,serpentineSteps=0,serpentineWrites=0,serpentineActive=0;
+let serpentineAgents=[],serpentineMemory=null,serpentineNext=0,serpentineEvents=0,serpentineSteps=0,serpentineWrites=0,serpentineActive=0,v02ChromaticPackets=[],v02ChromaticNext=0;
 
 if(chromaticStudy){
  const rr=(a,b)=>a+random()*(b-a);
@@ -341,7 +362,59 @@ function v02Panel(x,y,w,h,motif){
 }
 function initV02Architecture(){
  field.fill(0);
- const variant=requestedStudy-171,cols=5+R(4),rows=5+R(4),xCuts=[0],yCuts=[0];
+ const variant=requestedStudy-171;
+ if(variant>=3){
+  const cols=variant===3?12+R(5):variant===4?15+R(5):11+R(6),rows=variant===3?9+R(4):variant===4?11+R(5):10+R(5),xCuts=[0],yCuts=[0];
+  let total=0,weights=[];for(let i=0;i<cols;i++){weights.push(range(.62,1.42));total+=weights[i];}
+  for(let i=0,acc=0;i<cols;i++){acc+=weights[i];xCuts.push(Math.round(W*acc/total));}
+  total=0;weights=[];for(let i=0;i<rows;i++){weights.push(range(.64,1.40));total+=weights[i];}
+  for(let i=0,acc=0;i<rows;i++){acc+=weights[i];yCuts.push(Math.round(H*acc/total));}
+  for(let ry=0;ry<rows;ry++)for(let rx=0;rx<cols;rx++){
+   const x=xCuts[rx],y=yCuts[ry],w=xCuts[rx+1]-x,h=yCuts[ry+1]-y,margin=Math.max(2,Math.floor(Math.min(w,h)*range(.045,.12)));
+   if(w<7||h<7)continue;
+   if(variant===3){
+    if(random()<.78)v02Frame(x+1,y+1,w-2,h-2,1,1);
+    if(random()<.88)v02Panel(x+margin,y+margin,Math.max(3,w-2*margin),Math.max(3,h-2*margin),pick([0,1,2,3,6,7,8]));
+    if(random()<.54)v02Matrix(x+margin,y+margin,Math.max(3,w-2*margin),Math.max(3,h-2*margin),range(3,6)|0,range(3,7)|0,2);
+    if(random()<.34)v02Dots(x+margin,y+margin,Math.max(3,w-2*margin),Math.max(3,h-2*margin),range(3,6)|0,range(3,6)|0,range(.56,.88),1);
+    if(random()<.28)v02Bars(x+margin,y+margin,Math.max(3,w-2*margin),Math.max(3,h-2*margin),random()<.5?'h':'v',range(3,7)|0,.82);
+   }else if(variant===4){
+    const parts=2+R(4);
+    for(let p=0;p<parts;p++){
+     const pw=Math.max(4,Math.floor(range(w*.18,w*.68))),ph=Math.max(4,Math.floor(range(h*.16,h*.72))),px=Math.floor(range(x+1,Math.max(x+2,x+w-pw-1))),py=Math.floor(range(y+1,Math.max(y+2,y+h-ph-1)));
+     v02Panel(px,py,pw,ph,pick([0,1,2,3,6,7,8,9]));
+     if(random()<.42)v02Circuit(px,py,pw,ph);
+     if(random()<.48)v02Matrix(px,py,pw,ph,range(3,6)|0,range(3,6)|0,2);
+     if(random()<.30)v02Stipple(px,py,pw,ph,range(.045,.10),true);
+    }
+    if(random()<.55)v02Frame(x+1,y+1,w-2,h-2,1,1);
+   }else{
+    if(random()<.92)v02Stipple(x+margin,y+margin,Math.max(3,w-2*margin),Math.max(3,h-2*margin),range(.065,.145),true);
+    if(random()<.66)v02Matrix(x+margin,y+margin,Math.max(3,w-2*margin),Math.max(3,h-2*margin),range(3,7)|0,range(3,7)|0,2);
+    if(random()<.46)v02Frame(x+1,y+1,w-2,h-2,1,1+R(2));
+    if(random()<.64)v02Hatch(x+margin,y+margin,Math.max(3,w-2*margin),Math.max(3,h-2*margin),range(5,11)|0,range(.45,.78),random()<.5);
+    if(random()<.46)v02Bars(x+margin,y+margin,Math.max(3,w-2*margin),Math.max(3,h-2*margin),random()<.5?'h':'v',range(3,8)|0,.72);
+   }
+  }
+  const rails=variant===3?100+R(70):variant===4?150+R(100):125+R(85);
+  for(let i=0;i<rails;i++){
+   const x=Math.floor(range(0,W)),y=Math.floor(range(0,H));
+   if(random()<.58){const w=Math.floor(range(W*.008,W*(variant===4?.11:.17)));v02Rect(x,y,w,1+R(2),1,range(.44,.94));}
+   else{const h=Math.floor(range(H*.008,H*(variant===4?.10:.16)));v02Rect(x,y,1+R(2),h,1,range(.44,.92));}
+  }
+  const islands=variant===3?24+R(22):variant===4?34+R(30):42+R(34);
+  for(let i=0;i<islands;i++){
+   const w=Math.floor(range(W*.012,W*(variant===4?.075:.12))),h=Math.floor(range(H*.012,H*(variant===4?.075:.12))),x=Math.floor(range(0,Math.max(1,W-w))),y=Math.floor(range(0,Math.max(1,H-h)));
+   if(variant===5)v02Stipple(x,y,w,h,range(.08,.18),true);else v02Matrix(x,y,w,h,range(3,6)|0,range(3,6)|0,1);
+  }
+  const cuts=variant===3?12:variant===4?18:24;
+  for(let i=0;i<cuts;i++){
+   const w=Math.floor(range(W*.012,W*.055)),h=Math.floor(range(H*.008,H*.045)),x=Math.floor(range(0,Math.max(1,W-w))),y=Math.floor(range(0,Math.max(1,H-h)));
+   if(random()<.72)v02Rect(x,y,w,h,0);
+  }
+  return;
+ }
+ const cols=5+R(4),rows=5+R(4),xCuts=[0],yCuts=[0];
  let total=0,weights=[];for(let i=0;i<cols;i++){weights.push(range(.58,1.48));total+=weights[i];}
  for(let i=0,acc=0;i<cols;i++){acc+=weights[i];xCuts.push(Math.round(W*acc/total));}
  total=0;weights=[];for(let i=0;i<rows;i++){weights.push(range(.62,1.42));total+=weights[i];}
