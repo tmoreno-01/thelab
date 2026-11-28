@@ -217,7 +217,7 @@ void main(){
  vec2 axis=vec2(cos(angle),sin(angle));vec2 source=ctr+axis*(.035+.055*r(g,9u));
  if(age>=life||life<=0.){cycle+=1.;uint k=uint(cycle);float theta=6.283*r(id,k+71u);float rr=pow(r(id,k+93u),1.7)*(kind<.13?.075:kind<.72?.018:.075);p=source+vec2(cos(theta),sin(theta))*rr;v=axis*(.05+.07*a);age=0.;life=(kind<.13?6.+5.*b:3.5+7.*b);}
  vec2 q=p-ctr;float dist=length(q);vec2 n=q/max(.04,dist);float along=dot(q,axis),across=dot(q,turn(axis));
- float jetWidth=(kind<.72?.10:.21)+.16*max(along,0.);float jet=exp(-pow(across/max(.01,jetWidth),2.))*exp(-max(0.,-along)*8.);
+ float jetWidth=(kind<.72?.10:.21)+.16*max(along,0.);float crossRatio=across/max(.01,jetWidth);float jet=exp(-crossRatio*crossRatio)*exp(-max(0.,-along)*8.);
  float front=.6+.4*sin(t*2.2-j*.74-dist*4.7);float burst=beat*front;
  float thrust=(.17+.25*r(g,15u)+.34*lo+.53*burst)*jet;
  vec2 desired=axis*thrust+turn(axis)*(.16*sin(along*5.2+t*.55+j)+.08*cos(along*11.-t*.7+j))*jet*(.65+mi);
