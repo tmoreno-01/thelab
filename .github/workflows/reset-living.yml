@@ -1,0 +1,44 @@
+name: Validate RESET living studies
+on:
+  push:
+    paths:
+      - 'reset/versions/v.02/living.html'
+      - 'reset/versions/v.02/index.html'
+      - '.github/workflows/reset-living.yml'
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: |
+          npm install --no-save playwright
+          npx playwright install chromium
+          python3 -m http.server 8765 &
+          node <<'NODE'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const b=await chromium.launch({args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+            try {
+              for(const study of [13,14,15]){
+                const p=await b.newPage({viewport:{width:900,height:700}});
+                const errors=[];p.on('pageerror',e=>errors.push(e.message));
+                await p.goto('http://127.0.0.1:8765/reset/versions/v.02/living.html?study='+study+'&preview=1&seed=12345&colour=1');
+                await p.waitForFunction(()=>window.__resetDiagnostics?.().frames>10);
+                await p.waitForTimeout(6500);
+                const stats=await p.evaluate(()=>window.__resetDiagnostics());
+                if(errors.length||stats.modules<10||stats.transfers<1||stats.infections<1)throw Error(JSON.stringify({errors,stats}));
+                console.log(study,stats);
+                await p.screenshot({path:'/tmp/reset-'+study+'.png'});
+                await p.close();
+              }
+            }finally{await b.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reset-living-previews
+          path: /tmp/reset-*.png

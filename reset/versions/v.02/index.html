@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
-<title>RESET — v.02 / 010–012</title>
+<title>RESET — v.02 / 013–015</title>
 <style>
 *{box-sizing:border-box}
 html{background:#fff;color:#111;font:13px Arial,sans-serif}
@@ -56,34 +56,43 @@ main{max-width:1800px;margin:auto;padding:28px 24px 54px}
 <main>
  <div class="intro">
   <h1>RESET / v.02 — New studies</h1>
-  <p>Fresh seed on every load · connected structural motion · multi-scale temporal feedback</p>
+  <p>Fresh seed on every load · continuous currents · living pigment · evolving structural grammar</p>
  </div>
- <section class="grid" aria-label="RESET studies 010 to 012">
-  <article class="tile" tabindex="0" role="button" aria-label="Open study 010 Relay Spine fullscreen" data-study="177">
-   <div class="screen"><iframe title="RESET 010 — Relay Spine" loading="lazy" allowfullscreen></iframe></div>
-   <div class="number"><span>010 — RELAY SPINE</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
+ <section class="grid" aria-label="RESET studies 013 to 015">
+  <article class="tile" tabindex="0" role="button" aria-label="Open study 013 Coherent Weather fullscreen" data-study="13">
+   <div class="screen"><iframe title="RESET 013 — Coherent Weather" loading="lazy" allowfullscreen></iframe></div>
+   <div class="number"><span>013 — COHERENT WEATHER</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
   </article>
-  <article class="tile" tabindex="0" role="button" aria-label="Open study 011 Cluster Grammar fullscreen" data-study="178">
-   <div class="screen"><iframe title="RESET 011 — Cluster Grammar" loading="lazy" allowfullscreen></iframe></div>
-   <div class="number"><span>011 — CLUSTER GRAMMAR</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
+  <article class="tile" tabindex="0" role="button" aria-label="Open study 014 Relay Bloom fullscreen" data-study="14">
+   <div class="screen"><iframe title="RESET 014 — Relay Bloom" loading="lazy" allowfullscreen></iframe></div>
+   <div class="number"><span>014 — RELAY BLOOM</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
   </article>
-  <article class="tile" tabindex="0" role="button" aria-label="Open study 012 Signal Weather fullscreen" data-study="179">
-   <div class="screen"><iframe title="RESET 012 — Signal Weather" loading="lazy" allowfullscreen></iframe></div>
-   <div class="number"><span>012 — SIGNAL WEATHER</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
+  <article class="tile" tabindex="0" role="button" aria-label="Open study 015 Quiet Pressure fullscreen" data-study="15">
+   <div class="screen"><iframe title="RESET 015 — Quiet Pressure" loading="lazy" allowfullscreen></iframe></div>
+   <div class="number"><span>015 — QUIET PRESSURE</span><button class="reseed" type="button">NEW SEED ↻</button><span>FULLSCREEN ↗</span></div>
   </article>
  </section>
  <nav class="history" aria-label="Previous RESET studies">
-  <div class="history-head"><h2>Previous studies / 007–009</h2><a href="./archive.html">Expanded archive ↗</a></div>
+  <div class="history-head"><h2>Previous studies / 001–012</h2><a href="./archive.html">Expanded archive ↗</a></div>
   <div class="history-list">
+   <a class="history-item" href="./source.html?study=168"><span class="history-no">001</span><span class="history-name">PATCHWORK SIGNALS</span></a>
+   <a class="history-item" href="./source.html?study=169"><span class="history-no">002</span><span class="history-name">CHROMATIC INHERITANCE</span></a>
+   <a class="history-item" href="./source.html?study=170"><span class="history-no">003</span><span class="history-name">RESIDUAL GRAMMAR</span></a>
+   <a class="history-item" href="./source.html?study=171"><span class="history-no">004</span><span class="history-name">GRID ECOLOGY</span></a>
+   <a class="history-item" href="./source.html?study=172"><span class="history-no">005</span><span class="history-name">SIGNAL FRACTURE</span></a>
+   <a class="history-item" href="./source.html?study=173"><span class="history-no">006</span><span class="history-name">LIVING SYNTAX</span></a>
    <a class="history-item" href="./source.html?study=174"><span class="history-no">007</span><span class="history-name">LATTICE DRIFT</span></a>
    <a class="history-item" href="./source.html?study=175"><span class="history-no">008</span><span class="history-name">PATCH RELAY</span></a>
    <a class="history-item" href="./source.html?study=176"><span class="history-no">009</span><span class="history-name">SIGNAL WEATHER</span></a>
+   <a class="history-item" href="./source.html?study=177"><span class="history-no">010</span><span class="history-name">RELAY SPINE</span></a>
+   <a class="history-item" href="./source.html?study=178"><span class="history-no">011</span><span class="history-name">CLUSTER GRAMMAR</span></a>
+   <a class="history-item" href="./source.html?study=179"><span class="history-no">012</span><span class="history-name">SIGNAL WEATHER</span></a>
   </div>
  </nav>
 </main>
 <script>
 const tiles=[...document.querySelectorAll('.tile')],loaded=new WeakSet();
-function sourceFor(tile,preview=true){return './source.html?study='+tile.dataset.study+(preview?'&preview=1':'')+'&refresh='+Date.now();}
+function sourceFor(tile,preview=true){return './living.html?study='+tile.dataset.study+(preview?'&preview=1':'')+'&refresh='+Date.now();}
 function loadFrame(tile){const frame=tile.querySelector('iframe');if(!loaded.has(frame)){loaded.add(frame);frame.addEventListener('load',()=>syncTile(tile));frame.src=sourceFor(tile,true);}return frame;}
 function message(tile,type,data){const frame=tile.querySelector('iframe');if(frame?.contentWindow)frame.contentWindow.postMessage({type,...data},location.origin);}
 function isVisible(tile){if(document.hidden)return false;if(document.fullscreenElement)return document.fullscreenElement===tile;const r=tile.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;}
