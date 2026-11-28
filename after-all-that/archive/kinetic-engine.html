@@ -84,10 +84,10 @@ const motionProfile=requestedStudy===157
   ?{gain:1.20,radius:1.0,speed:1.0,pixelScale:1.25,slots:4,weights:[1.3,1.1,1.9,1.1,1.3,.8,1.6,1.5],initial:[2,6,7,1]}
   :{gain:1.42,radius:1.02,speed:1.12,pixelScale:1.32,slots:4,weights:[1.4,1.2,2.1,.95,1.5,.7,1.9,1.7],initial:[6,2,7,0]};
 const kineticProfile=requestedStudy===157
- ?{agents:72,behaviours:18,species:5,zones:12,trail:18,modeTime:[3.2,8.5],speed:[.075,.19],chem:false,chains:0,chainMax:0,excitable:false,branch:.002,trailLife:[2.0,4.4],density:1.0}
+ ?{agents:72,behaviours:18,species:5,zones:12,trail:12,modeTime:[3.2,8.5],speed:[.075,.19],chem:false,chains:0,chainMax:0,excitable:false,branch:.002,trailLife:[2.0,4.4],density:1.0}
  :requestedStudy===158
-  ?{agents:86,behaviours:6,species:6,zones:14,trail:20,modeTime:[3.0,7.5],speed:[.075,.18],chem:true,chemW:144,chemH:90,chains:0,chainMax:0,excitable:false,branch:.010,trailLife:[2.2,4.8],density:1.1}
-  :{agents:46,behaviours:16,species:5,zones:10,trail:17,modeTime:[2.8,7.2],speed:[.065,.16],chem:false,chemW:0,chemH:0,chains:16,chainMax:28,chainLength:13,excitable:true,exciteW:120,exciteH:76,branch:.025,trailLife:[2.0,4.5],density:1.0};
+  ?{agents:86,behaviours:6,species:6,zones:14,trail:13,modeTime:[3.0,7.5],speed:[.075,.18],chem:true,chemW:144,chemH:90,chains:0,chainMax:0,excitable:false,branch:.010,trailLife:[2.2,4.8],density:1.1}
+  :{agents:46,behaviours:16,species:5,zones:10,trail:11,modeTime:[2.8,7.2],speed:[.065,.16],chem:false,chemW:0,chemH:0,chains:10,chainMax:18,chainLength:10,excitable:true,exciteW:120,exciteH:76,branch:.025,trailLife:[2.0,4.5],density:1.0};
 let W=0,H=0,field,rgba,rgba32=null,active=[],agents=[],memory=[],used=new Set(),last=0,lastDraw=0,age=0,next=0,nextSense=0,paused=false,quality=!q.has('preview'),seed=crypto.getRandomValues(new Uint32Array(1))[0]||1;
 let trials=0,accepted=0,finished=0,colourBirths=0,inherited=0,refusals=0,changes=0,previous=null,focus=-1,nextFocus=0,colonies=[],morphChanges=0,flowChanges=0,colonyCount=0,nextMorph=0,fronts=[],nextFront=0,frontCount=0,frontEdits=0,microSlips=[],nextSlip=0,slipHistory=[],slipEvents=0,slipPairs=0,renderField=null,flowPockets=[],nextFlow=0,flowHistory=[],flowEvents=0,flowCells=0,motionFields=[],motionSource=null,motionX=null,motionY=null,motionStrength=null,motionMemory=null,motionErase=null,motionColour=null,motionHue=null,motionIndices=null,motionIndexCount=0,motionMapReady=false,nextMotionMap=0,motionEvents=0,motionTouched=0,motionMoved=0,motionActive=0,feedbackFields=[],feedbackHistory=[],feedbackModeUse=new Uint16Array(40),feedbackRecent=[],nextFeedback=0,feedbackPrevious=null,feedbackReady=false,feedbackEvents=0,feedbackTouched=0,feedbackMoved=0,feedbackActive=0,resetAgents=[],resetIncidents=[],resetRegions=[],resetHeat=null,resetVisitedAt=null,resetLastMode=null,resetSource=null,resetWriteStamp=null,resetStamp=0,resetHeatClock=0,resetModeUse=new Uint16Array(10),resetModeRecent=[],resetNextIncident=0,resetEvents=0,resetMoved=0,resetSteps=0,resetInteractions=0,resetColour=null,resetColourTouched=null,resetColourListed=null,resetColourIndices=[],resetColourCells=0,resetColourBirths=0,resetColourTransfers=0,pigmentEvents=[],pigmentHistory=[],pigmentFamilyUse=new Uint16Array(5),pigmentRecent=[],nextPigment=0,pigmentEventCount=0,pigmentTransitions=0,kineticAgents=[],kineticChains=[],kineticZones=[],kineticPheromone=[],kineticPheromoneNext=[],kineticGrayU=null,kineticGrayV=null,kineticGrayUNext=null,kineticGrayVNext=null,kineticExcite=null,kineticExciteNext=null,kineticW=0,kineticH=0,kineticClock=0,kineticChemClock=0,kineticExciteClock=0,kineticNextChem=0,kineticNextExcite=0,kineticNextBranch=0,kineticSteps=0,kineticDeposits=0,kineticBranches=0,kineticModeChanges=0,kineticChemSteps=0,kineticChainSegments=0,kineticRenderNodes=0;
 function random(){seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return (seed>>>0)/4294967296}
@@ -1166,7 +1166,7 @@ function kineticInitExcitable(){
  kineticNextExcite=age+.08;
 }
 function kineticMakeChain(id,x,y,angle,parent){
- const count=kineticProfile.chainLength+R(7),rest=range(5.2,8.5),nodes=[];
+ const count=kineticProfile.chainLength+R(4),rest=range(5.2,8.5),nodes=[];
  for(let i=0;i<count;i++){const bend=Math.sin(i*.37+id)*range(0,5),px=x+Math.cos(angle)*i*rest-Math.sin(angle)*bend,py=y+Math.sin(angle)*i*rest+Math.cos(angle)*bend;nodes.push({x:px,y:py,px,py,phase:range(0,Math.PI*2)});}
  return {id,type:R(9),nodes,rest,phase:range(0,Math.PI*2),omega:range(.55,2.1),born:age,width:1+R(3),colour:palette[[2,3,5,6,7,8,9,10][R(8)]],seed:1+R(1000000),history:[],nextHistory:age+.08,nextGrow:age+range(1.2,3.8),growth:0,branchDepth:parent?(parent.branchDepth||0)+1:0};
 }
@@ -1278,7 +1278,7 @@ function kineticUpdateAgents(dt){
   a.heading=Math.atan2(a.vy,a.vx);if(kineticProfile.chem)kineticDeposit(a);
   const moved=Math.hypot((a.x-a.lastX)*W,(a.y-a.lastY)*H);
   if(age>=a.nextTrail&&moved>1.1){a.trail.push({x:a.x*W,y:a.y*H,angle:a.heading,born:age,life:range(kineticProfile.trailLife[0],kineticProfile.trailLife[1]),
-    radius:range(3,7),width:1+R(3),phase:range(0,Math.PI*2),seed:a.seed+R(100000),kind:a.deform,strength:range(.48,.92),colour:[2,3,5,6,7,8,9,10][a.species%8]});
+    radius:range(2,5),width:1+R(2),phase:range(0,Math.PI*2),seed:a.seed+R(100000),kind:a.deform,strength:range(.48,.92),colour:[2,3,5,6,7,8,9,10][a.species%8]});
    if(a.trail.length>kineticProfile.trail)a.trail.shift();a.nextTrail=age+range(.045,.105);a.lastX=a.x;a.lastY=a.y;kineticSteps++;}
   if(requestedStudy===158&&kineticAgents.length<120&&age>=kineticNextBranch&&random()<kineticProfile.branch){spawn.push(kineticCreateAgent(kineticAgents.length,a));kineticBranches++;kineticNextBranch=age+range(1.4,3.6);}
  }
@@ -1297,11 +1297,11 @@ function kineticUpdateChains(dt){
    if(c.type===2){ax+=Math.sin(i*.4+c.phase)*.5;ay+=Math.cos(i*.4+c.phase)*.5;}if(c.type===5){ax*=1.6;ay*=1.6;}
    p.px=p.x;p.py=p.y;p.x+=vx+ax*dt*dt*130;p.y+=vy+ay*dt*dt*130;
   }
-  for(let pass=0;pass<3;pass++){
+  for(let pass=0;pass<2;pass++){
    for(let i=0;i<n-1;i++){const a=nodes[i],b=nodes[i+1],dx=b.x-a.x,dy=b.y-a.y,d=Math.max(.001,Math.hypot(dx,dy)),wave=c.type===4?1+.11*Math.sin(c.phase+i*.5):c.type===5?1+.08*Math.sin(c.phase-i*.23):1,err=(d-c.rest*wave)/d*.48,ox=dx*err*.5,oy=dy*err*.5;a.x+=ox;a.y+=oy;b.x-=ox;b.y-=oy;}
    for(let i=1;i<n-1;i++){const p=nodes[i],a=nodes[i-1],b=nodes[i+1],bend=c.type===1?.035:c.type===2?.09:.055;p.x+=(a.x+b.x-2*p.x)*bend;p.y+=(a.y+b.y-2*p.y)*bend;}
   }
-  if(age>=c.nextHistory){const pts=new Float32Array(n*2);for(let i=0;i<n;i++){pts[i*2]=nodes[i].x;pts[i*2+1]=nodes[i].y;}c.history.push({born:age,points:pts});if(c.history.length>5)c.history.shift();c.nextHistory=age+.13;}
+  if(age>=c.nextHistory){const pts=new Float32Array(n*2);for(let i=0;i<n;i++){pts[i*2]=nodes[i].x;pts[i*2+1]=nodes[i].y;}c.history.push({born:age,points:pts});if(c.history.length>2)c.history.shift();c.nextHistory=age+.18;}
   if(age>=c.nextGrow&&nodes.length<30){
    let best=0,bestD=0;for(let i=0;i<n-1;i++){const d=Math.hypot(nodes[i+1].x-nodes[i].x,nodes[i+1].y-nodes[i].y);if(d>bestD){bestD=d;best=i;}}
    const a=nodes[best],b=nodes[best+1],dx=b.x-a.x,dy=b.y-a.y,d=Math.max(.001,Math.hypot(dx,dy)),off=range(-2.8,2.8);
@@ -1339,16 +1339,16 @@ function resetApplyKineticNode(node){
  }
 }
 function resetApplyKineticSegment(x1,y1,x2,y2,style,born,life,strength){
- const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),steps=Math.max(1,Math.ceil(len/3.2)),angle=Math.atan2(dy,dx);
+ const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),steps=Math.max(1,Math.ceil(len/5.5)),angle=Math.atan2(dy,dx);
  for(let i=0;i<=steps;i++){const t=i/steps;resetApplyKineticNode({x:x1+dx*t,y:y1+dy*t,angle,born,life,radius:style.radius,width:style.width,phase:style.phase,seed:style.seed+i*13,kind:style.kind,strength:strength*style.strength,colour:style.colour});}
 }
 function applyKineticMotion(){
  if(!kineticStudy||!kineticAgents.length)return;kineticRenderNodes=0;
- for(const a of kineticAgents)for(const node of a.trail)resetApplyKineticNode(node);
+ for(const a of kineticAgents)for(let i=0;i<a.trail.length;i+=2)resetApplyKineticNode(a.trail[i]);
  for(const c of kineticChains){
-  const style={radius:4+c.width,width:c.width,phase:c.phase,seed:c.seed,kind:c.type%12,strength:.65,colour:c.colour};
+  const style={radius:2.5+c.width*.55,width:1+(c.width>2?1:0),phase:c.phase,seed:c.seed,kind:c.type%12,strength:.62,colour:c.colour};
   for(let i=0;i<c.nodes.length-1;i++)resetApplyKineticSegment(c.nodes[i].x,c.nodes[i].y,c.nodes[i+1].x,c.nodes[i+1].y,style,age-.025,.12,.9);
-  for(const hist of c.history){const fade=1-clamp((age-hist.born)/2.4,0,1);if(fade<.04)continue;for(let i=0;i<hist.points.length/2-1;i++)resetApplyKineticSegment(hist.points[i*2],hist.points[i*2+1],hist.points[i*2+2],hist.points[i*2+3],style,hist.born,2.4,fade*.52);}
+  for(const hist of c.history){const fade=1-clamp((age-hist.born)/2.4,0,1);if(fade<.04)continue;for(let i=0;i<hist.points.length/2-1;i+=2)resetApplyKineticSegment(hist.points[i*2],hist.points[i*2+1],hist.points[i*2+2],hist.points[i*2+3],style,hist.born,1.45,fade*.48);}
  }
 }
 
